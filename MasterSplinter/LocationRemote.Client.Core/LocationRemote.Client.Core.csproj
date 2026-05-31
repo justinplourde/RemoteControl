@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>LocationRemote.Client.Core</AssemblyName>
+    <RootNamespace>LocationRemote.Client.Core</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LocationRemote.Common\LocationRemote.Common.csproj" />
+  </ItemGroup>
+</Project>

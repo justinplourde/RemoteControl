@@ -18,6 +18,7 @@ remote administration behavior is extracted deliberately.
 - Pure file-system protocol contracts for drive listing, directory listing, path rename/delete, and file-manager status
 - Full legacy protocol DTO surface is present in `LocationRemote.Common`
 - Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
+- `LocationRemote.Client.Core` contains message dispatch contracts and typed routing infrastructure
 
 ## Protocol Rules
 
@@ -34,6 +35,7 @@ remote administration behavior is extracted deliberately.
 - Registry operations
 - Process and shell execution behavior
 - File-system access behavior; only DTO contracts are modernized so far
+- Client command handlers; only dispatch routing infrastructure exists so far
 - Client installation, startup, and service behavior
 - Windows-specific platform helpers and native methods
 
