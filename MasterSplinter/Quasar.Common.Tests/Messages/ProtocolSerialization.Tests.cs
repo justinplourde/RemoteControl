@@ -1,10 +1,13 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf;
 using Quasar.Common.Messages;
+using Quasar.Common.Models;
 using Quasar.Common.Networking;
+using Quasar.Common.Protocol;
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace Quasar.Common.Tests.Messages
 {
@@ -17,7 +20,11 @@ namespace Quasar.Common.Tests.Messages
             TypeRegistry.AddTypesToSerializer(
                 typeof(IMessage),
                 typeof(ClientIdentification),
-                typeof(ClientIdentificationResult));
+                typeof(ClientIdentificationResult),
+                typeof(FileTransferRequest),
+                typeof(FileTransferChunk),
+                typeof(FileTransferComplete),
+                typeof(FileTransferCancel));
         }
 
         [TestMethod, TestCategory("Protocol")]
@@ -98,12 +105,113 @@ namespace Quasar.Common.Tests.Messages
         }
 
         [TestMethod, TestCategory("Protocol")]
+        public void LegacyClientIdentificationPayloadDefaultsProtocolMetadata()
+        {
+            var legacy = new ClientIdentification
+            {
+                Version = "1.4.1",
+                OperatingSystem = "Windows 11 64 Bit",
+                AccountType = "Admin",
+                Country = "United States",
+                CountryCode = "US",
+                ImageIndex = 230,
+                Id = new string('A', 64),
+                Username = "jplou",
+                PcName = "LOCATIONREMOTE",
+                Tag = "legacy",
+                EncryptionKey = "test-key",
+                Signature = new byte[] { 1, 2, 3, 4 }
+            };
+
+            var roundTripped = Deserialize<ClientIdentification>(Serialize(legacy));
+
+            Assert.IsNull(roundTripped.ProtocolVersion);
+            Assert.IsNull(roundTripped.Capabilities);
+        }
+
+        [TestMethod, TestCategory("Protocol")]
+        public void ClientIdentificationRoundTripsProtocolMetadata()
+        {
+            var original = new ClientIdentification
+            {
+                Version = "1.4.1",
+                Id = new string('B', 64),
+                EncryptionKey = "test-key",
+                Signature = new byte[] { 4, 3, 2, 1 },
+                ProtocolVersion = new ProtocolVersion { Major = 1, Minor = 0 },
+                Capabilities = new ClientCapabilities
+                {
+                    SupportedFeatures = { "file-transfer", "protocol-versioning" }
+                }
+            };
+
+            var roundTripped = Deserialize<ClientIdentification>(Serialize(original));
+
+            Assert.AreEqual(1, roundTripped.ProtocolVersion.Major);
+            Assert.AreEqual(0, roundTripped.ProtocolVersion.Minor);
+            CollectionAssert.AreEqual(original.Capabilities.SupportedFeatures, roundTripped.Capabilities.SupportedFeatures);
+        }
+
+        [TestMethod, TestCategory("Protocol")]
+        public void ClientIdentificationProtocolMetadataUsesAdditiveFieldNumbers()
+        {
+            Assert.AreEqual(100, GetProtoMemberTag(nameof(ClientIdentification.ProtocolVersion)));
+            Assert.AreEqual(101, GetProtoMemberTag(nameof(ClientIdentification.Capabilities)));
+        }
+
+        [TestMethod, TestCategory("Protocol")]
+        public void FileTransferMessagesRoundTripThroughRegisteredInterface()
+        {
+            IMessage[] messages =
+            {
+                new FileTransferRequest { Id = 7, RemotePath = "C:\\Temp\\report.pdf" },
+                new FileTransferChunk
+                {
+                    Id = 7,
+                    FilePath = "report.pdf",
+                    FileSize = 3,
+                    Chunk = new FileChunk { Offset = 0, Data = new byte[] { 1, 2, 3 } }
+                },
+                new FileTransferComplete { Id = 7, FilePath = "report.pdf" },
+                new FileTransferCancel { Id = 7, Reason = "Cancelled" }
+            };
+
+            foreach (var message in messages)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    using (var writer = new PayloadWriter(stream, true))
+                    {
+                        writer.WriteMessage(message);
+                    }
+
+                    using (var reader = new PayloadReader(stream.ToArray(), (int)stream.Length, false))
+                    {
+                        Assert.AreEqual(message.GetType(), reader.ReadMessage().GetType());
+                    }
+                }
+            }
+        }
+
+        [TestMethod, TestCategory("Protocol")]
         public void TypeRegistryDiscoversModernMessageTypes()
         {
             var packetTypes = TypeRegistry.GetPacketTypes(typeof(IMessage)).ToArray();
 
             CollectionAssert.Contains(packetTypes, typeof(ClientIdentification));
             CollectionAssert.Contains(packetTypes, typeof(ClientIdentificationResult));
+            CollectionAssert.Contains(packetTypes, typeof(FileTransferRequest));
+            CollectionAssert.Contains(packetTypes, typeof(FileTransferChunk));
+            CollectionAssert.Contains(packetTypes, typeof(FileTransferComplete));
+            CollectionAssert.Contains(packetTypes, typeof(FileTransferCancel));
+        }
+
+        private static int GetProtoMemberTag(string propertyName)
+        {
+            return typeof(ClientIdentification)
+                .GetProperty(propertyName)
+                .GetCustomAttribute<ProtoMemberAttribute>()
+                .Tag;
         }
 
         private static byte[] Serialize<T>(T value)

@@ -1,4 +1,5 @@
 using ProtoBuf;
+using Quasar.Common.Protocol;
 
 namespace Quasar.Common.Messages
 {
@@ -40,5 +41,11 @@ namespace Quasar.Common.Messages
 
         [ProtoMember(12)]
         public byte[] Signature { get; set; }
+
+        [ProtoMember(100)]
+        public ProtocolVersion ProtocolVersion { get; set; }
+
+        [ProtoMember(101)]
+        public ClientCapabilities Capabilities { get; set; }
     }
 }
