@@ -59,7 +59,7 @@ Current verification:
 
 - `LocationRemote.Common.Tests`: 32 passed, 1 skipped.
 - `LocationRemote.Client.Core.Tests`: 7 passed.
-- `LocationRemote.Server.Core.Tests`: 33 passed.
+- `LocationRemote.Server.Core.Tests`: 35 passed.
 
 Known legacy limitation:
 
@@ -150,6 +150,8 @@ Done:
 - Added tests for listener start/stop, connection lifecycle routing, handshake result sending,
   invalid pre-handshake message disconnects, rejected identification disconnects, and
   post-handshake message forwarding.
+- Added in-memory parity tests proving the modern client identification factory can complete
+  the modern server handshake path without sockets.
 - Verified `LocationRemote.Server.Host --smoke-test` starts and stops cleanly.
 - Verified `LocationRemote.Client.Host --smoke-test` creates a modern identification payload.
 
@@ -311,10 +313,9 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Prove a safe end-to-end vertical slice on .NET 10.
-2. Replace the idle listener with a real modern transport or legacy socket adapter.
-3. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
-4. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Replace the idle listener with a real modern transport or legacy socket adapter.
+2. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+3. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks

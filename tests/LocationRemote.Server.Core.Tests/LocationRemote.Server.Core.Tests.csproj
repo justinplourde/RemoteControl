@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\LocationRemote.Server.Core\LocationRemote.Server.Core.csproj" />
+    <ProjectReference Include="..\..\src\LocationRemote.Client.Core\LocationRemote.Client.Core.csproj" />
     <ProjectReference Include="..\..\src\LocationRemote.Common\LocationRemote.Common.csproj" />
   </ItemGroup>
 </Project>
