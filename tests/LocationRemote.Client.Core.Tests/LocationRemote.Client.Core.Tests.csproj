@@ -10,7 +10,7 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.4.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LocationRemote.Client.Core\LocationRemote.Client.Core.csproj" />
-    <ProjectReference Include="..\LocationRemote.Common\LocationRemote.Common.csproj" />
+    <ProjectReference Include="..\..\src\LocationRemote.Client.Core\LocationRemote.Client.Core.csproj" />
+    <ProjectReference Include="..\..\src\LocationRemote.Common\LocationRemote.Common.csproj" />
   </ItemGroup>
 </Project>

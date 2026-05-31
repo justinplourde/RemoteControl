@@ -2,7 +2,15 @@
 
 ## Current Direction
 
-The modern .NET work starts with a small, safe shared core in `LocationRemote.Common`.
+The modern .NET work lives at the repository root in `src` and `tests`, with
+`LocationRemote.sln` as the acceptance solution for portable code.
+
+`MasterSplinter` remains the imported legacy application folder. Its `Quasar.sln`
+now stays focused on the existing WinForms server, client, and legacy common
+projects while the modern class libraries can grow independently beside future
+root-level Web API, CLI, and client projects.
+
+The modern .NET work starts with a small, safe shared core in `src/LocationRemote.Common`.
 The legacy `Quasar.Common` project remains on `net452` while sensitive or Windows-specific
 remote administration behavior is extracted deliberately.
 
@@ -19,6 +27,11 @@ remote administration behavior is extracted deliberately.
 - Full legacy protocol DTO surface is present in `LocationRemote.Common`
 - Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
 - `LocationRemote.Client.Core` contains message dispatch contracts and typed routing infrastructure
+
+## Solutions
+
+- `LocationRemote.sln`: modern root solution for portable class libraries and tests.
+- `MasterSplinter/Quasar.sln`: legacy solution for the imported Windows desktop projects.
 
 ## Protocol Rules
 
