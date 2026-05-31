@@ -7,8 +7,9 @@ The modern .NET 10 work lives at the repository root in `src` and `tests`, with
 
 `MasterSplinter` remains the imported legacy application folder. Its `Quasar.sln`
 now stays focused on the existing WinForms server, client, and legacy common
-projects while the modern class libraries can grow independently beside future
-root-level Web API, CLI, and client projects.
+projects while the modern class libraries grow toward a runnable .NET 10 parity
+implementation. Future root-level Web API, CLI, client UI, service, and cross-platform
+projects should wait until that parity gate is met.
 
 The modern .NET work starts with a small, safe shared core in `src/LocationRemote.Common`.
 The legacy `Quasar.Common` project remains on `net452` while sensitive or Windows-specific
@@ -51,8 +52,12 @@ remote administration behavior is extracted deliberately.
 - Client command handlers; only dispatch routing infrastructure exists so far
 - Client installation, startup, and service behavior
 - Windows-specific platform helpers and native methods
+- New roadmap features such as Web API, CLI, permissioned operators, consent UI,
+  cross-platform expansion, and GUI overhaul until modern runtime parity is proven
 
 ## Rule Of Thumb
 
 Move protocol contracts and pure data models first. Move behavior only after tests describe
-its current observable contract and after platform-specific boundaries are clear.
+its current observable contract and after platform-specific boundaries are clear. Build
+new roadmap features only after the modern .NET runtime can mirror the selected legacy
+client/server behavior with tests.

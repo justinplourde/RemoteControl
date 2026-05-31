@@ -5,17 +5,22 @@ Last updated: May 31, 2026
 ## Current Goal
 
 Modernize the archived Quasar-derived codebase into a new `LocationRemote` repository
-with a testable .NET 10 core first. New Web API, CLI, client, and service projects
-should live at the repository root beside shared class libraries instead of being
-buried inside the legacy `MasterSplinter` application folder.
+with a testable .NET 10 implementation first. The next major gate is functional parity:
+the modern root projects should be able to run equivalent client/server behavior, with
+tests proving that the modern behavior mirrors the legacy behavior we intentionally keep.
+
+Only after that parity gate should we start adding the new roadmap features: Web API,
+CLI, permissioned operators, consentful client UI, Windows service mode, cross-platform
+expansion, and the GUI overhaul.
 
 The guiding order is:
 
 1. Preserve and test current behavior.
-2. Extract portable protocol and orchestration code.
-3. Add explicit safety, permission, audit, and consent boundaries.
-4. Build API/CLI/client surfaces on top of shared core libraries.
-5. Expand platform support after behavior is covered by tests.
+2. Extract portable protocol, networking, and orchestration code.
+3. Rebuild the existing tool on modern .NET and prove parity.
+4. Add explicit safety, permission, audit, and consent boundaries.
+5. Build API/CLI/client surfaces on top of shared core libraries.
+6. Expand platform support after behavior is covered by tests.
 
 ## Priority 0: Repository And Baseline
 
@@ -126,9 +131,40 @@ Left to do:
 - Add command correlation IDs so API/CLI calls can be traced through audit logs.
 - Add integration tests for client/server handshake and command dispatch once networking is extracted.
 
-## Priority 5: Permissioned Operators And Audit Logging
+## Priority 5: Modern Runtime Parity
 
-Status: Planned
+Status: Next
+
+This is the main gate before adding new product features from the original roadmap.
+The goal is not just to have DTOs and core contracts compiling on .NET 10; the goal is
+to have a modern runnable client/server path that mirrors the legacy functionality we
+choose to carry forward.
+
+Planned work:
+
+- Extract the server listener and client connection lifecycle into `LocationRemote.Server.Core`.
+- Extract the client connection, identity, reconnect, and message-routing behavior into
+  `LocationRemote.Client.Core`.
+- Add a modern runnable server host, initially minimal and local, that uses the shared server core.
+- Add a modern runnable client host, initially minimal and local, that uses the shared client core.
+- Prove handshake parity against the legacy protocol fixtures.
+- Prove command dispatch parity for a small safe vertical slice before moving broader behavior.
+- Build out behavior tests for file-system operations, system info, process metadata, shell behavior,
+  remote desktop contracts, registry behavior, startup/service behavior, and reverse proxy behavior
+  before or while each area is extracted.
+- Classify each legacy feature as keep, redesign, defer, or remove before porting behavior.
+
+Parity acceptance should include:
+
+- Modern client/server handshake succeeds using the modern `net10.0` projects.
+- Existing wire fixtures remain compatible.
+- Modern command routing matches the tested legacy message behavior.
+- A documented capability matrix exists for supported, deferred, removed, and Windows-only features.
+- `dotnet test .\LocationRemote.sln` remains green.
+
+## Priority 6: Permissioned Operators And Audit Logging
+
+Status: Planned after modern runtime parity
 
 - Add operator identity models.
 - Add roles/permissions for administrative actions.
@@ -137,9 +173,13 @@ Status: Planned
   consent requests, and permission denials.
 - Keep audit storage behind an interface so Web API, CLI, and desktop UI can share the same model.
 
-## Priority 6: Web API
+Note: lightweight audit contracts already exist in `LocationRemote.Server.Core` because they help
+shape command dispatch safely. Full permissioned operators and persistent audit logging remain
+post-parity roadmap features.
 
-Status: Planned
+## Priority 7: Web API
+
+Status: Planned after modern runtime parity
 
 - Add a root-level Web API project after `LocationRemote.Server.Core` owns orchestration contracts.
 - Expose client inventory, session status, command dispatch, audit query, and capability discovery.
@@ -147,9 +187,9 @@ Status: Planned
 - Do not duplicate server orchestration inside controllers.
 - Add API tests around authorization, request validation, command routing, and audit recording.
 
-## Priority 7: CLI Server
+## Priority 8: CLI Server
 
-Status: Planned
+Status: Planned after modern runtime parity
 
 - Add a root-level CLI project after `LocationRemote.Server.Core` has stable orchestration APIs.
 - Support running a server, listing clients, inspecting capabilities, and dispatching safe commands.
@@ -157,9 +197,9 @@ Status: Planned
 - Keep CLI output scriptable and testable.
 - Consider a proxy/forwarding mode from the original roadmap once the listener model is extracted.
 
-## Priority 8: Basic Client GUI, Status, And Consent
+## Priority 9: Basic Client GUI, Status, And Consent
 
-Status: Planned
+Status: Planned after modern runtime parity
 
 - Add a basic client UI or status surface.
 - Show connection status and active feature status.
@@ -167,18 +207,18 @@ Status: Planned
 - Support consent prompts for sensitive operations such as remote desktop.
 - Keep consent/status models in shared client core so different UIs can reuse them.
 
-## Priority 9: Windows Service Mode
+## Priority 10: Windows Service Mode
 
-Status: Planned
+Status: Planned after modern runtime parity
 
 - Add Windows service installation mode only after client behavior has clear contracts and tests.
 - Keep service install/start/stop behavior behind platform-specific interfaces.
 - Preserve a non-service mode for interactive and consent-oriented scenarios.
 - Add Windows-specific tests around service abstractions where practical.
 
-## Priority 10: Cross-Platform Support
+## Priority 11: Cross-Platform Support
 
-Status: Planned after modernization and functional tests
+Status: Planned after modern runtime parity and functional tests
 
 The answer to whether modern .NET enables more than Windows is yes, but only for the parts
 that are actually portable or deliberately abstracted. The first cross-platform work should
@@ -203,9 +243,9 @@ Likely capability categories:
 - Windows-only unless rethought: Windows registry operations, UAC/elevation flows,
   WinForms desktop tooling, Windows service implementation.
 
-## Priority 11: GUI Overhaul
+## Priority 12: GUI Overhaul
 
-Status: Long-term
+Status: Long-term, after modern runtime parity and API/core boundaries
 
 - Rework the operator GUI after the API/core boundary exists.
 - Consider WPF or a web-based interface.
@@ -213,18 +253,18 @@ Status: Long-term
   legacy WinForms handlers.
 - Improve remote desktop rendering only after streaming contracts and consent behavior are defined.
 
-## Priority 12: Transparent Protocol Documentation
+## Priority 13: Transparent Protocol Documentation
 
-Status: Long-term, partially enabled by current tests
+Status: Ongoing, required for parity and long-term compatibility
 
 - Document message framing, protobuf contracts, version fields, capabilities, and compatibility rules.
 - Publish a protocol compatibility matrix.
 - Use the current pinned wire fixtures as the source of truth for examples.
 - Keep protocol documentation updated whenever message contracts change.
 
-## Priority 13: Remaining Legacy Behavior Extraction
+## Priority 14: Remaining Legacy Behavior Extraction
 
-Status: Planned
+Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
@@ -247,9 +287,12 @@ Recommended next sequence:
 2. Add command correlation IDs and richer audit fields.
 3. Extract handshake orchestration tests for client identification and capability negotiation.
 4. Add a minimal listener abstraction that can be implemented by the legacy socket server first.
-5. Add root-level Web API scaffold using only `LocationRemote.Server.Core` abstractions.
-6. Add CLI scaffold after the same server-core API proves usable from Web API.
-7. Start platform capability interfaces before moving Windows-specific behavior.
+5. Add a minimal modern server host for parity testing.
+6. Add a minimal modern client host for parity testing.
+7. Prove a safe end-to-end vertical slice on .NET 10.
+8. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+9. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+   Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
 
