@@ -57,7 +57,7 @@ Current verification:
 
 - `LocationRemote.Common.Tests`: 32 passed, 1 skipped.
 - `LocationRemote.Client.Core.Tests`: 6 passed.
-- `LocationRemote.Server.Core.Tests`: 10 passed.
+- `LocationRemote.Server.Core.Tests`: 17 passed.
 
 Known legacy limitation:
 
@@ -117,16 +117,19 @@ Done:
 - Added `LocationRemote.Server.Core`.
 - Added server-side client session abstractions.
 - Added thread-safe client session registry.
+- Added connection lifecycle contracts for connected, identified, disconnected, and faulted clients.
+- Added lifecycle coordinator that records identified sessions and removes disconnected/faulted sessions.
 - Added command dispatch result/status contracts.
 - Added shared command dispatcher that future Web API and CLI projects can call.
 - Added audit event and audit sink abstractions.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
   command dispatch, missing clients, send failures, audit events, and cancellation.
+- Added tests for lifecycle event emission, registry updates, pre-identification disconnects,
+  invalid lifecycle inputs, and lifecycle cancellation flow.
 
 Left to do:
 
 - Extract server listener/orchestration behavior from `MasterSplinter/Quasar.Server`.
-- Define connection lifecycle events for connected, identified, disconnected, and faulted clients.
 - Define operator identity and authorization inputs for server commands.
 - Add command correlation IDs so API/CLI calls can be traced through audit logs.
 - Add integration tests for client/server handshake and command dispatch once networking is extracted.
@@ -283,15 +286,14 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add server connection lifecycle contracts to `LocationRemote.Server.Core`.
-2. Add command correlation IDs and richer audit fields.
-3. Extract handshake orchestration tests for client identification and capability negotiation.
-4. Add a minimal listener abstraction that can be implemented by the legacy socket server first.
-5. Add a minimal modern server host for parity testing.
-6. Add a minimal modern client host for parity testing.
-7. Prove a safe end-to-end vertical slice on .NET 10.
-8. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
-9. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Add command correlation IDs and richer audit fields.
+2. Extract handshake orchestration tests for client identification and capability negotiation.
+3. Add a minimal listener abstraction that can be implemented by the legacy socket server first.
+4. Add a minimal modern server host for parity testing.
+5. Add a minimal modern client host for parity testing.
+6. Prove a safe end-to-end vertical slice on .NET 10.
+7. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+8. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks

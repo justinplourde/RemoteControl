@@ -28,6 +28,7 @@ remote administration behavior is extracted deliberately.
 - Full legacy protocol DTO surface is present in `LocationRemote.Common`
 - Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
 - `LocationRemote.Client.Core` contains message dispatch contracts and typed routing infrastructure
+- `LocationRemote.Server.Core` contains session registry, command dispatch, audit, and connection lifecycle contracts
 
 ## Solutions
 
