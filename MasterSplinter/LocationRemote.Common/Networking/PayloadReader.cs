@@ -1,0 +1,66 @@
+using ProtoBuf;
+using Quasar.Common.Messages;
+using System;
+using System.IO;
+
+namespace Quasar.Common.Networking
+{
+    public class PayloadReader : MemoryStream
+    {
+        private readonly Stream _innerStream;
+        public bool LeaveInnerStreamOpen { get; }
+
+        public PayloadReader(byte[] payload, int length, bool leaveInnerStreamOpen)
+        {
+            _innerStream = new MemoryStream(payload, 0, length, false, true);
+            LeaveInnerStreamOpen = leaveInnerStreamOpen;
+        }
+
+        public PayloadReader(Stream stream, bool leaveInnerStreamOpen)
+        {
+            _innerStream = stream;
+            LeaveInnerStreamOpen = leaveInnerStreamOpen;
+        }
+
+        public int ReadInteger()
+        {
+            return BitConverter.ToInt32(ReadBytes(4), 0);
+        }
+
+        public byte[] ReadBytes(int length)
+        {
+            if (_innerStream.Position + length <= _innerStream.Length)
+            {
+                byte[] result = new byte[length];
+                _innerStream.Read(result, 0, result.Length);
+                return result;
+            }
+            throw new OverflowException($"Unable to read {length} bytes from stream");
+        }
+
+        public IMessage ReadMessage()
+        {
+            ReadInteger();
+            return Serializer.Deserialize<IMessage>(_innerStream);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (LeaveInnerStreamOpen)
+                {
+                    _innerStream.Flush();
+                }
+                else
+                {
+                    _innerStream.Close();
+                }
+            }
+            finally
+            {
+                base.Dispose(disposing);
+            }
+        }
+    }
+}
