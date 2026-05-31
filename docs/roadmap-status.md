@@ -57,7 +57,7 @@ Current verification:
 
 - `LocationRemote.Common.Tests`: 32 passed, 1 skipped.
 - `LocationRemote.Client.Core.Tests`: 6 passed.
-- `LocationRemote.Server.Core.Tests`: 25 passed.
+- `LocationRemote.Server.Core.Tests`: 33 passed.
 
 Known legacy limitation:
 
@@ -126,6 +126,10 @@ Done:
   outcome, and error fields.
 - Added handshake coordinator and legacy identification validator for client identification.
 - Added handshake result surface that preserves protocol version and capability metadata.
+- Added minimal remote-client listener and connection abstractions.
+- Added listener orchestrator that starts/stops listeners, records connection lifecycle,
+  runs client identification handshakes, disconnects invalid pre-handshake traffic,
+  and forwards post-handshake messages to an injected sink.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
   command dispatch, missing clients, send failures, audit events, and cancellation.
 - Added tests for caller-supplied correlation metadata, generated correlation IDs,
@@ -134,6 +138,9 @@ Done:
   invalid lifecycle inputs, and lifecycle cancellation flow.
 - Added tests for accepted identification, rejected legacy IDs, injectable validation,
   legacy clients without protocol metadata, and capability negotiation metadata.
+- Added tests for listener start/stop, connection lifecycle routing, handshake result sending,
+  invalid pre-handshake message disconnects, rejected identification disconnects, and
+  post-handshake message forwarding.
 
 Left to do:
 
@@ -293,12 +300,11 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add a minimal listener abstraction that can be implemented by the legacy socket server first.
-2. Add a minimal modern server host for parity testing.
-3. Add a minimal modern client host for parity testing.
-4. Prove a safe end-to-end vertical slice on .NET 10.
-5. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
-6. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Add a minimal modern server host for parity testing.
+2. Add a minimal modern client host for parity testing.
+3. Prove a safe end-to-end vertical slice on .NET 10.
+4. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+5. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks

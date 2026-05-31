@@ -30,6 +30,7 @@ remote administration behavior is extracted deliberately.
 - `LocationRemote.Client.Core` contains message dispatch contracts and typed routing infrastructure
 - `LocationRemote.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
 - `LocationRemote.Server.Core` contains client identification handshake coordination with legacy ID validation and capability metadata preservation
+- `LocationRemote.Server.Core` contains listener abstractions and a listener orchestrator for transport-independent parity work
 
 ## Solutions
 
