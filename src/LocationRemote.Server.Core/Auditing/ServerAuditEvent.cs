@@ -6,11 +6,16 @@ namespace LocationRemote.Server.Core.Auditing
     {
         public ServerAuditEvent(
             DateTimeOffset occurredAtUtc,
+            Guid correlationId,
             string clientId,
+            string operatorId,
+            string source,
             string messageType,
             string outcome,
             string errorMessage)
         {
+            if (correlationId == Guid.Empty)
+                throw new ArgumentException("Correlation id is required.", nameof(correlationId));
             if (string.IsNullOrWhiteSpace(clientId))
                 throw new ArgumentException("Client id is required.", nameof(clientId));
             if (string.IsNullOrWhiteSpace(messageType))
@@ -19,7 +24,10 @@ namespace LocationRemote.Server.Core.Auditing
                 throw new ArgumentException("Outcome is required.", nameof(outcome));
 
             OccurredAtUtc = occurredAtUtc;
+            CorrelationId = correlationId;
             ClientId = clientId;
+            OperatorId = operatorId;
+            Source = source;
             MessageType = messageType;
             Outcome = outcome;
             ErrorMessage = errorMessage;
@@ -27,7 +35,13 @@ namespace LocationRemote.Server.Core.Auditing
 
         public DateTimeOffset OccurredAtUtc { get; }
 
+        public Guid CorrelationId { get; }
+
         public string ClientId { get; }
+
+        public string OperatorId { get; }
+
+        public string Source { get; }
 
         public string MessageType { get; }
 

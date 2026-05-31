@@ -16,19 +16,39 @@ namespace LocationRemote.Server.Core.Tests.Commands
         [TestMethod, TestCategory("ServerCore")]
         public async Task DispatchSendsMessageToRegisteredClient()
         {
+            var correlationId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
             var session = new RecordingRemoteClientSession("client-1");
             var registry = new ClientSessionRegistry();
             registry.AddOrUpdate(session);
             var auditSink = new RecordingAuditSink();
             var dispatcher = new ServerCommandDispatcher(registry, auditSink);
             var message = new GetSystemInfo();
+            var request = new CommandDispatchRequest(correlationId, "client-1", message, "operator-1", "unit-test");
 
-            CommandDispatchResult result = await dispatcher.DispatchAsync("client-1", message, CancellationToken.None);
+            CommandDispatchResult result = await dispatcher.DispatchAsync(request, CancellationToken.None);
 
+            Assert.AreEqual(correlationId, result.CorrelationId);
             Assert.AreEqual(CommandDispatchStatus.Sent, result.Status);
             Assert.AreSame(message, session.SentMessages[0]);
+            Assert.AreEqual(correlationId, auditSink.Events[0].CorrelationId);
+            Assert.AreEqual("operator-1", auditSink.Events[0].OperatorId);
+            Assert.AreEqual("unit-test", auditSink.Events[0].Source);
             Assert.AreEqual("Sent", auditSink.Events[0].Outcome);
             Assert.AreEqual(typeof(GetSystemInfo).FullName, auditSink.Events[0].MessageType);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
+        public async Task ConvenienceDispatchGeneratesCorrelationId()
+        {
+            var registry = new ClientSessionRegistry();
+            registry.AddOrUpdate(new RecordingRemoteClientSession("client-1"));
+            var auditSink = new RecordingAuditSink();
+            var dispatcher = new ServerCommandDispatcher(registry, auditSink);
+
+            CommandDispatchResult result = await dispatcher.DispatchAsync("client-1", new GetSystemInfo(), CancellationToken.None);
+
+            Assert.AreNotEqual(Guid.Empty, result.CorrelationId);
+            Assert.AreEqual(result.CorrelationId, auditSink.Events[0].CorrelationId);
         }
 
         [TestMethod, TestCategory("ServerCore")]
@@ -39,8 +59,10 @@ namespace LocationRemote.Server.Core.Tests.Commands
 
             CommandDispatchResult result = await dispatcher.DispatchAsync("client-1", new GetSystemInfo(), CancellationToken.None);
 
+            Assert.AreNotEqual(Guid.Empty, result.CorrelationId);
             Assert.AreEqual(CommandDispatchStatus.ClientNotFound, result.Status);
             Assert.AreEqual("ClientNotFound", auditSink.Events[0].Outcome);
+            Assert.AreEqual(result.CorrelationId, auditSink.Events[0].CorrelationId);
         }
 
         [TestMethod, TestCategory("ServerCore")]
@@ -54,8 +76,10 @@ namespace LocationRemote.Server.Core.Tests.Commands
 
             CommandDispatchResult result = await dispatcher.DispatchAsync("client-1", new GetSystemInfo(), CancellationToken.None);
 
+            Assert.AreNotEqual(Guid.Empty, result.CorrelationId);
             Assert.AreEqual(CommandDispatchStatus.Faulted, result.Status);
             Assert.AreSame(exception, result.Exception);
+            Assert.AreEqual(result.CorrelationId, auditSink.Events[0].CorrelationId);
             Assert.AreEqual("Faulted", auditSink.Events[0].Outcome);
             Assert.AreEqual("send failed", auditSink.Events[0].ErrorMessage);
         }
@@ -84,6 +108,10 @@ namespace LocationRemote.Server.Core.Tests.Commands
                 dispatcher.DispatchAsync("", new GetSystemInfo(), CancellationToken.None));
             await Assert.ThrowsExceptionAsync<ArgumentNullException>(() =>
                 dispatcher.DispatchAsync("client-1", null, CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(() =>
+                dispatcher.DispatchAsync(null, CancellationToken.None));
+            Assert.ThrowsException<ArgumentException>(() =>
+                new CommandDispatchRequest(Guid.Empty, "client-1", new GetSystemInfo(), null, null));
         }
 
         private sealed class RecordingAuditSink : IServerAuditSink
