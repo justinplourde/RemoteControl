@@ -26,6 +26,7 @@ remote administration behavior is extracted deliberately.
 - Older payloads that omit protocol metadata must continue to deserialize safely.
 - Unknown future fields must be tolerated by readers.
 - Modernized contracts should gain pinned wire-compatibility fixtures before behavior is extracted.
+- Full-surface fixtures pin one representative payload for every `IMessage` DTO.
 
 ## Deferred
 
