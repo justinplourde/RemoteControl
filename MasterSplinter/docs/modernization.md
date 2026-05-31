@@ -15,6 +15,7 @@ remote administration behavior is extracted deliberately.
 - Payload length-prefix reader/writer
 - Pure file-system models used by serialization tests
 - Pure file-transfer message contracts
+- Pure file-system protocol contracts for drive listing, directory listing, path rename/delete, and file-manager status
 
 ## Protocol Rules
 
@@ -28,6 +29,7 @@ remote administration behavior is extracted deliberately.
 - Remote desktop image compression and streaming
 - Registry operations
 - Process and shell execution behavior
+- File-system access behavior; only DTO contracts are modernized so far
 - Client installation, startup, and service behavior
 - Windows-specific platform helpers and native methods
 

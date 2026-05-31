@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf;
+using Quasar.Common.Enums;
 using Quasar.Common.Messages;
 using Quasar.Common.Models;
 using Quasar.Common.Networking;
@@ -24,7 +25,14 @@ namespace Quasar.Common.Tests.Messages
                 typeof(FileTransferRequest),
                 typeof(FileTransferChunk),
                 typeof(FileTransferComplete),
-                typeof(FileTransferCancel));
+                typeof(FileTransferCancel),
+                typeof(GetDrives),
+                typeof(GetDrivesResponse),
+                typeof(GetDirectory),
+                typeof(GetDirectoryResponse),
+                typeof(DoPathRename),
+                typeof(DoPathDelete),
+                typeof(SetStatusFileManager));
         }
 
         [TestMethod, TestCategory("Protocol")]
@@ -194,6 +202,100 @@ namespace Quasar.Common.Tests.Messages
         }
 
         [TestMethod, TestCategory("Protocol")]
+        public void FileSystemMessagesRoundTripThroughRegisteredInterface()
+        {
+            IMessage[] messages =
+            {
+                new GetDrives(),
+                new GetDrivesResponse
+                {
+                    Drives = new[]
+                    {
+                        new Drive { DisplayName = "Local Disk (C:)", RootDirectory = "C:\\" }
+                    }
+                },
+                new GetDirectory { RemotePath = "C:\\Temp" },
+                new GetDirectoryResponse
+                {
+                    RemotePath = "C:\\Temp",
+                    Items = new[]
+                    {
+                        new FileSystemEntry
+                        {
+                            EntryType = FileType.File,
+                            Name = "report.pdf",
+                            Size = 12345,
+                            LastAccessTimeUtc = new DateTime(2026, 05, 31, 12, 30, 00, DateTimeKind.Utc),
+                            ContentType = ContentType.Pdf
+                        }
+                    }
+                },
+                new DoPathRename
+                {
+                    Path = "C:\\Temp\\old.txt",
+                    NewPath = "C:\\Temp\\new.txt",
+                    PathType = FileType.File
+                },
+                new DoPathDelete
+                {
+                    Path = "C:\\Temp\\old.txt",
+                    PathType = FileType.File
+                },
+                new SetStatusFileManager
+                {
+                    Message = "Directory loaded",
+                    SetLastDirectorySeen = true
+                }
+            };
+
+            foreach (var message in messages)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    using (var writer = new PayloadWriter(stream, true))
+                    {
+                        writer.WriteMessage(message);
+                    }
+
+                    using (var reader = new PayloadReader(stream.ToArray(), (int)stream.Length, false))
+                    {
+                        Assert.AreEqual(message.GetType(), reader.ReadMessage().GetType());
+                    }
+                }
+            }
+        }
+
+        [TestMethod, TestCategory("Protocol")]
+        public void DirectoryResponsePreservesFileSystemEntries()
+        {
+            var original = new GetDirectoryResponse
+            {
+                RemotePath = "C:\\Temp",
+                Items = new[]
+                {
+                    new FileSystemEntry
+                    {
+                        EntryType = FileType.Directory,
+                        Name = "nested",
+                        Size = 0,
+                        LastAccessTimeUtc = new DateTime(2026, 05, 31, 18, 45, 00, DateTimeKind.Utc),
+                        ContentType = null
+                    }
+                }
+            };
+
+            var roundTripped = Deserialize<GetDirectoryResponse>(Serialize(original));
+
+            Assert.AreEqual(original.RemotePath, roundTripped.RemotePath);
+            Assert.AreEqual(1, roundTripped.Items.Length);
+            Assert.AreEqual(original.Items[0].EntryType, roundTripped.Items[0].EntryType);
+            Assert.AreEqual(original.Items[0].Name, roundTripped.Items[0].Name);
+            Assert.AreEqual(original.Items[0].Size, roundTripped.Items[0].Size);
+            Assert.AreEqual(original.Items[0].LastAccessTimeUtc, roundTripped.Items[0].LastAccessTimeUtc);
+            Assert.AreEqual(original.Items[0].ContentType, roundTripped.Items[0].ContentType);
+        }
+
+        [TestMethod, TestCategory("Protocol")]
         public void TypeRegistryDiscoversModernMessageTypes()
         {
             var packetTypes = TypeRegistry.GetPacketTypes(typeof(IMessage)).ToArray();
@@ -204,6 +306,13 @@ namespace Quasar.Common.Tests.Messages
             CollectionAssert.Contains(packetTypes, typeof(FileTransferChunk));
             CollectionAssert.Contains(packetTypes, typeof(FileTransferComplete));
             CollectionAssert.Contains(packetTypes, typeof(FileTransferCancel));
+            CollectionAssert.Contains(packetTypes, typeof(GetDrives));
+            CollectionAssert.Contains(packetTypes, typeof(GetDrivesResponse));
+            CollectionAssert.Contains(packetTypes, typeof(GetDirectory));
+            CollectionAssert.Contains(packetTypes, typeof(GetDirectoryResponse));
+            CollectionAssert.Contains(packetTypes, typeof(DoPathRename));
+            CollectionAssert.Contains(packetTypes, typeof(DoPathDelete));
+            CollectionAssert.Contains(packetTypes, typeof(SetStatusFileManager));
         }
 
         private static int GetProtoMemberTag(string propertyName)
