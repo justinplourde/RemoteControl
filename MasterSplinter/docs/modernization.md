@@ -23,6 +23,7 @@ remote administration behavior is extracted deliberately.
 - Versioning and capability metadata must be additive.
 - Older payloads that omit protocol metadata must continue to deserialize safely.
 - Unknown future fields must be tolerated by readers.
+- Modernized contracts should gain pinned wire-compatibility fixtures before behavior is extracted.
 
 ## Deferred
 
