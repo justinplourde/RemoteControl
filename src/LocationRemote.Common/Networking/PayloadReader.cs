@@ -32,7 +32,7 @@ namespace Quasar.Common.Networking
             if (_innerStream.Position + length <= _innerStream.Length)
             {
                 byte[] result = new byte[length];
-                _innerStream.Read(result, 0, result.Length);
+                _innerStream.ReadExactly(result, 0, result.Length);
                 return result;
             }
             throw new OverflowException($"Unable to read {length} bytes from stream");

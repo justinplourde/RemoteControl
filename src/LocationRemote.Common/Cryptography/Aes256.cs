@@ -25,11 +25,17 @@ namespace Quasar.Common.Cryptography
             if (string.IsNullOrEmpty(masterKey))
                 throw new ArgumentException($"{nameof(masterKey)} can not be null or empty.");
 
-            using (var derive = new Rfc2898DeriveBytes(masterKey, Salt, 50000, HashAlgorithmName.SHA1))
-            {
-                _key = derive.GetBytes(KeyLength);
-                _authKey = derive.GetBytes(AuthKeyLength);
-            }
+            byte[] derivedBytes = Rfc2898DeriveBytes.Pbkdf2(
+                masterKey,
+                Salt,
+                50000,
+                HashAlgorithmName.SHA1,
+                KeyLength + AuthKeyLength);
+
+            _key = new byte[KeyLength];
+            _authKey = new byte[AuthKeyLength];
+            Buffer.BlockCopy(derivedBytes, 0, _key, 0, KeyLength);
+            Buffer.BlockCopy(derivedBytes, KeyLength, _authKey, 0, AuthKeyLength);
         }
 
         public string Encrypt(string input)

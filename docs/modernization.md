@@ -2,7 +2,7 @@
 
 ## Current Direction
 
-The modern .NET work lives at the repository root in `src` and `tests`, with
+The modern .NET 10 work lives at the repository root in `src` and `tests`, with
 `LocationRemote.sln` as the acceptance solution for portable code.
 
 `MasterSplinter` remains the imported legacy application folder. Its `Quasar.sln`
