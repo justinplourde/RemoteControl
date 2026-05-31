@@ -28,6 +28,8 @@ remote administration behavior is extracted deliberately.
 - Full legacy protocol DTO surface is present in `LocationRemote.Common`
 - Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
 - `LocationRemote.Client.Core` contains message dispatch contracts and typed routing infrastructure
+- `LocationRemote.Client.Core` contains client identification factory support
+- `LocationRemote.Client.Host` creates a modern identification payload through a runnable placeholder host
 - `LocationRemote.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
 - `LocationRemote.Server.Core` contains client identification handshake coordination with legacy ID validation and capability metadata preservation
 - `LocationRemote.Server.Core` contains listener abstractions and a listener orchestrator for transport-independent parity work

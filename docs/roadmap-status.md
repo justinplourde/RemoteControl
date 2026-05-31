@@ -48,6 +48,7 @@ Current root projects:
 
 - `src/LocationRemote.Common`
 - `src/LocationRemote.Client.Core`
+- `src/LocationRemote.Client.Host`
 - `src/LocationRemote.Server.Core`
 - `src/LocationRemote.Server.Host`
 - `tests/LocationRemote.Common.Tests`
@@ -57,7 +58,7 @@ Current root projects:
 Current verification:
 
 - `LocationRemote.Common.Tests`: 32 passed, 1 skipped.
-- `LocationRemote.Client.Core.Tests`: 6 passed.
+- `LocationRemote.Client.Core.Tests`: 7 passed.
 - `LocationRemote.Server.Core.Tests`: 33 passed.
 
 Known legacy limitation:
@@ -99,8 +100,13 @@ Done:
 
 - Added `LocationRemote.Client.Core`.
 - Added message dispatch contracts and typed routing infrastructure.
+- Added client identification factory for building modern `ClientIdentification` messages.
+- Added `LocationRemote.Client.Host` as a minimal modern client executable for parity wiring.
+- Added a placeholder client smoke-test mode that creates a modern identification payload
+  without opening a transport yet.
 - Added tests for known-message dispatch, unknown-message handling, faulted handlers,
   duplicate registration, cancellation-token flow, and cancellation propagation.
+- Added tests for mapping client identity options to the protocol identification message.
 
 Left to do:
 
@@ -145,6 +151,7 @@ Done:
   invalid pre-handshake message disconnects, rejected identification disconnects, and
   post-handshake message forwarding.
 - Verified `LocationRemote.Server.Host --smoke-test` starts and stops cleanly.
+- Verified `LocationRemote.Client.Host --smoke-test` creates a modern identification payload.
 
 Left to do:
 
@@ -304,11 +311,10 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add a minimal modern client host for parity testing.
-2. Prove a safe end-to-end vertical slice on .NET 10.
-3. Replace the idle listener with a real modern transport or legacy socket adapter.
-4. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
-5. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Prove a safe end-to-end vertical slice on .NET 10.
+2. Replace the idle listener with a real modern transport or legacy socket adapter.
+3. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+4. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -323,6 +329,12 @@ Current server host smoke test:
 
 ```powershell
 dotnet run --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --smoke-test
+```
+
+Current client host smoke test:
+
+```powershell
+dotnet run --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --smoke-test
 ```
 
 Legacy check, for awareness:
