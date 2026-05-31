@@ -49,6 +49,7 @@ Current root projects:
 - `src/LocationRemote.Common`
 - `src/LocationRemote.Client.Core`
 - `src/LocationRemote.Server.Core`
+- `src/LocationRemote.Server.Host`
 - `tests/LocationRemote.Common.Tests`
 - `tests/LocationRemote.Client.Core.Tests`
 - `tests/LocationRemote.Server.Core.Tests`
@@ -130,6 +131,8 @@ Done:
 - Added listener orchestrator that starts/stops listeners, records connection lifecycle,
   runs client identification handshakes, disconnects invalid pre-handshake traffic,
   and forwards post-handshake messages to an injected sink.
+- Added `LocationRemote.Server.Host` as a minimal modern server executable for parity wiring.
+- Added an idle listener host mode that verifies server-core composition without opening sockets yet.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
   command dispatch, missing clients, send failures, audit events, and cancellation.
 - Added tests for caller-supplied correlation metadata, generated correlation IDs,
@@ -141,6 +144,7 @@ Done:
 - Added tests for listener start/stop, connection lifecycle routing, handshake result sending,
   invalid pre-handshake message disconnects, rejected identification disconnects, and
   post-handshake message forwarding.
+- Verified `LocationRemote.Server.Host --smoke-test` starts and stops cleanly.
 
 Left to do:
 
@@ -300,9 +304,9 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add a minimal modern server host for parity testing.
-2. Add a minimal modern client host for parity testing.
-3. Prove a safe end-to-end vertical slice on .NET 10.
+1. Add a minimal modern client host for parity testing.
+2. Prove a safe end-to-end vertical slice on .NET 10.
+3. Replace the idle listener with a real modern transport or legacy socket adapter.
 4. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
 5. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
@@ -313,6 +317,12 @@ Current modern acceptance:
 
 ```powershell
 dotnet test .\LocationRemote.sln
+```
+
+Current server host smoke test:
+
+```powershell
+dotnet run --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --smoke-test
 ```
 
 Legacy check, for awareness:
