@@ -16,6 +16,8 @@ remote administration behavior is extracted deliberately.
 - Pure file-system models used by serialization tests
 - Pure file-transfer message contracts
 - Pure file-system protocol contracts for drive listing, directory listing, path rename/delete, and file-manager status
+- Full legacy protocol DTO surface is present in `LocationRemote.Common`
+- Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
 
 ## Protocol Rules
 

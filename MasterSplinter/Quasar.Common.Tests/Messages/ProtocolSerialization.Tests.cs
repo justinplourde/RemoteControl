@@ -18,21 +18,7 @@ namespace Quasar.Common.Tests.Messages
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {
-            TypeRegistry.AddTypesToSerializer(
-                typeof(IMessage),
-                typeof(ClientIdentification),
-                typeof(ClientIdentificationResult),
-                typeof(FileTransferRequest),
-                typeof(FileTransferChunk),
-                typeof(FileTransferComplete),
-                typeof(FileTransferCancel),
-                typeof(GetDrives),
-                typeof(GetDrivesResponse),
-                typeof(GetDirectory),
-                typeof(GetDirectoryResponse),
-                typeof(DoPathRename),
-                typeof(DoPathDelete),
-                typeof(SetStatusFileManager));
+            TypeRegistry.AddTypesToSerializer(typeof(IMessage), TypeRegistry.GetPacketTypes(typeof(IMessage)).OrderBy(t => t.FullName).ToArray());
         }
 
         [TestMethod, TestCategory("Protocol")]
