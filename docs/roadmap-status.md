@@ -1,6 +1,6 @@
 # MasterSplinter Roadmap Status
 
-Last updated: May 31, 2026
+Last updated: June 1, 2026
 
 ## Current Goal
 
@@ -60,7 +60,7 @@ Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
 - `MasterSplinter.Client.Core.Tests`: 7 passed.
-- `MasterSplinter.Host.Tests`: 6 passed.
+- `MasterSplinter.Host.Tests`: 7 passed.
 - `MasterSplinter.Server.Core.Tests`: 35 passed.
 
 Known legacy limitation:
@@ -144,6 +144,8 @@ Done:
 - Added loopback-only TCP handshake support in `MasterSplinter.Client.Host`.
 - Added host tests for command-line option parsing, loopback-only address guards,
   and real loopback TCP handshake behavior.
+- Added host integration coverage proving server command dispatch can send a command
+  over an identified loopback TCP session.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
   command dispatch, missing clients, send failures, audit events, and cancellation.
 - Added tests for caller-supplied correlation metadata, generated correlation IDs,
@@ -159,6 +161,8 @@ Done:
   the modern server handshake path without sockets.
 - Added automated loopback TCP parity tests proving the modern client and server host transport
   can complete the identification handshake.
+- Added automated loopback TCP command dispatch coverage proving a server command can reach
+  the connected client stream after identification.
 - Verified `MasterSplinter.Server.Host --smoke-test` starts and stops cleanly.
 - Verified `MasterSplinter.Client.Host --smoke-test` creates a modern identification payload.
 - Verified a two-process loopback TCP handshake: server host `--once` plus client host returns
@@ -168,7 +172,7 @@ Left to do:
 
 - Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
-- Add integration tests for client/server handshake and command dispatch once networking is extracted.
+- Add integration tests for broader client/server behavior once client handlers are extracted.
 
 ## Priority 5: Modern Runtime Parity
 

@@ -1,5 +1,6 @@
 using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Host;
+using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Handshake;
 using MasterSplinter.Server.Core.Lifecycle;
 using MasterSplinter.Server.Core.Listeners;
@@ -7,6 +8,7 @@ using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Quasar.Common.Messages;
+using Quasar.Common.Networking;
 using Quasar.Common.Protocol;
 using System;
 using System.Net;
@@ -42,6 +44,60 @@ namespace MasterSplinter.Host.Tests
 
                 Assert.IsTrue(result.Result);
                 Assert.IsTrue(registry.TryGet(ValidClientId, out _));
+            }
+            finally
+            {
+                await orchestrator.StopAsync(CancellationToken.None);
+            }
+        }
+
+        [TestMethod, TestCategory("Host")]
+        public async Task ServerCommandDispatcherSendsCommandOverLoopbackTcpSession()
+        {
+            int port = GetFreeLoopbackPort();
+            var registry = new ClientSessionRegistry();
+            var lifecycleSink = new CompletionLifecycleSink();
+            var lifecycle = new ClientConnectionLifecycleCoordinator(registry, lifecycleSink);
+            var handshake = new ClientHandshakeCoordinator(lifecycle);
+            var listener = new LoopbackTcpRemoteClientListener();
+            var orchestrator = new RemoteClientListenerOrchestrator(listener, lifecycle, handshake);
+
+            await orchestrator.StartAsync(new ServerListenOptions("127.0.0.1", port), CancellationToken.None);
+            try
+            {
+                using (var client = new TcpClient())
+                {
+                    await client.ConnectAsync(IPAddress.Loopback, port);
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        using (var writer = new PayloadWriter(stream, true))
+                        {
+                            writer.WriteMessage(CreateIdentification(ValidClientId));
+                        }
+
+                        using (var reader = new PayloadReader(stream, true))
+                        {
+                            var handshakeResult = (ClientIdentificationResult)reader.ReadMessage();
+                            Assert.IsTrue(handshakeResult.Result);
+                        }
+
+                        await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+                        var dispatcher = new ServerCommandDispatcher(registry);
+                        CommandDispatchResult dispatchResult = await dispatcher.DispatchAsync(
+                            ValidClientId,
+                            new GetSystemInfo(),
+                            CancellationToken.None);
+
+                        Assert.AreEqual(CommandDispatchStatus.Sent, dispatchResult.Status);
+
+                        using (var reader = new PayloadReader(stream, true))
+                        {
+                            IMessage command = reader.ReadMessage();
+                            Assert.IsInstanceOfType(command, typeof(GetSystemInfo));
+                        }
+                    }
+                }
             }
             finally
             {
