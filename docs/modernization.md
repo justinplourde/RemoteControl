@@ -36,6 +36,7 @@ remote administration behavior is extracted deliberately.
 - `LocationRemote.Server.Host` wires the modern server core into a runnable loopback-only TCP host
 - `LocationRemote.Client.Host` can perform a loopback TCP identification handshake with the modern server host
 - In-memory parity tests prove modern client identification can complete the modern server handshake path without depending on sockets
+- Host tests cover option parsing, loopback-only guards, and real loopback TCP identification handshakes
 
 ## Solutions
 

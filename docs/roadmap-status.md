@@ -53,12 +53,14 @@ Current root projects:
 - `src/LocationRemote.Server.Host`
 - `tests/LocationRemote.Common.Tests`
 - `tests/LocationRemote.Client.Core.Tests`
+- `tests/LocationRemote.Host.Tests`
 - `tests/LocationRemote.Server.Core.Tests`
 
 Current verification:
 
 - `LocationRemote.Common.Tests`: 32 passed, 1 skipped.
 - `LocationRemote.Client.Core.Tests`: 7 passed.
+- `LocationRemote.Host.Tests`: 6 passed.
 - `LocationRemote.Server.Core.Tests`: 35 passed.
 
 Known legacy limitation:
@@ -140,6 +142,8 @@ Done:
 - Added `LocationRemote.Server.Host` as a minimal modern server executable for parity wiring.
 - Replaced the idle listener with a loopback-only TCP listener in `LocationRemote.Server.Host`.
 - Added loopback-only TCP handshake support in `LocationRemote.Client.Host`.
+- Added host tests for command-line option parsing, loopback-only address guards,
+  and real loopback TCP handshake behavior.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
   command dispatch, missing clients, send failures, audit events, and cancellation.
 - Added tests for caller-supplied correlation metadata, generated correlation IDs,
@@ -153,6 +157,8 @@ Done:
   post-handshake message forwarding.
 - Added in-memory parity tests proving the modern client identification factory can complete
   the modern server handshake path without sockets.
+- Added automated loopback TCP parity tests proving the modern client and server host transport
+  can complete the identification handshake.
 - Verified `LocationRemote.Server.Host --smoke-test` starts and stops cleanly.
 - Verified `LocationRemote.Client.Host --smoke-test` creates a modern identification payload.
 - Verified a two-process loopback TCP handshake: server host `--once` plus client host returns
@@ -316,10 +322,9 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add tests around the loopback TCP transport and host option validation.
-2. Add TLS/certificate validation parity for the transport handshake.
-3. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
-4. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Add TLS/certificate validation parity for the transport handshake.
+2. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+3. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -333,20 +338,20 @@ dotnet test .\LocationRemote.sln
 Current server host smoke test:
 
 ```powershell
-dotnet run --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --smoke-test
+dotnet run --no-launch-profile --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --smoke-test
 ```
 
 Current client host smoke test:
 
 ```powershell
-dotnet run --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --smoke-test
+dotnet run --no-launch-profile --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --smoke-test
 ```
 
 Current loopback handshake check:
 
 ```powershell
-dotnet run --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --port 47830 --once
-dotnet run --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --port 47830
+dotnet run --no-launch-profile --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --port 47830 --once
+dotnet run --no-launch-profile --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --port 47830
 ```
 
 Legacy check, for awareness:
