@@ -4,8 +4,9 @@ Last updated: June 1, 2026
 
 ## Current Goal
 
-Modernize the archived Quasar-derived codebase into a new `MasterSplinter` repository
-with a testable .NET 10 implementation first. The next major gate is functional parity:
+Modernize the archived Quasar-derived codebase inside the `RemoteControl` repository,
+with `MasterSplinter` as the modern product/solution name and a testable .NET 10
+implementation first. The next major gate is functional parity:
 the modern root projects should be able to run equivalent client/server behavior, with
 tests proving that the modern behavior mirrors the legacy behavior we intentionally keep.
 
@@ -26,7 +27,7 @@ The guiding order is:
 
 Status: Done
 
-- Created a fresh git repository at `C:\Users\Jplou\develop\MasterSplinter`.
+- Created a fresh git repository, now located at `C:\Users\Jplou\develop\RemoteControl`.
 - Preserved the imported archived code under `legacy/Quasar`.
 - Archived the nested fork history so `legacy/Quasar/.git` is no longer the active repository.
 - Added the legacy project as imported source in the new root repository.

@@ -1,28 +1,31 @@
-# MasterSplinter Current State
+# RemoteControl / MasterSplinter Current State
 
 Last updated: June 1, 2026
 
 ## Fresh Chat Handoff
 
-This repository was renamed from `LocationRemote` to `MasterSplinter`. If a Codex
-chat says its working directory is missing, open a new chat from:
+The outer repository folder is now `RemoteControl`. The modern product/solution inside
+the repository is still named `MasterSplinter`. If a Codex chat says its working directory
+is missing, open a new chat from:
 
 ```powershell
-C:\Users\Jplou\develop\MasterSplinter
+C:\Users\Jplou\develop\RemoteControl
 ```
 
-Then ask the new chat to read this file and `docs/roadmap-status.md`.
+Then ask the new chat to read this file, `docs/roadmap-status.md`, and
+`docs/repository-layout.md`.
 
 ## Repository
 
-- Root: `C:\Users\Jplou\develop\MasterSplinter`
+- Root: `C:\Users\Jplou\develop\RemoteControl`
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed rename checkpoint: `2e8fa30 Rename modern workspace to MasterSplinter`
+- Latest committed roadmap checkpoint before this handoff: `5e3ddd6 Add drive listing command response slice`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
-Quasar code is preserved separately as reference material and parity source.
+Quasar code is preserved separately as reference material and parity source, and should
+be removable once modern parity is proven.
 
 ## Verification
 
@@ -71,6 +74,12 @@ All modern projects target `net10.0`.
 
 - Modernization and parity come before new roadmap features.
 - Keep the legacy Quasar source as reference under `legacy/Quasar`.
+- Keep `MasterSplinter.sln` at the repo root as the main solution. This is a standard
+  .NET layout when paired with root-level `src`, `tests`, `docs`, and temporary `legacy` folders.
+- Add future Web API, CLI, service, and GUI projects as root-owned projects under `src`
+  unless there is a strong reason to create a separate top-level folder.
+- Treat `legacy/Quasar` as the old source-of-truth during parity work, not as the long-term
+  product location.
 - Preserve existing wire compatibility until tests define a versioned upgrade path.
 - Protocol changes must be additive and covered by serialization/wire tests.
 - Cross-platform work starts only after portable behavior is covered by tests.
@@ -78,7 +87,7 @@ All modern projects target `net10.0`.
 
 ## Completed
 
-- Fresh repository created and renamed to `MasterSplinter`.
+- Fresh repository created; the outer workspace folder is now `RemoteControl`.
 - Legacy imported code moved to `legacy/Quasar`.
 - Modern solution renamed to `MasterSplinter.sln`.
 - Modern namespaces/projects renamed from `LocationRemote.*` to `MasterSplinter.*`.
