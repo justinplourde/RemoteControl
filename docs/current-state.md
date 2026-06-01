@@ -60,17 +60,25 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 The latest manual loopback check returned `Handshake result: True`.
 
-Current manual command-dispatch check:
+Current manual read-only parity check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47837
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47837 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47838
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47838 --handle-commands
 ```
 
-At the CLI prompt, the latest manual check ran `dispatch first get-drives`, received
-`GetDrivesResponse`, printed `Safety=FileRead`, returned `Dispatch result: Sent`, and
-showed the payload row `- C:\ (OS) [Local Disk, NTFS] => C:\`. The same persistent client
-connection also handled `dispatch first get-system-info` without reconnecting.
+At the CLI prompt, the latest manual check listed one connected client and successfully ran
+all current read-only commands on the same persistent client connection:
+
+- `dispatch first get-system-info`: `GetSystemInfoResponse`, 19 rows.
+- `dispatch first get-drives`: `GetDrivesResponse`, 1 drive, `- C:\ (OS) [Local Disk, NTFS] => C:\`.
+- `dispatch first get-directory --path C:\`: `GetDirectoryResponse`, 24 entries.
+- `dispatch first get-processes`: `GetProcessesResponse`, 280 processes.
+- `dispatch first get-startup-items`: `GetStartupItemsResponse`, 5 entries.
+- `dispatch first get-connections`: `GetConnectionsResponse`, 47 TCP connections.
+
+Both CLI and client exited cleanly. Note: several `GetSystemInfo` fields are still placeholder
+`-` values and need provider parity follow-up even though the command path works.
 
 Current CLI dispatch command names:
 
@@ -164,7 +172,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Use CLI `listen` mode to manually verify every completed read-only parity slice.
+1. Fill system-info provider placeholders or document intentional degraded fields.
 2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
 3. Add parity tests against legacy behavior before moving each behavior slice.
 4. Confirm full legacy admin-tool parity for kept features before starting Web API work.

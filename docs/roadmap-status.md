@@ -237,12 +237,17 @@ Done:
   and `exit` commands for repeated manual dispatch against connected clients.
 - Verified a persistent CLI/client session can list the connected client, run `get-drives`,
   then run `get-system-info` on the same client connection.
+- Verified a full read-only CLI parity pass on one persistent client connection: `get-system-info`
+  returned 19 rows, `get-drives` returned 1 drive, `get-directory --path C:\` returned 24 entries,
+  `get-processes` returned 280 processes, `get-startup-items` returned 5 entries, and
+  `get-connections` returned 47 TCP connections.
 
 Left to do:
 
 - Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
 - Add integration tests for broader client/server behavior once client handlers are extracted.
+- Fill or explicitly document placeholder fields in the modern `GetSystemInfo` provider.
 
 ## Priority 5: Modern Runtime Parity
 
@@ -409,7 +414,7 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Use CLI `listen` mode to manually verify every completed read-only parity slice.
+1. Fill system-info provider placeholders or document intentional degraded fields.
 2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
 3. Confirm full legacy admin-tool parity for kept features before starting Web API work.
 4. Start original roadmap features: permissioned operators, Web API, consent UI,
@@ -445,8 +450,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47837
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47837 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47838
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47838 --handle-commands
 ```
 
 Legacy check, for awareness:

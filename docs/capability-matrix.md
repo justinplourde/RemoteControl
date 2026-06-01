@@ -35,12 +35,12 @@ Two kinds of parity are tracked:
 | --- | --- | --- | --- | --- | --- | --- |
 | Client identification and handshake | `ClientIdentification`, `ClientIdentificationResult` | done | portable | connection lifecycle | keep | Existing validation, protocol compatibility tests, audit lifecycle events |
 | TLS transport with pinned server certificate | legacy `SslStream` transport | done for loopback host | portable transport, cert storage platform-specific | connection security | keep | Certificate loading/storage plan before non-loopback use |
-| System information | `GetSystemInfo`, `GetSystemInfoResponse` | done | platform-specific | read-only inventory | keep | Capability reporting for fields that vary by OS |
-| Drive listing | `GetDrives`, `GetDrivesResponse` | done | platform-specific | read-only inventory | keep | Existing provider abstraction is enough for parity expansion |
-| Directory listing | `GetDirectory`, `GetDirectoryResponse`, `SetStatusFileManager` | done | portable with platform-specific permissions | read-only filesystem | keep | Path normalization and access-denial reporting before broader file manager work |
-| Process listing | `GetProcesses`, `GetProcessesResponse` | done | platform-specific | read-only inventory | keep | Capability reporting for process metadata differences |
-| Startup item listing | `GetStartupItems`, `GetStartupItemsResponse`, `SetStatus` | done | Windows-specific today, portable concept | read-only persistence inventory | keep | Platform-specific providers and clear capability labels |
-| TCP connection listing | `GetConnections`, `GetConnectionsResponse` | done | Windows-specific today, portable concept | read-only network inventory | keep | Platform-specific providers and degraded behavior on unsupported OSes |
+| System information | `GetSystemInfo`, `GetSystemInfoResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest manual pass returned 19 rows, but several fields are placeholders; fill or document degraded fields |
+| Drive listing | `GetDrives`, `GetDrivesResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest manual pass returned `C:\ (OS) [Local Disk, NTFS] => C:\` |
+| Directory listing | `GetDirectory`, `GetDirectoryResponse`, `SetStatusFileManager` | done; manually verified | portable with platform-specific permissions | read-only filesystem | keep | Latest manual pass returned 24 entries for `C:\`; path normalization and access-denial reporting before broader file manager work |
+| Process listing | `GetProcesses`, `GetProcessesResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest manual pass returned 280 processes; capability reporting for process metadata differences |
+| Startup item listing | `GetStartupItems`, `GetStartupItemsResponse`, `SetStatus` | done; manually verified | Windows-specific today, portable concept | read-only persistence inventory | keep | Latest manual pass returned 5 entries; platform-specific providers and clear capability labels |
+| TCP connection listing | `GetConnections`, `GetConnectionsResponse` | done; manually verified | Windows-specific today, portable concept | read-only network inventory | keep | Latest manual pass returned 47 TCP connections; platform-specific providers and degraded behavior on unsupported OSes |
 | File download from client / file upload to client | `FileTransferRequest`, `FileTransferChunk`, `FileTransferComplete`, `FileTransferCancel` | protocol only | portable with platform-specific filesystem constraints | sensitive data movement | keep | Operator permission, audit, size limits, path policy, cancellation and progress model |
 | File delete and rename | `DoPathDelete`, `DoPathRename`, `SetStatusFileManager` | protocol only | portable with platform-specific permissions | state-changing filesystem | keep | Operator permission, audit, confirmation policy, protected path rules |
 | Process start and process end | `DoProcessStart`, `DoProcessEnd`, `DoProcessResponse` | protocol only | platform-specific | state-changing execution | keep | Operator permission, audit, explicit command provenance, allow/deny policy |
@@ -78,4 +78,5 @@ The safest next implementation work is not another powerful command. Recommended
 - Add audit expectations per safety class.
 - Add client capability reporting for completed slices.
 - Start a read/write split for registry and file-manager behavior before any write operations.
-- Use CLI `listen` mode to verify completed runtime slices before starting Web API work.
+- CLI `listen` mode verified all current read-only runtime slices on June 1, 2026; address
+  system-info placeholder fields before treating read-only inventory parity as complete.

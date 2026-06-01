@@ -29,15 +29,17 @@ dotnet test .\MasterSplinter.sln
 Manual command-dispatch smoke check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47837
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47837 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47838
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47838 --handle-commands
 ```
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
-In the CLI listen prompt, use `clients`, `dispatch first get-drives`, and `exit`. The latest
-manual listen-mode check printed `- C:\ (OS) [Local Disk, NTFS] => C:\` and then dispatched
-`get-system-info` on the same persistent client connection.
+In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
+`get-directory --path C:\`, `get-processes`, `get-startup-items`, and `get-connections` on one
+persistent client connection. Results: 19 system-info rows, 1 drive, 24 directory entries,
+280 processes, 5 startup items, and 47 TCP connections. Several system-info fields are still
+placeholder `-` values and need follow-up.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.
