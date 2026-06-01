@@ -408,6 +408,13 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\Master
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47830
 ```
 
+Current manual command dispatch check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\MasterSplinter.Server.Host.csproj -- --port 47831 --dispatch get-system-info
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47831 --handle-one-command
+```
+
 Legacy check, for awareness:
 
 ```powershell

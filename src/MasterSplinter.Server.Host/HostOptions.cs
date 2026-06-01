@@ -5,12 +5,13 @@ namespace MasterSplinter.Server.Host
 {
     internal sealed class HostOptions
     {
-        private HostOptions(string host, int port, bool smokeTest, bool once)
+        private HostOptions(string host, int port, bool smokeTest, bool once, string dispatchCommand)
         {
             Host = host;
             Port = port;
             SmokeTest = smokeTest;
             Once = once;
+            DispatchCommand = dispatchCommand;
         }
 
         public string Host { get; }
@@ -21,12 +22,15 @@ namespace MasterSplinter.Server.Host
 
         public bool Once { get; }
 
+        public string DispatchCommand { get; }
+
         public static HostOptions Parse(string[] args)
         {
             string host = "127.0.0.1";
             int port = 4782;
             bool smokeTest = false;
             bool once = false;
+            string dispatchCommand = null;
 
             for (int index = 0; index < args.Length; index++)
             {
@@ -48,10 +52,14 @@ namespace MasterSplinter.Server.Host
                 {
                     once = true;
                 }
+                else if (string.Equals(arg, "--dispatch", StringComparison.OrdinalIgnoreCase))
+                {
+                    dispatchCommand = ReadValue(args, ref index, "--dispatch");
+                }
                 else if (string.Equals(arg, "--help", StringComparison.OrdinalIgnoreCase) ||
                          string.Equals(arg, "-h", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("Usage: MasterSplinter.Server.Host [--host 127.0.0.1] [--port 4782] [--smoke-test] [--once]");
+                    throw new InvalidOperationException("Usage: MasterSplinter.Server.Host [--host 127.0.0.1] [--port 4782] [--smoke-test] [--once] [--dispatch get-system-info]");
                 }
                 else
                 {
@@ -59,7 +67,7 @@ namespace MasterSplinter.Server.Host
                 }
             }
 
-            return new HostOptions(host, port, smokeTest, once);
+            return new HostOptions(host, port, smokeTest, once, dispatchCommand);
         }
 
         private static string ReadValue(string[] args, ref int index, string optionName)

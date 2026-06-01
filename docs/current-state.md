@@ -59,6 +59,16 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 The latest manual loopback check returned `Handshake result: True`.
 
+Current manual command-dispatch check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\MasterSplinter.Server.Host.csproj -- --port 47831 --dispatch get-system-info
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47831 --handle-one-command
+```
+
+The latest manual dispatch check sent `GetSystemInfo`, received `GetSystemInfoResponse`,
+and returned `Dispatch result: Sent`.
+
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
@@ -114,6 +124,7 @@ All modern projects target `net10.0`.
 - Server command safety classification added and attached to dispatch results and audit events.
 - Server command policy enforcement added so commands requiring permission or consent are denied unless dispatch authorization grants them.
 - Server authorization models and services added to derive dispatch authorization from operator permissions and client consent.
+- Server host manual `--dispatch get-system-info` command added for loopback command-response smoke testing.
 
 ## Current Limitations
 

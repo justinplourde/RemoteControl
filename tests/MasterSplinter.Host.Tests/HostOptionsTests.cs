@@ -17,7 +17,8 @@ namespace MasterSplinter.Host.Tests
                 "--host", "localhost",
                 "--port", "47829",
                 "--smoke-test",
-                "--once"
+                "--once",
+                "--dispatch", "get-system-info"
             });
 
             Assert.AreEqual("127.0.0.1", defaults.Host);
@@ -28,6 +29,7 @@ namespace MasterSplinter.Host.Tests
             Assert.AreEqual(47829, custom.Port);
             Assert.IsTrue(custom.SmokeTest);
             Assert.IsTrue(custom.Once);
+            Assert.AreEqual("get-system-info", custom.DispatchCommand);
         }
 
         [TestMethod, TestCategory("Host")]

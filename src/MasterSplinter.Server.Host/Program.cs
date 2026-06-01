@@ -1,9 +1,12 @@
+using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Handshake;
 using MasterSplinter.Server.Core.Lifecycle;
 using MasterSplinter.Server.Core.Listeners;
 using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
+using Quasar.Common.Messages;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,7 +28,9 @@ namespace MasterSplinter.Server.Host
                     };
 
                     var registry = new ClientSessionRegistry();
-                    var onceCompletion = options.Once ? new TaskCompletionSource<bool>() : null;
+                    bool dispatchOnce = !string.IsNullOrWhiteSpace(options.DispatchCommand);
+                    var onceCompletion = options.Once || dispatchOnce ? new TaskCompletionSource<bool>() : null;
+                    var responseCompletion = dispatchOnce ? new TaskCompletionSource<IMessage>() : null;
                     var lifecycleSink = new ConsoleLifecycleSink(onceCompletion);
                     var lifecycle = new ClientConnectionLifecycleCoordinator(registry, lifecycleSink);
                     var handshake = new ClientHandshakeCoordinator(lifecycle);
@@ -34,7 +39,7 @@ namespace MasterSplinter.Server.Host
                         listener,
                         lifecycle,
                         handshake,
-                        new ConsoleRemoteClientMessageSink());
+                        new ConsoleRemoteClientMessageSink(responseCompletion));
 
                     await orchestrator.StartAsync(
                         new ServerListenOptions(options.Host, options.Port),
@@ -50,7 +55,39 @@ namespace MasterSplinter.Server.Host
                         return 0;
                     }
 
-                    if (onceCompletion != null)
+                    if (dispatchOnce)
+                    {
+                        using (tokenSource.Token.Register(() => onceCompletion.TrySetCanceled()))
+                        {
+                            try
+                            {
+                                await onceCompletion.Task.ConfigureAwait(false);
+                                ClientSessionSnapshot session = registry.GetSnapshots().FirstOrDefault();
+                                if (session == null)
+                                    throw new InvalidOperationException("No identified client is available for dispatch.");
+
+                                IMessage command = CreateDispatchCommand(options.DispatchCommand);
+                                var dispatcher = new ServerCommandDispatcher(registry);
+                                CommandDispatchResult dispatchResult = await dispatcher.DispatchAsync(
+                                    session.ClientId,
+                                    command,
+                                    tokenSource.Token).ConfigureAwait(false);
+                                Console.WriteLine($"Dispatch result: {dispatchResult.Status}.");
+
+                                if (dispatchResult.Status == CommandDispatchStatus.Sent)
+                                {
+                                    IMessage response = await responseCompletion.Task.WaitAsync(
+                                        TimeSpan.FromSeconds(15),
+                                        tokenSource.Token).ConfigureAwait(false);
+                                    Console.WriteLine($"Dispatch response: {response.GetType().Name}.");
+                                }
+                            }
+                            catch (TaskCanceledException)
+                            {
+                            }
+                        }
+                    }
+                    else if (onceCompletion != null)
                     {
                         using (tokenSource.Token.Register(() => onceCompletion.TrySetCanceled()))
                         {
@@ -84,6 +121,14 @@ namespace MasterSplinter.Server.Host
                 Console.Error.WriteLine(exception.Message);
                 return 1;
             }
+        }
+
+        private static IMessage CreateDispatchCommand(string commandName)
+        {
+            if (string.Equals(commandName, "get-system-info", StringComparison.OrdinalIgnoreCase))
+                return new GetSystemInfo();
+
+            throw new ArgumentException($"Unknown dispatch command '{commandName}'.");
         }
     }
 }
