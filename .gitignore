@@ -5,6 +5,7 @@
 *.suo
 *.userosscache
 *.sln.docstates
+**/Properties/launchSettings.json
 TestResults/
 *.trx
 *.coverage
