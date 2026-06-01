@@ -138,7 +138,8 @@ Done:
   runs client identification handshakes, disconnects invalid pre-handshake traffic,
   and forwards post-handshake messages to an injected sink.
 - Added `LocationRemote.Server.Host` as a minimal modern server executable for parity wiring.
-- Added an idle listener host mode that verifies server-core composition without opening sockets yet.
+- Replaced the idle listener with a loopback-only TCP listener in `LocationRemote.Server.Host`.
+- Added loopback-only TCP handshake support in `LocationRemote.Client.Host`.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
   command dispatch, missing clients, send failures, audit events, and cancellation.
 - Added tests for caller-supplied correlation metadata, generated correlation IDs,
@@ -154,6 +155,8 @@ Done:
   the modern server handshake path without sockets.
 - Verified `LocationRemote.Server.Host --smoke-test` starts and stops cleanly.
 - Verified `LocationRemote.Client.Host --smoke-test` creates a modern identification payload.
+- Verified a two-process loopback TCP handshake: server host `--once` plus client host returns
+  `Handshake result: True`.
 
 Left to do:
 
@@ -313,9 +316,10 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Replace the idle listener with a real modern transport or legacy socket adapter.
-2. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
-3. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Add tests around the loopback TCP transport and host option validation.
+2. Add TLS/certificate validation parity for the transport handshake.
+3. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+4. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -336,6 +340,13 @@ Current client host smoke test:
 
 ```powershell
 dotnet run --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --smoke-test
+```
+
+Current loopback handshake check:
+
+```powershell
+dotnet run --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --port 47830 --once
+dotnet run --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --port 47830
 ```
 
 Legacy check, for awareness:

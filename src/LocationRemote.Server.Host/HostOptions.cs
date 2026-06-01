@@ -5,11 +5,12 @@ namespace LocationRemote.Server.Host
 {
     internal sealed class HostOptions
     {
-        private HostOptions(string host, int port, bool smokeTest)
+        private HostOptions(string host, int port, bool smokeTest, bool once)
         {
             Host = host;
             Port = port;
             SmokeTest = smokeTest;
+            Once = once;
         }
 
         public string Host { get; }
@@ -18,11 +19,14 @@ namespace LocationRemote.Server.Host
 
         public bool SmokeTest { get; }
 
+        public bool Once { get; }
+
         public static HostOptions Parse(string[] args)
         {
             string host = "127.0.0.1";
             int port = 4782;
             bool smokeTest = false;
+            bool once = false;
 
             for (int index = 0; index < args.Length; index++)
             {
@@ -40,10 +44,14 @@ namespace LocationRemote.Server.Host
                 {
                     smokeTest = true;
                 }
+                else if (string.Equals(arg, "--once", StringComparison.OrdinalIgnoreCase))
+                {
+                    once = true;
+                }
                 else if (string.Equals(arg, "--help", StringComparison.OrdinalIgnoreCase) ||
                          string.Equals(arg, "-h", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("Usage: LocationRemote.Server.Host [--host 127.0.0.1] [--port 4782] [--smoke-test]");
+                    throw new InvalidOperationException("Usage: LocationRemote.Server.Host [--host 127.0.0.1] [--port 4782] [--smoke-test] [--once]");
                 }
                 else
                 {
@@ -51,7 +59,7 @@ namespace LocationRemote.Server.Host
                 }
             }
 
-            return new HostOptions(host, port, smokeTest);
+            return new HostOptions(host, port, smokeTest, once);
         }
 
         private static string ReadValue(string[] args, ref int index, string optionName)

@@ -28,6 +28,7 @@ namespace Quasar.Common.Networking
 
         public int WriteMessage(IMessage message)
         {
+            TypeRegistry.EnsurePacketTypesRegistered();
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, message);

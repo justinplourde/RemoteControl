@@ -3,6 +3,7 @@ using LocationRemote.Client.Host;
 using Quasar.Common.Messages;
 using Quasar.Common.Protocol;
 using System;
+using System.Threading;
 
 namespace LocationRemote.Client.Host
 {
@@ -35,17 +36,22 @@ namespace LocationRemote.Client.Host
                 ClientIdentification identification = new ClientIdentificationFactory().Create(identityOptions);
 
                 Console.WriteLine($"LocationRemote client host prepared identification for {identification.Id}.");
-                Console.WriteLine($"Target placeholder: {options.Host}:{options.Port}.");
-                Console.WriteLine("Transport implementation is pending.");
 
                 if (options.SmokeTest)
                 {
+                    Console.WriteLine($"Target placeholder: {options.Host}:{options.Port}.");
+                    Console.WriteLine("Transport not opened in smoke-test mode.");
                     Console.WriteLine("Smoke test completed.");
                     return 0;
                 }
 
-                Console.WriteLine("Run with --smoke-test until the modern transport is implemented.");
-                return 0;
+                ClientIdentificationResult result = new LoopbackTcpHandshakeClient()
+                    .IdentifyAsync(options.Host, options.Port, identification, CancellationToken.None)
+                    .GetAwaiter()
+                    .GetResult();
+
+                Console.WriteLine($"Handshake result: {result.Result}.");
+                return result.Result ? 0 : 2;
             }
             catch (Exception exception)
             {

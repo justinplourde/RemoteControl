@@ -29,19 +29,33 @@ namespace Quasar.Common.Networking
 
         public byte[] ReadBytes(int length)
         {
-            if (_innerStream.Position + length <= _innerStream.Length)
+            if (length < 0)
+                throw new ArgumentOutOfRangeException(nameof(length));
+
+            if (_innerStream.CanSeek && _innerStream.Position + length > _innerStream.Length)
+                throw new OverflowException($"Unable to read {length} bytes from stream");
+
+            byte[] result = new byte[length];
+            try
             {
-                byte[] result = new byte[length];
                 _innerStream.ReadExactly(result, 0, result.Length);
                 return result;
             }
-            throw new OverflowException($"Unable to read {length} bytes from stream");
+            catch (EndOfStreamException exception)
+            {
+                throw new OverflowException($"Unable to read {length} bytes from stream", exception);
+            }
         }
 
         public IMessage ReadMessage()
         {
-            ReadInteger();
-            return Serializer.Deserialize<IMessage>(_innerStream);
+            TypeRegistry.EnsurePacketTypesRegistered();
+            int length = ReadInteger();
+            byte[] payload = ReadBytes(length);
+            using (var stream = new MemoryStream(payload))
+            {
+                return Serializer.Deserialize<IMessage>(stream);
+            }
         }
 
         protected override void Dispose(bool disposing)

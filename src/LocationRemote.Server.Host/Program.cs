@@ -25,10 +25,11 @@ namespace LocationRemote.Server.Host
                     };
 
                     var registry = new ClientSessionRegistry();
-                    var lifecycleSink = new ConsoleLifecycleSink();
+                    var onceCompletion = options.Once ? new TaskCompletionSource<bool>() : null;
+                    var lifecycleSink = new ConsoleLifecycleSink(onceCompletion);
                     var lifecycle = new ClientConnectionLifecycleCoordinator(registry, lifecycleSink);
                     var handshake = new ClientHandshakeCoordinator(lifecycle);
-                    var listener = new IdleRemoteClientListener();
+                    var listener = new LoopbackTcpRemoteClientListener();
                     var orchestrator = new RemoteClientListenerOrchestrator(
                         listener,
                         lifecycle,
@@ -39,8 +40,8 @@ namespace LocationRemote.Server.Host
                         new ServerListenOptions(options.Host, options.Port),
                         tokenSource.Token).ConfigureAwait(false);
 
-                    Console.WriteLine($"LocationRemote server host listening placeholder on {options.Host}:{options.Port}.");
-                    Console.WriteLine("Transport implementation is pending; press Ctrl+C to stop.");
+                    Console.WriteLine($"LocationRemote server host listening on {options.Host}:{options.Port}.");
+                    Console.WriteLine("Loopback TCP transport active; press Ctrl+C to stop.");
 
                     if (options.SmokeTest)
                     {
@@ -49,12 +50,28 @@ namespace LocationRemote.Server.Host
                         return 0;
                     }
 
-                    try
+                    if (onceCompletion != null)
                     {
-                        await Task.Delay(Timeout.InfiniteTimeSpan, tokenSource.Token).ConfigureAwait(false);
+                        using (tokenSource.Token.Register(() => onceCompletion.TrySetCanceled()))
+                        {
+                            try
+                            {
+                                await onceCompletion.Task.ConfigureAwait(false);
+                            }
+                            catch (TaskCanceledException)
+                            {
+                            }
+                        }
                     }
-                    catch (OperationCanceledException)
+                    else
                     {
+                        try
+                        {
+                            await Task.Delay(Timeout.InfiniteTimeSpan, tokenSource.Token).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                        }
                     }
 
                     await orchestrator.StopAsync(CancellationToken.None).ConfigureAwait(false);
