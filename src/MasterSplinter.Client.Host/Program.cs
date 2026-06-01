@@ -1,4 +1,6 @@
+using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.Identity;
+using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
 using Quasar.Common.Messages;
 using Quasar.Common.Protocol;
@@ -32,6 +34,7 @@ namespace MasterSplinter.Client.Host
 
                 identityOptions.Capabilities.SupportedFeatures.Add("handshake");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
+                identityOptions.Capabilities.SupportedFeatures.Add("system.info");
 
                 ClientIdentification identification = new ClientIdentificationFactory().Create(identityOptions);
 
@@ -45,10 +48,26 @@ namespace MasterSplinter.Client.Host
                     return 0;
                 }
 
-                ClientIdentificationResult result = new LoopbackTcpHandshakeClient()
-                    .IdentifyAsync(options.Host, options.Port, identification, CancellationToken.None)
-                    .GetAwaiter()
-                    .GetResult();
+                ClientIdentificationResult result;
+                if (options.HandleOneCommand)
+                {
+                    MessageDispatcher dispatcher = new MessageDispatcher.Builder()
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(
+                            new GetSystemInfoHandler(new SystemInfoProvider())))
+                        .Build();
+
+                    result = new LoopbackTcpCommandClient()
+                        .IdentifyAndHandleOneCommandAsync(options.Host, options.Port, identification, dispatcher, CancellationToken.None)
+                        .GetAwaiter()
+                        .GetResult();
+                }
+                else
+                {
+                    result = new LoopbackTcpHandshakeClient()
+                        .IdentifyAsync(options.Host, options.Port, identification, CancellationToken.None)
+                        .GetAwaiter()
+                        .GetResult();
+                }
 
                 Console.WriteLine($"Handshake result: {result.Result}.");
                 return result.Result ? 0 : 2;

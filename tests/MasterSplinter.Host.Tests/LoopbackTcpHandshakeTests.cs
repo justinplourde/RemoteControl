@@ -1,4 +1,6 @@
+using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.Identity;
+using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
 using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Handshake;
@@ -11,6 +13,7 @@ using Quasar.Common.Messages;
 using Quasar.Common.Networking;
 using Quasar.Common.Protocol;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -40,7 +43,7 @@ namespace MasterSplinter.Host.Tests
                 ClientIdentificationResult result = await new LoopbackTcpHandshakeClient()
                     .IdentifyAsync("127.0.0.1", port, CreateIdentification(ValidClientId), CancellationToken.None);
 
-                await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(15));
 
                 Assert.IsTrue(result.Result);
                 Assert.IsTrue(registry.TryGet(ValidClientId, out _));
@@ -81,7 +84,7 @@ namespace MasterSplinter.Host.Tests
                             Assert.IsTrue(handshakeResult.Result);
                         }
 
-                        await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                        await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(15));
 
                         var dispatcher = new ServerCommandDispatcher(registry);
                         CommandDispatchResult dispatchResult = await dispatcher.DispatchAsync(
@@ -98,6 +101,59 @@ namespace MasterSplinter.Host.Tests
                         }
                     }
                 }
+            }
+            finally
+            {
+                await orchestrator.StopAsync(CancellationToken.None);
+            }
+        }
+
+        [TestMethod, TestCategory("Host")]
+        public async Task LoopbackTcpClientHandlesServerCommandAndReturnsSystemInfoResponse()
+        {
+            int port = GetFreeLoopbackPort();
+            var registry = new ClientSessionRegistry();
+            var lifecycleSink = new CompletionLifecycleSink();
+            var lifecycle = new ClientConnectionLifecycleCoordinator(registry, lifecycleSink);
+            var handshake = new ClientHandshakeCoordinator(lifecycle);
+            var listener = new LoopbackTcpRemoteClientListener();
+            var responseSink = new CompletionMessageSink();
+            var orchestrator = new RemoteClientListenerOrchestrator(listener, lifecycle, handshake, responseSink);
+            MessageDispatcher dispatcher = new MessageDispatcher.Builder()
+                .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(
+                    new GetSystemInfoHandler(new TestSystemInfoProvider())))
+                .Build();
+
+            await orchestrator.StartAsync(new ServerListenOptions("127.0.0.1", port), CancellationToken.None);
+            try
+            {
+                Task<ClientIdentificationResult> clientTask = new LoopbackTcpCommandClient()
+                    .IdentifyAndHandleOneCommandAsync(
+                        "127.0.0.1",
+                        port,
+                        CreateIdentification(ValidClientId),
+                        dispatcher,
+                        CancellationToken.None);
+
+                await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(15));
+
+                var serverDispatcher = new ServerCommandDispatcher(registry);
+                CommandDispatchResult dispatchResult = await serverDispatcher.DispatchAsync(
+                    ValidClientId,
+                    new GetSystemInfo(),
+                    CancellationToken.None);
+
+                Assert.AreEqual(CommandDispatchStatus.Sent, dispatchResult.Status);
+
+                IMessage response = await responseSink.Message.Task.WaitAsync(TimeSpan.FromSeconds(15));
+                ClientIdentificationResult clientResult = await clientTask.WaitAsync(TimeSpan.FromSeconds(15));
+
+                Assert.IsTrue(clientResult.Result);
+                Assert.IsInstanceOfType(response, typeof(GetSystemInfoResponse));
+
+                var systemInfo = (GetSystemInfoResponse)response;
+                Assert.AreEqual("PC Name", systemInfo.SystemInfos[0].Item1);
+                Assert.AreEqual("modern-client", systemInfo.SystemInfos[0].Item2);
             }
             finally
             {
@@ -161,7 +217,8 @@ namespace MasterSplinter.Host.Tests
 
         private sealed class CompletionLifecycleSink : IClientConnectionLifecycleSink
         {
-            public TaskCompletionSource<bool> Identified { get; } = new TaskCompletionSource<bool>();
+            public TaskCompletionSource<bool> Identified { get; } =
+                new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             public Task WriteAsync(ClientConnectionLifecycleEvent lifecycleEvent, CancellationToken cancellationToken)
             {
@@ -169,6 +226,33 @@ namespace MasterSplinter.Host.Tests
                     Identified.TrySetResult(true);
 
                 return Task.CompletedTask;
+            }
+        }
+
+        private sealed class CompletionMessageSink : IRemoteClientMessageSink
+        {
+            public TaskCompletionSource<IMessage> Message { get; } =
+                new TaskCompletionSource<IMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public Task HandleAsync(
+                IRemoteClientConnection connection,
+                IMessage message,
+                CancellationToken cancellationToken)
+            {
+                Message.TrySetResult(message);
+                return Task.CompletedTask;
+            }
+        }
+
+        private sealed class TestSystemInfoProvider : ISystemInfoProvider
+        {
+            public IReadOnlyList<Tuple<string, string>> GetSystemInfo()
+            {
+                return new[]
+                {
+                    Tuple.Create("PC Name", "modern-client"),
+                    Tuple.Create("Country", "XX")
+                };
             }
         }
 

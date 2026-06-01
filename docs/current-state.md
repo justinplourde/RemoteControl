@@ -35,10 +35,10 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 7 passed
+- `MasterSplinter.Client.Core.Tests`: 10 passed
 - `MasterSplinter.Server.Core.Tests`: 35 passed
-- `MasterSplinter.Host.Tests`: 7 passed
-- Total: 81 passed, 1 skipped, 0 failed
+- `MasterSplinter.Host.Tests`: 8 passed
+- Total: 85 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -59,8 +59,8 @@ The latest manual loopback check returned `Handshake result: True`.
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts and client identification factory.
-- `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode and loopback handshake.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, and system-info handling.
+- `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
 - `tests/*`: MSTest coverage for the modern projects.
@@ -88,6 +88,8 @@ All modern projects target `net10.0`.
 - Minimal client/server hosts added.
 - Loopback TCP handshake path added and tested.
 - Loopback TCP server-to-client command dispatch path added and tested.
+- `GetSystemInfo` client handler added with deterministic tests.
+- Loopback TCP `GetSystemInfo` command-response path added and tested.
 
 ## Current Limitations
 
@@ -98,7 +100,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Start extracting selected client command handlers behind explicit interfaces.
+1. Extract the next small read-only client handler behind explicit interfaces.
 2. Add parity tests against legacy behavior before moving each behavior slice.
 3. Build a capability matrix that marks each feature as portable, Windows-only, deferred, or removed.
 4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, CLI, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

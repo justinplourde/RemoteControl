@@ -28,8 +28,11 @@ remote administration behavior is extracted deliberately.
 - Full legacy protocol DTO surface is present in `MasterSplinter.Common`
 - Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
 - `MasterSplinter.Client.Core` contains message dispatch contracts and typed routing infrastructure
+- `MasterSplinter.Client.Core` contains response-handler adapters for command handlers that emit protocol responses
 - `MasterSplinter.Client.Core` contains client identification factory support
+- `MasterSplinter.Client.Core` contains a testable `GetSystemInfo` handler backed by an `ISystemInfoProvider`
 - `MasterSplinter.Client.Host` creates a modern identification payload through a runnable placeholder host
+- `MasterSplinter.Client.Host` can handle one loopback command and send a protocol response in `--handle-one-command` mode
 - `MasterSplinter.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
 - `MasterSplinter.Server.Core` contains client identification handshake coordination with legacy ID validation and capability metadata preservation
 - `MasterSplinter.Server.Core` contains listener abstractions and a listener orchestrator for transport-independent parity work
@@ -37,7 +40,8 @@ remote administration behavior is extracted deliberately.
 - `MasterSplinter.Client.Host` can perform a loopback TCP identification handshake with the modern server host
 - In-memory parity tests prove modern client identification can complete the modern server handshake path without depending on sockets
 - Host tests cover option parsing, loopback-only guards, real loopback TCP identification handshakes,
-  and server-to-client command dispatch over an identified loopback TCP session
+  server-to-client command dispatch over an identified loopback TCP session, and the
+  `GetSystemInfo` command-response path
 
 ## Solutions
 

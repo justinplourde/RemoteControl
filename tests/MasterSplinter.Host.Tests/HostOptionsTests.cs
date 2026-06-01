@@ -40,7 +40,8 @@ namespace MasterSplinter.Host.Tests
                 "--client-id", "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
                 "--tag", "lab",
                 "--encryption-key", "test-key",
-                "--smoke-test"
+                "--smoke-test",
+                "--handle-one-command"
             });
 
             Assert.AreEqual("localhost", custom.Host);
@@ -49,6 +50,7 @@ namespace MasterSplinter.Host.Tests
             Assert.AreEqual("lab", custom.Tag);
             Assert.AreEqual("test-key", custom.EncryptionKey);
             Assert.IsTrue(custom.SmokeTest);
+            Assert.IsTrue(custom.HandleOneCommand);
         }
 
         [TestMethod, TestCategory("Host")]
