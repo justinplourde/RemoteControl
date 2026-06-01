@@ -56,5 +56,16 @@ namespace MasterSplinter.Server.Core.Commands
         {
             return new CommandDispatchRequest(Guid.NewGuid(), clientId, message, null, null);
         }
+
+        public CommandDispatchRequest WithAuthorization(CommandDispatchAuthorization authorization)
+        {
+            return new CommandDispatchRequest(
+                CorrelationId,
+                ClientId,
+                Message,
+                OperatorId,
+                Source,
+                authorization);
+        }
     }
 }
