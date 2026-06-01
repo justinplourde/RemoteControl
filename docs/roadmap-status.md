@@ -59,8 +59,8 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 10 passed.
-- `MasterSplinter.Host.Tests`: 8 passed.
+- `MasterSplinter.Client.Core.Tests`: 13 passed.
+- `MasterSplinter.Host.Tests`: 9 passed.
 - `MasterSplinter.Server.Core.Tests`: 35 passed.
 
 Known legacy limitation:
@@ -108,11 +108,13 @@ Done:
   without opening a transport yet.
 - Added response-handler adapters for client commands that emit protocol responses.
 - Added `GetSystemInfo` handling behind `ISystemInfoProvider`.
+- Added `GetDrives` handling behind `IDriveProvider`.
 - Added `--handle-one-command` mode to the client host for one command-response loopback slice.
 - Added tests for known-message dispatch, unknown-message handling, faulted handlers,
   duplicate registration, cancellation-token flow, and cancellation propagation.
 - Added tests for mapping client identity options to the protocol identification message.
 - Added tests for `GetSystemInfo` response mapping and response-handler send behavior.
+- Added tests for `GetDrives` success mapping, legacy-style status errors, and response-handler send behavior.
 
 Left to do:
 
@@ -169,6 +171,8 @@ Done:
   the connected client stream after identification.
 - Added automated loopback TCP command-response coverage proving the modern client can handle
   `GetSystemInfo` and send `GetSystemInfoResponse` back to the server sink.
+- Added automated loopback TCP command-response coverage proving the modern client can handle
+  `GetDrives` and send `GetDrivesResponse` back to the server sink.
 - Verified `MasterSplinter.Server.Host --smoke-test` starts and stops cleanly.
 - Verified `MasterSplinter.Client.Host --smoke-test` creates a modern identification payload.
 - Verified a two-process loopback TCP handshake: server host `--once` plus client host returns

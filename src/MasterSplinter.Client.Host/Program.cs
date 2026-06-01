@@ -1,4 +1,5 @@
 using MasterSplinter.Client.Core.Dispatch;
+using MasterSplinter.Client.Core.FileSystem;
 using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
@@ -33,6 +34,7 @@ namespace MasterSplinter.Client.Host
                     new ClientCapabilities());
 
                 identityOptions.Capabilities.SupportedFeatures.Add("handshake");
+                identityOptions.Capabilities.SupportedFeatures.Add("filesystem.drives");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
 
@@ -52,6 +54,8 @@ namespace MasterSplinter.Client.Host
                 if (options.HandleOneCommand)
                 {
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
+                            new GetDrivesHandler(new DriveProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(
                             new GetSystemInfoHandler(new SystemInfoProvider())))
                         .Build();

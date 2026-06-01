@@ -1,4 +1,5 @@
 using MasterSplinter.Client.Core.Dispatch;
+using MasterSplinter.Client.Core.FileSystem;
 using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
@@ -10,6 +11,7 @@ using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Quasar.Common.Messages;
+using Quasar.Common.Models;
 using Quasar.Common.Networking;
 using Quasar.Common.Protocol;
 using System;
@@ -162,6 +164,59 @@ namespace MasterSplinter.Host.Tests
         }
 
         [TestMethod, TestCategory("Host")]
+        public async Task LoopbackTcpClientHandlesGetDrivesCommandAndReturnsDrivesResponse()
+        {
+            int port = GetFreeLoopbackPort();
+            var registry = new ClientSessionRegistry();
+            var lifecycleSink = new CompletionLifecycleSink();
+            var lifecycle = new ClientConnectionLifecycleCoordinator(registry, lifecycleSink);
+            var handshake = new ClientHandshakeCoordinator(lifecycle);
+            var listener = new LoopbackTcpRemoteClientListener();
+            var responseSink = new CompletionMessageSink();
+            var orchestrator = new RemoteClientListenerOrchestrator(listener, lifecycle, handshake, responseSink);
+            MessageDispatcher dispatcher = new MessageDispatcher.Builder()
+                .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
+                    new GetDrivesHandler(new TestDriveProvider())))
+                .Build();
+
+            await orchestrator.StartAsync(new ServerListenOptions("127.0.0.1", port), CancellationToken.None);
+            try
+            {
+                Task<ClientIdentificationResult> clientTask = new LoopbackTcpCommandClient()
+                    .IdentifyAndHandleOneCommandAsync(
+                        "127.0.0.1",
+                        port,
+                        CreateIdentification(ValidClientId),
+                        dispatcher,
+                        CancellationToken.None);
+
+                await lifecycleSink.Identified.Task.WaitAsync(TimeSpan.FromSeconds(15));
+
+                var serverDispatcher = new ServerCommandDispatcher(registry);
+                CommandDispatchResult dispatchResult = await serverDispatcher.DispatchAsync(
+                    ValidClientId,
+                    new GetDrives(),
+                    CancellationToken.None);
+
+                Assert.AreEqual(CommandDispatchStatus.Sent, dispatchResult.Status);
+
+                IMessage response = await responseSink.Message.Task.WaitAsync(TimeSpan.FromSeconds(15));
+                ClientIdentificationResult clientResult = await clientTask.WaitAsync(TimeSpan.FromSeconds(15));
+
+                Assert.IsTrue(clientResult.Result);
+                Assert.IsInstanceOfType(response, typeof(GetDrivesResponse));
+
+                var drives = (GetDrivesResponse)response;
+                Assert.AreEqual("Z:\\ [Network Drive, NTFS]", drives.Drives[0].DisplayName);
+                Assert.AreEqual("Z:\\", drives.Drives[0].RootDirectory);
+            }
+            finally
+            {
+                await orchestrator.StopAsync(CancellationToken.None);
+            }
+        }
+
+        [TestMethod, TestCategory("Host")]
         public async Task LoopbackTcpServerRejectsNonLoopbackBindAddress()
         {
             var listener = new LoopbackTcpRemoteClientListener();
@@ -253,6 +308,17 @@ namespace MasterSplinter.Host.Tests
                     Tuple.Create("PC Name", "modern-client"),
                     Tuple.Create("Country", "XX")
                 };
+            }
+        }
+
+        private sealed class TestDriveProvider : IDriveProvider
+        {
+            public DriveListResult GetDrives()
+            {
+                return DriveListResult.Success(new[]
+                {
+                    new Drive { DisplayName = "Z:\\ [Network Drive, NTFS]", RootDirectory = "Z:\\" }
+                });
             }
         }
 

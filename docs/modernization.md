@@ -31,6 +31,7 @@ remote administration behavior is extracted deliberately.
 - `MasterSplinter.Client.Core` contains response-handler adapters for command handlers that emit protocol responses
 - `MasterSplinter.Client.Core` contains client identification factory support
 - `MasterSplinter.Client.Core` contains a testable `GetSystemInfo` handler backed by an `ISystemInfoProvider`
+- `MasterSplinter.Client.Core` contains a testable `GetDrives` handler backed by an `IDriveProvider`
 - `MasterSplinter.Client.Host` creates a modern identification payload through a runnable placeholder host
 - `MasterSplinter.Client.Host` can handle one loopback command and send a protocol response in `--handle-one-command` mode
 - `MasterSplinter.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
@@ -41,7 +42,7 @@ remote administration behavior is extracted deliberately.
 - In-memory parity tests prove modern client identification can complete the modern server handshake path without depending on sockets
 - Host tests cover option parsing, loopback-only guards, real loopback TCP identification handshakes,
   server-to-client command dispatch over an identified loopback TCP session, and the
-  `GetSystemInfo` command-response path
+  `GetSystemInfo` and `GetDrives` command-response paths
 
 ## Solutions
 

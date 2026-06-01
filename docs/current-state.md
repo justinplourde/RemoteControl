@@ -35,10 +35,10 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 10 passed
+- `MasterSplinter.Client.Core.Tests`: 13 passed
 - `MasterSplinter.Server.Core.Tests`: 35 passed
-- `MasterSplinter.Host.Tests`: 8 passed
-- Total: 85 passed, 1 skipped, 0 failed
+- `MasterSplinter.Host.Tests`: 9 passed
+- Total: 89 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -59,7 +59,7 @@ The latest manual loopback check returned `Handshake result: True`.
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, and system-info handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, and drive-list handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
@@ -90,6 +90,8 @@ All modern projects target `net10.0`.
 - Loopback TCP server-to-client command dispatch path added and tested.
 - `GetSystemInfo` client handler added with deterministic tests.
 - Loopback TCP `GetSystemInfo` command-response path added and tested.
+- `GetDrives` client handler added with deterministic tests.
+- Loopback TCP `GetDrives` command-response path added and tested.
 
 ## Current Limitations
 
