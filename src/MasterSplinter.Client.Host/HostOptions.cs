@@ -13,7 +13,8 @@ namespace MasterSplinter.Client.Host
             string encryptionKey,
             byte[] signature,
             bool smokeTest,
-            bool handleOneCommand)
+            bool handleOneCommand,
+            bool handleCommands)
         {
             Host = host;
             Port = port;
@@ -23,6 +24,7 @@ namespace MasterSplinter.Client.Host
             Signature = signature;
             SmokeTest = smokeTest;
             HandleOneCommand = handleOneCommand;
+            HandleCommands = handleCommands;
         }
 
         public string Host { get; }
@@ -41,6 +43,8 @@ namespace MasterSplinter.Client.Host
 
         public bool HandleOneCommand { get; }
 
+        public bool HandleCommands { get; }
+
         public static HostOptions Parse(string[] args)
         {
             string host = "127.0.0.1";
@@ -51,6 +55,7 @@ namespace MasterSplinter.Client.Host
             byte[] signature = new byte[] { 1, 2, 3, 4 };
             bool smokeTest = false;
             bool handleOneCommand = false;
+            bool handleCommands = false;
 
             for (int index = 0; index < args.Length; index++)
             {
@@ -84,10 +89,14 @@ namespace MasterSplinter.Client.Host
                 {
                     handleOneCommand = true;
                 }
+                else if (string.Equals(arg, "--handle-commands", StringComparison.OrdinalIgnoreCase))
+                {
+                    handleCommands = true;
+                }
                 else if (string.Equals(arg, "--help", StringComparison.OrdinalIgnoreCase) ||
                          string.Equals(arg, "-h", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("Usage: MasterSplinter.Client.Host [--host 127.0.0.1] [--port 4782] [--client-id <64 chars>] [--tag modern] [--encryption-key dev-key] [--smoke-test] [--handle-one-command]");
+                    throw new InvalidOperationException("Usage: MasterSplinter.Client.Host [--host 127.0.0.1] [--port 4782] [--client-id <64 chars>] [--tag modern] [--encryption-key dev-key] [--smoke-test] [--handle-one-command] [--handle-commands]");
                 }
                 else
                 {
@@ -95,7 +104,7 @@ namespace MasterSplinter.Client.Host
                 }
             }
 
-            return new HostOptions(host, port, clientId, tag, encryptionKey, signature, smokeTest, handleOneCommand);
+            return new HostOptions(host, port, clientId, tag, encryptionKey, signature, smokeTest, handleOneCommand, handleCommands);
         }
 
         private static string ReadValue(string[] args, ref int index, string optionName)

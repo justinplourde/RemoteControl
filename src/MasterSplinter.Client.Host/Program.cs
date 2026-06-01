@@ -58,7 +58,7 @@ namespace MasterSplinter.Client.Host
                 }
 
                 ClientIdentificationResult result;
-                if (options.HandleOneCommand)
+                if (options.HandleOneCommand || options.HandleCommands)
                 {
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
                         .AddHandler(new ResponseMessageHandlerAdapter<GetConnections>(
@@ -75,10 +75,16 @@ namespace MasterSplinter.Client.Host
                             new GetSystemInfoHandler(new SystemInfoProvider())))
                         .Build();
 
-                    result = new LoopbackTcpCommandClient()
-                        .IdentifyAndHandleOneCommandAsync(options.Host, options.Port, identification, dispatcher, CancellationToken.None)
-                        .GetAwaiter()
-                        .GetResult();
+                    var commandClient = new LoopbackTcpCommandClient();
+                    result = options.HandleCommands
+                        ? commandClient
+                            .IdentifyAndHandleCommandsAsync(options.Host, options.Port, identification, dispatcher, CancellationToken.None)
+                            .GetAwaiter()
+                            .GetResult()
+                        : commandClient
+                            .IdentifyAndHandleOneCommandAsync(options.Host, options.Port, identification, dispatcher, CancellationToken.None)
+                            .GetAwaiter()
+                            .GetResult();
                 }
                 else
                 {

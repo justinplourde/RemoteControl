@@ -28,6 +28,18 @@ namespace MasterSplinter.Cli.Tests
         }
 
         [TestMethod, TestCategory("Cli")]
+        public void ParseListenDefaults()
+        {
+            CliOptions options = CliOptions.Parse(new[] { "listen" });
+
+            Assert.AreEqual("listen", options.Command);
+            Assert.IsNull(options.DispatchCommand);
+            Assert.AreEqual("127.0.0.1", options.Host);
+            Assert.AreEqual(4782, options.Port);
+            Assert.AreEqual(60, options.TimeoutSeconds);
+        }
+
+        [TestMethod, TestCategory("Cli")]
         public void ParseDispatchCustomOptions()
         {
             CliOptions options = CliOptions.Parse(new[]
@@ -103,6 +115,25 @@ namespace MasterSplinter.Cli.Tests
                 CliOptions.Parse(new[] { "dispatch", "--command", "get-system-info", "--nope" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "unknown" })));
+        }
+
+        [TestMethod, TestCategory("Cli")]
+        public void ParseListenCommands()
+        {
+            ListenCommand clients = ListenCommand.Parse("clients");
+            Assert.AreEqual("clients", clients.Verb);
+
+            ListenCommand exit = ListenCommand.Parse("exit");
+            Assert.AreEqual("exit", exit.Verb);
+
+            ListenCommand dispatch = ListenCommand.Parse("dispatch first get-directory --path \"C:\\Program Files\"");
+            Assert.AreEqual("dispatch", dispatch.Verb);
+            Assert.AreEqual("first", dispatch.ClientId);
+            Assert.AreEqual("get-directory", dispatch.DispatchCommand);
+            Assert.AreEqual("C:\\Program Files", dispatch.Path);
+
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 
         [TestMethod, TestCategory("Cli")]

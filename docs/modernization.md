@@ -8,8 +8,9 @@ The modern .NET 10 work lives at the repository root in `src` and `tests`, with
 `legacy/Quasar` remains the imported legacy application folder. Its `Quasar.sln`
 now stays focused on the existing WinForms server, client, and legacy common
 projects while the modern class libraries grow toward a runnable .NET 10 parity
-implementation. Future root-level Web API, CLI, client UI, service, and cross-platform
-projects should wait until that parity gate is met.
+implementation. Future root-level Web API, client UI, service, and cross-platform
+projects should wait until that parity gate is met. The CLI is currently allowed only
+as a manual parity verification harness.
 
 The modern .NET work starts with a small, safe shared core in `src/MasterSplinter.Common`.
 The legacy `Quasar.Common` project remains on `net452` while sensitive or Windows-specific
@@ -33,7 +34,9 @@ remote administration behavior is extracted deliberately.
 - `MasterSplinter.Client.Core` contains a testable `GetSystemInfo` handler backed by an `ISystemInfoProvider`
 - `MasterSplinter.Client.Core` contains a testable `GetDrives` handler backed by an `IDriveProvider`
 - `MasterSplinter.Client.Host` creates a modern identification payload through a runnable placeholder host
-- `MasterSplinter.Client.Host` can handle one loopback command and send a protocol response in `--handle-one-command` mode
+- `MasterSplinter.Client.Host` can handle one loopback command in `--handle-one-command`
+  mode or repeated loopback commands in `--handle-commands` mode
+- `MasterSplinter.Cli` can run `listen` mode for repeated manual dispatch against connected clients
 - `MasterSplinter.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
 - `MasterSplinter.Server.Core` contains client identification handshake coordination with legacy ID validation and capability metadata preservation
 - `MasterSplinter.Server.Core` contains listener abstractions and a listener orchestrator for transport-independent parity work
@@ -67,7 +70,7 @@ remote administration behavior is extracted deliberately.
 - Client command handlers; only dispatch routing infrastructure exists so far
 - Client installation, startup, and service behavior
 - Windows-specific platform helpers and native methods
-- New roadmap features such as Web API, CLI, permissioned operators, consent UI,
+- New roadmap features such as Web API, permissioned operators, consent UI,
   cross-platform expansion, and GUI overhaul until modern runtime parity is proven
 
 ## Rule Of Thumb

@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli dispatch --command <get-system-info|get-drives|get-directory|get-processes|get-startup-items|get-connections> [--path <path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-processes|get-startup-items|get-connections>] [--path <path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -84,6 +84,10 @@ namespace MasterSplinter.Cli
                 else
                     throw new ArgumentException($"Unknown argument '{arg}'.");
             }
+
+            if (!string.Equals(command, "dispatch", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(command, "listen", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException($"Unknown command '{command}'.");
 
             if (string.Equals(command, "dispatch", StringComparison.OrdinalIgnoreCase) &&
                 string.IsNullOrWhiteSpace(dispatchCommand))

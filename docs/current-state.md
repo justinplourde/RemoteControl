@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Expand CLI read-only dispatch commands`
+- Latest committed roadmap checkpoint before this handoff: `Add CLI listen parity harness`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -39,10 +39,10 @@ Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
 - `MasterSplinter.Client.Core.Tests`: 25 passed
-- `MasterSplinter.Cli.Tests`: 6 passed
+- `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 47 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 125 passed, 1 skipped, 0 failed
+- Total: 127 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -63,13 +63,14 @@ The latest manual loopback check returned `Handshake result: True`.
 Current manual command-dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47835
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47835 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47837
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47837 --handle-commands
 ```
 
-The latest manual dispatch check sent `GetDrives`, received `GetDrivesResponse`,
-printed `Safety=FileRead`, returned `Dispatch result: Sent`, and showed the payload row
-`- C:\ (OS) [Local Disk, NTFS] => C:\`.
+At the CLI prompt, the latest manual check ran `dispatch first get-drives`, received
+`GetDrivesResponse`, printed `Safety=FileRead`, returned `Dispatch result: Sent`, and
+showed the payload row `- C:\ (OS) [Local Disk, NTFS] => C:\`. The same persistent client
+connection also handled `dispatch first get-system-info` without reconnecting.
 
 Current CLI dispatch command names:
 
@@ -79,6 +80,13 @@ Current CLI dispatch command names:
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
+
+Current CLI listen commands:
+
+- `clients`
+- `dispatch <client-id|first> <command> [--path <path>]`
+- `help`
+- `exit`
 
 ## Modern Projects
 
@@ -105,7 +113,8 @@ All modern projects target `net10.0`.
 - Preserve existing wire compatibility until tests define a versioned upgrade path.
 - Protocol changes must be additive and covered by serialization/wire tests.
 - Cross-platform work starts only after portable behavior is covered by tests.
-- Web API, CLI, consentful clients, service mode, and GUI overhaul are post-parity roadmap work.
+- Web API, consentful clients, service mode, and GUI overhaul are post-parity roadmap work.
+- Do not start the Web API until full legacy admin-tool parity for kept features is confirmed.
 
 ## Completed
 
@@ -143,17 +152,20 @@ All modern projects target `net10.0`.
   service plumbing applied before dispatch.
 - CLI response formatting now prints payload rows for supported read-only responses and has
   formatter coverage in `MasterSplinter.Cli.Tests`.
+- CLI `listen` mode added for repeated manual dispatch against connected clients, paired with
+  client host `--handle-commands` persistent command handling.
 
 ## Current Limitations
 
 - Legacy `legacy/Quasar/Quasar.sln` is preserved but is not the primary acceptance gate.
 - The legacy WinForms surface has known build/security friction on the current machine.
-- Modern hosts currently prove loopback handshake parity, not full remote-management behavior.
+- Modern hosts currently prove loopback handshake and selected read-only runtime parity, not full remote-management behavior.
 - File-system, process, shell, registry, desktop, service, and UI behavior are not fully extracted yet.
 
 ## Recommended Next Tasks
 
-1. Add CLI commands for listing connected clients and selecting a specific client ID.
+1. Use CLI `listen` mode to manually verify every completed read-only parity slice.
 2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
 3. Add parity tests against legacy behavior before moving each behavior slice.
-4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
+4. Confirm full legacy admin-tool parity for kept features before starting Web API work.
+5. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

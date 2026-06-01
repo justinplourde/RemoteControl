@@ -16,6 +16,9 @@ Only after that parity gate should we start adding the new roadmap features: Web
 CLI, permissioned operators, consentful client UI, Windows service mode, cross-platform
 expansion, and the GUI overhaul.
 
+Current decision: do not start the Web API until full legacy admin-tool parity for kept
+features is confirmed.
+
 The guiding order is:
 
 1. Preserve and test current behavior.
@@ -65,7 +68,7 @@ Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
 - `MasterSplinter.Client.Core.Tests`: 25 passed.
-- `MasterSplinter.Cli.Tests`: 6 passed.
+- `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 47 passed.
 
@@ -120,6 +123,8 @@ Done:
 - Added `GetStartupItems` handling behind `IStartupItemProvider`.
 - Added `GetConnections` handling behind `IConnectionProvider`.
 - Added `--handle-one-command` mode to the client host for one command-response loopback slice.
+- Added `--handle-commands` mode to keep the loopback client connected for repeated manual
+  CLI dispatches.
 - Added tests for known-message dispatch, unknown-message handling, faulted handlers,
   duplicate registration, cancellation-token flow, and cancellation propagation.
 - Added tests for mapping client identity options to the protocol identification message.
@@ -228,6 +233,10 @@ Done:
   startup items, and TCP connections.
 - Verified the latest two-process CLI `get-drives` smoke prints
   `- C:\ (OS) [Local Disk, NTFS] => C:\`.
+- Added CLI `listen` mode with `clients`, `dispatch <client-id|first> <command>`, `help`,
+  and `exit` commands for repeated manual dispatch against connected clients.
+- Verified a persistent CLI/client session can list the connected client, run `get-drives`,
+  then run `get-system-info` on the same client connection.
 
 Left to do:
 
@@ -264,6 +273,8 @@ Parity acceptance should include:
 - Existing wire fixtures remain compatible.
 - Modern command routing matches the tested legacy message behavior.
 - A documented capability matrix exists for supported, deferred, removed, and Windows-only features.
+- Completed kept capabilities can be manually verified through CLI `listen` mode without
+  restarting the client for each command.
 - `dotnet test .\MasterSplinter.sln` remains green.
 
 Current capability matrix:
@@ -293,6 +304,7 @@ post-parity roadmap features.
 Status: Planned after modern runtime parity
 
 - Add a root-level Web API project after `MasterSplinter.Server.Core` owns orchestration contracts.
+- Blocked until full legacy admin-tool parity for kept features is confirmed.
 - Expose client inventory, session status, command dispatch, audit query, and capability discovery.
 - Use the server core for all business logic.
 - Do not duplicate server orchestration inside controllers.
@@ -304,7 +316,9 @@ Status: Started
 
 - Added a root-level CLI project for manual loopback smoke testing.
 - Supports manual loopback dispatch for the current read-only command set.
-- Still needs listing clients, inspecting capabilities, and dispatching safe commands to selected clients.
+- Supports listing connected clients and dispatching safe commands to selected clients in
+  `listen` mode.
+- Still needs inspecting capabilities and a less manual non-loopback operator experience.
 - Use the same shared server core as the Web API.
 - Keep CLI output scriptable and testable.
 - Consider a proxy/forwarding mode from the original roadmap once the listener model is extracted.
@@ -395,9 +409,10 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add CLI commands for listing connected clients and selecting a specific client ID.
+1. Use CLI `listen` mode to manually verify every completed read-only parity slice.
 2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
-3. Start original roadmap features: permissioned operators, Web API, consent UI,
+3. Confirm full legacy admin-tool parity for kept features before starting Web API work.
+4. Start original roadmap features: permissioned operators, Web API, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -430,8 +445,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47835
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47835 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47837
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47837 --handle-commands
 ```
 
 Legacy check, for awareness:

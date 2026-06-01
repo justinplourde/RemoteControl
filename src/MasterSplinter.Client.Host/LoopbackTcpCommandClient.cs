@@ -31,6 +31,22 @@ namespace MasterSplinter.Client.Host
                 cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task<ClientIdentificationResult> IdentifyAndHandleCommandsAsync(
+            string host,
+            int port,
+            ClientIdentification identification,
+            IMessageDispatcher dispatcher,
+            CancellationToken cancellationToken)
+        {
+            return await IdentifyAndHandleCommandsAsync(
+                host,
+                port,
+                identification,
+                dispatcher,
+                null,
+                cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<ClientIdentificationResult> IdentifyAndHandleOneCommandAsync(
             string host,
             int port,
@@ -74,6 +90,69 @@ namespace MasterSplinter.Client.Host
 
                     var context = new LoopbackClientCommandContext(identification.Id, stream);
                     await dispatcher.DispatchAsync(context, command, cancellationToken).ConfigureAwait(false);
+                    return result;
+                }
+            }
+        }
+
+        public async Task<ClientIdentificationResult> IdentifyAndHandleCommandsAsync(
+            string host,
+            int port,
+            ClientIdentification identification,
+            IMessageDispatcher dispatcher,
+            X509Certificate2 expectedServerCertificate,
+            CancellationToken cancellationToken)
+        {
+            if (dispatcher == null)
+                throw new ArgumentNullException(nameof(dispatcher));
+
+            IPAddress address = ResolveLoopbackAddress(host);
+            using (var client = new TcpClient())
+            {
+                await client.ConnectAsync(address, port, cancellationToken).ConfigureAwait(false);
+                using (Stream stream = await CreateAuthenticatedStreamAsync(
+                    client,
+                    address,
+                    expectedServerCertificate,
+                    cancellationToken).ConfigureAwait(false))
+                {
+                    using (var writer = new PayloadWriter(stream, true))
+                    {
+                        writer.WriteMessage(identification);
+                    }
+
+                    ClientIdentificationResult result;
+                    using (var reader = new PayloadReader(stream, true))
+                    {
+                        result = (ClientIdentificationResult)reader.ReadMessage();
+                    }
+
+                    if (!result.Result)
+                        return result;
+
+                    var context = new LoopbackClientCommandContext(identification.Id, stream);
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        IMessage command;
+                        try
+                        {
+                            using (var reader = new PayloadReader(stream, true))
+                            {
+                                command = reader.ReadMessage();
+                            }
+                        }
+                        catch (IOException)
+                        {
+                            return result;
+                        }
+                        catch (OverflowException)
+                        {
+                            return result;
+                        }
+
+                        await dispatcher.DispatchAsync(context, command, cancellationToken).ConfigureAwait(false);
+                    }
+
                     return result;
                 }
             }

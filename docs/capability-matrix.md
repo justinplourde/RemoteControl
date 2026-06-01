@@ -78,3 +78,4 @@ The safest next implementation work is not another powerful command. Recommended
 - Add audit expectations per safety class.
 - Add client capability reporting for completed slices.
 - Start a read/write split for registry and file-manager behavior before any write operations.
+- Use CLI `listen` mode to verify completed runtime slices before starting Web API work.
