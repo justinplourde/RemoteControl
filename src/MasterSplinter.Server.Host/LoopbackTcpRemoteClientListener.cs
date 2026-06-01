@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace MasterSplinter.Server.Host
 {
-    internal sealed class LoopbackTcpRemoteClientListener : IRemoteClientListener
+    public sealed class LoopbackTcpRemoteClientListener : IRemoteClientListener
     {
         private readonly ConcurrentDictionary<string, TcpRemoteClientConnection> _connections =
             new ConcurrentDictionary<string, TcpRemoteClientConnection>();

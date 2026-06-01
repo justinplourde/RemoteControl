@@ -32,6 +32,7 @@ Modern product code belongs under `src`:
 - `src/MasterSplinter.Common`
 - `src/MasterSplinter.Client.Core`
 - `src/MasterSplinter.Client.Host`
+- `src/MasterSplinter.Cli`
 - `src/MasterSplinter.Server.Core`
 - `src/MasterSplinter.Server.Host`
 
@@ -65,4 +66,3 @@ tested modern libraries under `src`. Once the modern implementation has enough p
 
 This lets the repository name describe the broader workspace while the code keeps a
 stable product identity during modernization.
-

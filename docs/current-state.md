@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `5e3ddd6 Add drive listing command response slice`
+- Latest committed roadmap checkpoint before this handoff: `639c11f Add manual loopback command dispatch smoke`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -39,9 +39,10 @@ Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
 - `MasterSplinter.Client.Core.Tests`: 25 passed
+- `MasterSplinter.Cli.Tests`: 3 passed
 - `MasterSplinter.Server.Core.Tests`: 47 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 119 passed, 1 skipped, 0 failed
+- Total: 122 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -62,8 +63,8 @@ The latest manual loopback check returned `Handshake result: True`.
 Current manual command-dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\MasterSplinter.Server.Host.csproj -- --port 47831 --dispatch get-system-info
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47831 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-system-info --port 47833 --timeout-seconds 60
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47833 --handle-one-command
 ```
 
 The latest manual dispatch check sent `GetSystemInfo`, received `GetSystemInfoResponse`,
@@ -74,6 +75,7 @@ and returned `Dispatch result: Sent`.
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
 - `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, and TCP-connection listing.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
+- `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch smoke testing.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
 - `tests/*`: MSTest coverage for the modern projects.
@@ -125,6 +127,7 @@ All modern projects target `net10.0`.
 - Server command policy enforcement added so commands requiring permission or consent are denied unless dispatch authorization grants them.
 - Server authorization models and services added to derive dispatch authorization from operator permissions and client consent.
 - Server host manual `--dispatch get-system-info` command added for loopback command-response smoke testing.
+- CLI manual `dispatch --command get-system-info` command added for loopback command-response smoke testing.
 
 ## Current Limitations
 
@@ -135,7 +138,8 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Wire operator/consent authorization into future API/CLI command request creation.
-2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
-3. Add parity tests against legacy behavior before moving each behavior slice.
-4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, CLI, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
+1. Wire CLI command request creation through operator/consent authorization metadata.
+2. Expand the CLI from one-command smoke testing to scriptable client listing and additional safe commands.
+3. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
+4. Add parity tests against legacy behavior before moving each behavior slice.
+5. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

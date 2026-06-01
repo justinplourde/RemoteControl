@@ -52,10 +52,12 @@ Current root projects:
 - `src/MasterSplinter.Common`
 - `src/MasterSplinter.Client.Core`
 - `src/MasterSplinter.Client.Host`
+- `src/MasterSplinter.Cli`
 - `src/MasterSplinter.Server.Core`
 - `src/MasterSplinter.Server.Host`
 - `tests/MasterSplinter.Common.Tests`
 - `tests/MasterSplinter.Client.Core.Tests`
+- `tests/MasterSplinter.Cli.Tests`
 - `tests/MasterSplinter.Host.Tests`
 - `tests/MasterSplinter.Server.Core.Tests`
 
@@ -63,6 +65,7 @@ Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
 - `MasterSplinter.Client.Core.Tests`: 25 passed.
+- `MasterSplinter.Cli.Tests`: 3 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 47 passed.
 
@@ -210,6 +213,11 @@ Done:
 - Verified `MasterSplinter.Client.Host --smoke-test` creates a modern identification payload.
 - Verified a two-process loopback TCP handshake: server host `--once` plus client host returns
   `Handshake result: True`.
+- Added `MasterSplinter.Cli` as a minimal operator CLI that can host one loopback listener,
+  accept one client, dispatch `GetSystemInfo`, and print the response.
+- Added CLI option parsing coverage and included `MasterSplinter.Cli.Tests` in the root solution.
+- Verified a two-process CLI dispatch smoke: CLI `dispatch --command get-system-info` plus client
+  host `--handle-one-command` returns `Dispatch result: Sent` and `GetSystemInfoResponse`.
 
 Left to do:
 
@@ -282,9 +290,9 @@ Status: Planned after modern runtime parity
 
 ## Priority 8: CLI Server
 
-Status: Planned after modern runtime parity
+Status: Started
 
-- Add a root-level CLI project after `MasterSplinter.Server.Core` has stable orchestration APIs.
+- Added a root-level CLI project for manual loopback smoke testing.
 - Support running a server, listing clients, inspecting capabilities, and dispatching safe commands.
 - Use the same shared server core as the Web API.
 - Keep CLI output scriptable and testable.
@@ -376,9 +384,10 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Wire operator/consent authorization into future API/CLI command request creation.
-2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
-3. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
+1. Wire CLI command request creation through operator/consent authorization metadata.
+2. Expand the CLI from one-command smoke testing to scriptable client listing and additional safe commands.
+3. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
+4. Start original roadmap features: permissioned operators, Web API, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -411,8 +420,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\MasterSplinter.Server.Host.csproj -- --port 47831 --dispatch get-system-info
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47831 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-system-info --port 47833 --timeout-seconds 60
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47833 --handle-one-command
 ```
 
 Legacy check, for awareness:
