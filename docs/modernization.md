@@ -3,15 +3,15 @@
 ## Current Direction
 
 The modern .NET 10 work lives at the repository root in `src` and `tests`, with
-`LocationRemote.sln` as the acceptance solution for portable code.
+`MasterSplinter.sln` as the acceptance solution for portable code.
 
-`MasterSplinter` remains the imported legacy application folder. Its `Quasar.sln`
+`legacy/Quasar` remains the imported legacy application folder. Its `Quasar.sln`
 now stays focused on the existing WinForms server, client, and legacy common
 projects while the modern class libraries grow toward a runnable .NET 10 parity
 implementation. Future root-level Web API, CLI, client UI, service, and cross-platform
 projects should wait until that parity gate is met.
 
-The modern .NET work starts with a small, safe shared core in `src/LocationRemote.Common`.
+The modern .NET work starts with a small, safe shared core in `src/MasterSplinter.Common`.
 The legacy `Quasar.Common` project remains on `net452` while sensitive or Windows-specific
 remote administration behavior is extracted deliberately.
 
@@ -25,23 +25,23 @@ remote administration behavior is extracted deliberately.
 - Pure file-system models used by serialization tests
 - Pure file-transfer message contracts
 - Pure file-system protocol contracts for drive listing, directory listing, path rename/delete, and file-manager status
-- Full legacy protocol DTO surface is present in `LocationRemote.Common`
+- Full legacy protocol DTO surface is present in `MasterSplinter.Common`
 - Reflection coverage verifies every modern message contract can payload round-trip through `IMessage`
-- `LocationRemote.Client.Core` contains message dispatch contracts and typed routing infrastructure
-- `LocationRemote.Client.Core` contains client identification factory support
-- `LocationRemote.Client.Host` creates a modern identification payload through a runnable placeholder host
-- `LocationRemote.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
-- `LocationRemote.Server.Core` contains client identification handshake coordination with legacy ID validation and capability metadata preservation
-- `LocationRemote.Server.Core` contains listener abstractions and a listener orchestrator for transport-independent parity work
-- `LocationRemote.Server.Host` wires the modern server core into a runnable loopback-only TCP host
-- `LocationRemote.Client.Host` can perform a loopback TCP identification handshake with the modern server host
+- `MasterSplinter.Client.Core` contains message dispatch contracts and typed routing infrastructure
+- `MasterSplinter.Client.Core` contains client identification factory support
+- `MasterSplinter.Client.Host` creates a modern identification payload through a runnable placeholder host
+- `MasterSplinter.Server.Core` contains session registry, command dispatch with correlation IDs, audit, and connection lifecycle contracts
+- `MasterSplinter.Server.Core` contains client identification handshake coordination with legacy ID validation and capability metadata preservation
+- `MasterSplinter.Server.Core` contains listener abstractions and a listener orchestrator for transport-independent parity work
+- `MasterSplinter.Server.Host` wires the modern server core into a runnable loopback-only TCP host
+- `MasterSplinter.Client.Host` can perform a loopback TCP identification handshake with the modern server host
 - In-memory parity tests prove modern client identification can complete the modern server handshake path without depending on sockets
 - Host tests cover option parsing, loopback-only guards, and real loopback TCP identification handshakes
 
 ## Solutions
 
-- `LocationRemote.sln`: modern root solution for portable class libraries and tests.
-- `MasterSplinter/Quasar.sln`: legacy solution for the imported Windows desktop projects.
+- `MasterSplinter.sln`: modern root solution for portable class libraries and tests.
+- `legacy/Quasar/Quasar.sln`: legacy solution for the imported Windows desktop projects.
 
 ## Protocol Rules
 

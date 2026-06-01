@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>MasterSplinter.Server.Host</AssemblyName>
+    <RootNamespace>MasterSplinter.Server.Host</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MasterSplinter.Server.Core\MasterSplinter.Server.Core.csproj" />
+    <ProjectReference Include="..\MasterSplinter.Common\MasterSplinter.Common.csproj" />
+  </ItemGroup>
+</Project>

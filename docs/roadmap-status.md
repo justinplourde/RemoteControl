@@ -1,10 +1,10 @@
-# LocationRemote Roadmap Status
+# MasterSplinter Roadmap Status
 
 Last updated: May 31, 2026
 
 ## Current Goal
 
-Modernize the archived Quasar-derived codebase into a new `LocationRemote` repository
+Modernize the archived Quasar-derived codebase into a new `MasterSplinter` repository
 with a testable .NET 10 implementation first. The next major gate is functional parity:
 the modern root projects should be able to run equivalent client/server behavior, with
 tests proving that the modern behavior mirrors the legacy behavior we intentionally keep.
@@ -26,11 +26,11 @@ The guiding order is:
 
 Status: Done
 
-- Created a fresh git repository at `C:\Users\Jplou\develop\LocationRemote`.
-- Preserved the imported archived code under `MasterSplinter`.
-- Archived the nested fork history so `MasterSplinter/.git` is no longer the active repository.
+- Created a fresh git repository at `C:\Users\Jplou\develop\MasterSplinter`.
+- Preserved the imported archived code under `legacy/Quasar`.
+- Archived the nested fork history so `legacy/Quasar/.git` is no longer the active repository.
 - Added the legacy project as imported source in the new root repository.
-- Kept `MasterSplinter/Quasar.sln` focused on legacy WinForms-era projects.
+- Kept `legacy/Quasar/Quasar.sln` focused on legacy WinForms-era projects.
 - Added root `.gitignore` coverage for modern build/test output.
 
 ## Priority 1: Modern .NET Test Baseline
@@ -38,34 +38,34 @@ Status: Done
 Status: Done
 
 - Moved modern work to root-level `src` and `tests` folders.
-- Added `LocationRemote.sln` as the modern acceptance solution.
+- Added `MasterSplinter.sln` as the modern acceptance solution.
 - Retargeted the modern class libraries and tests to `net10.0`.
 - Kept MSTest as the test framework for the first modernization pass.
-- Established `dotnet test .\LocationRemote.sln` as the primary acceptance check.
-- Left legacy `MasterSplinter/Quasar.sln` in place for the original Windows desktop code.
+- Established `dotnet test .\MasterSplinter.sln` as the primary acceptance check.
+- Left legacy `legacy/Quasar/Quasar.sln` in place for the original Windows desktop code.
 
 Current root projects:
 
-- `src/LocationRemote.Common`
-- `src/LocationRemote.Client.Core`
-- `src/LocationRemote.Client.Host`
-- `src/LocationRemote.Server.Core`
-- `src/LocationRemote.Server.Host`
-- `tests/LocationRemote.Common.Tests`
-- `tests/LocationRemote.Client.Core.Tests`
-- `tests/LocationRemote.Host.Tests`
-- `tests/LocationRemote.Server.Core.Tests`
+- `src/MasterSplinter.Common`
+- `src/MasterSplinter.Client.Core`
+- `src/MasterSplinter.Client.Host`
+- `src/MasterSplinter.Server.Core`
+- `src/MasterSplinter.Server.Host`
+- `tests/MasterSplinter.Common.Tests`
+- `tests/MasterSplinter.Client.Core.Tests`
+- `tests/MasterSplinter.Host.Tests`
+- `tests/MasterSplinter.Server.Core.Tests`
 
 Current verification:
 
-- `LocationRemote.Common.Tests`: 32 passed, 1 skipped.
-- `LocationRemote.Client.Core.Tests`: 7 passed.
-- `LocationRemote.Host.Tests`: 6 passed.
-- `LocationRemote.Server.Core.Tests`: 35 passed.
+- `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
+- `MasterSplinter.Client.Core.Tests`: 7 passed.
+- `MasterSplinter.Host.Tests`: 6 passed.
+- `MasterSplinter.Server.Core.Tests`: 35 passed.
 
 Known legacy limitation:
 
-- `dotnet build .\MasterSplinter\Quasar.sln` still fails on the legacy WinForms surface because
+- `dotnet build .\legacy\Quasar\Quasar.sln` still fails on the legacy WinForms surface because
   the installed .NET SDK reports resource-generation issues in `Quasar.Server`, and Windows
   Security blocks the legacy `Quasar.Common.dll` output as potentially unwanted software.
   This is one of the reasons the root modern libraries are being extracted and tested separately.
@@ -80,7 +80,7 @@ Status: Done
 - Added file-transfer protocol contracts.
 - Added file-system protocol contracts for drive listing, directory listing, path rename/delete,
   and file-manager status.
-- Mirrored the full legacy protocol DTO surface in `LocationRemote.Common`.
+- Mirrored the full legacy protocol DTO surface in `MasterSplinter.Common`.
 - Added reflection coverage so every modern message contract round-trips through `IMessage`.
 - Added pinned wire-compatibility fixtures, including full-surface representative fixtures for
   every `IMessage` DTO.
@@ -100,10 +100,10 @@ Status: Started
 
 Done:
 
-- Added `LocationRemote.Client.Core`.
+- Added `MasterSplinter.Client.Core`.
 - Added message dispatch contracts and typed routing infrastructure.
 - Added client identification factory for building modern `ClientIdentification` messages.
-- Added `LocationRemote.Client.Host` as a minimal modern client executable for parity wiring.
+- Added `MasterSplinter.Client.Host` as a minimal modern client executable for parity wiring.
 - Added a placeholder client smoke-test mode that creates a modern identification payload
   without opening a transport yet.
 - Added tests for known-message dispatch, unknown-message handling, faulted handlers,
@@ -123,7 +123,7 @@ Status: Started
 
 Done:
 
-- Added `LocationRemote.Server.Core`.
+- Added `MasterSplinter.Server.Core`.
 - Added server-side client session abstractions.
 - Added thread-safe client session registry.
 - Added connection lifecycle contracts for connected, identified, disconnected, and faulted clients.
@@ -139,9 +139,9 @@ Done:
 - Added listener orchestrator that starts/stops listeners, records connection lifecycle,
   runs client identification handshakes, disconnects invalid pre-handshake traffic,
   and forwards post-handshake messages to an injected sink.
-- Added `LocationRemote.Server.Host` as a minimal modern server executable for parity wiring.
-- Replaced the idle listener with a loopback-only TCP listener in `LocationRemote.Server.Host`.
-- Added loopback-only TCP handshake support in `LocationRemote.Client.Host`.
+- Added `MasterSplinter.Server.Host` as a minimal modern server executable for parity wiring.
+- Replaced the idle listener with a loopback-only TCP listener in `MasterSplinter.Server.Host`.
+- Added loopback-only TCP handshake support in `MasterSplinter.Client.Host`.
 - Added host tests for command-line option parsing, loopback-only address guards,
   and real loopback TCP handshake behavior.
 - Added tests for session registration, replacement, removal, snapshots, invalid IDs,
@@ -159,14 +159,14 @@ Done:
   the modern server handshake path without sockets.
 - Added automated loopback TCP parity tests proving the modern client and server host transport
   can complete the identification handshake.
-- Verified `LocationRemote.Server.Host --smoke-test` starts and stops cleanly.
-- Verified `LocationRemote.Client.Host --smoke-test` creates a modern identification payload.
+- Verified `MasterSplinter.Server.Host --smoke-test` starts and stops cleanly.
+- Verified `MasterSplinter.Client.Host --smoke-test` creates a modern identification payload.
 - Verified a two-process loopback TCP handshake: server host `--once` plus client host returns
   `Handshake result: True`.
 
 Left to do:
 
-- Extract server listener/orchestration behavior from `MasterSplinter/Quasar.Server`.
+- Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
 - Add integration tests for client/server handshake and command dispatch once networking is extracted.
 
@@ -181,9 +181,9 @@ choose to carry forward.
 
 Planned work:
 
-- Extract the server listener and client connection lifecycle into `LocationRemote.Server.Core`.
+- Extract the server listener and client connection lifecycle into `MasterSplinter.Server.Core`.
 - Extract the client connection, identity, reconnect, and message-routing behavior into
-  `LocationRemote.Client.Core`.
+  `MasterSplinter.Client.Core`.
 - Add a modern runnable server host, initially minimal and local, that uses the shared server core.
 - Add a modern runnable client host, initially minimal and local, that uses the shared client core.
 - Prove handshake parity against the legacy protocol fixtures.
@@ -199,7 +199,7 @@ Parity acceptance should include:
 - Existing wire fixtures remain compatible.
 - Modern command routing matches the tested legacy message behavior.
 - A documented capability matrix exists for supported, deferred, removed, and Windows-only features.
-- `dotnet test .\LocationRemote.sln` remains green.
+- `dotnet test .\MasterSplinter.sln` remains green.
 
 ## Priority 6: Permissioned Operators And Audit Logging
 
@@ -212,7 +212,7 @@ Status: Planned after modern runtime parity
   consent requests, and permission denials.
 - Keep audit storage behind an interface so Web API, CLI, and desktop UI can share the same model.
 
-Note: lightweight audit contracts already exist in `LocationRemote.Server.Core` because they help
+Note: lightweight audit contracts already exist in `MasterSplinter.Server.Core` because they help
 shape command dispatch safely. Full permissioned operators and persistent audit logging remain
 post-parity roadmap features.
 
@@ -220,7 +220,7 @@ post-parity roadmap features.
 
 Status: Planned after modern runtime parity
 
-- Add a root-level Web API project after `LocationRemote.Server.Core` owns orchestration contracts.
+- Add a root-level Web API project after `MasterSplinter.Server.Core` owns orchestration contracts.
 - Expose client inventory, session status, command dispatch, audit query, and capability discovery.
 - Use the server core for all business logic.
 - Do not duplicate server orchestration inside controllers.
@@ -230,7 +230,7 @@ Status: Planned after modern runtime parity
 
 Status: Planned after modern runtime parity
 
-- Add a root-level CLI project after `LocationRemote.Server.Core` has stable orchestration APIs.
+- Add a root-level CLI project after `MasterSplinter.Server.Core` has stable orchestration APIs.
 - Support running a server, listing clients, inspecting capabilities, and dispatching safe commands.
 - Use the same shared server core as the Web API.
 - Keep CLI output scriptable and testable.
@@ -332,32 +332,32 @@ Recommended next sequence:
 Current modern acceptance:
 
 ```powershell
-dotnet test .\LocationRemote.sln
+dotnet test .\MasterSplinter.sln
 ```
 
 Current server host smoke test:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --smoke-test
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\MasterSplinter.Server.Host.csproj -- --smoke-test
 ```
 
 Current client host smoke test:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --smoke-test
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --smoke-test
 ```
 
 Current loopback handshake check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\LocationRemote.Server.Host\LocationRemote.Server.Host.csproj -- --port 47830 --once
-dotnet run --no-launch-profile --project .\src\LocationRemote.Client.Host\LocationRemote.Client.Host.csproj -- --port 47830
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Server.Host\MasterSplinter.Server.Host.csproj -- --port 47830 --once
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47830
 ```
 
 Legacy check, for awareness:
 
 ```powershell
-dotnet test .\MasterSplinter\Quasar.sln
+dotnet test .\legacy\Quasar\Quasar.sln
 ```
 
 The modern root solution is the main quality gate until the legacy WinForms surface is either
