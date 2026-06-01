@@ -6,9 +6,11 @@ Last updated: June 1, 2026
 
 Modernize the archived Quasar-derived codebase inside the `RemoteControl` repository,
 with `MasterSplinter` as the modern product/solution name and a testable .NET 10
-implementation first. The next major gate is functional parity:
-the modern root projects should be able to run equivalent client/server behavior, with
-tests proving that the modern behavior mirrors the legacy behavior we intentionally keep.
+implementation first. The next major gate is legacy admin-tool feature parity:
+the modern root projects should be able to run equivalent client/server behavior for
+legitimate administration features, with tests proving that the modern behavior mirrors
+the legacy behavior we intentionally keep. Sensitive legacy features may require
+compatibility parity first and redesigned runtime behavior before they are enabled.
 
 Only after that parity gate should we start adding the new roadmap features: Web API,
 CLI, permissioned operators, consentful client UI, Windows service mode, cross-platform
@@ -60,9 +62,9 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 13 passed.
-- `MasterSplinter.Host.Tests`: 9 passed.
-- `MasterSplinter.Server.Core.Tests`: 35 passed.
+- `MasterSplinter.Client.Core.Tests`: 25 passed.
+- `MasterSplinter.Host.Tests`: 15 passed.
+- `MasterSplinter.Server.Core.Tests`: 38 passed.
 
 Known legacy limitation:
 
@@ -110,12 +112,20 @@ Done:
 - Added response-handler adapters for client commands that emit protocol responses.
 - Added `GetSystemInfo` handling behind `ISystemInfoProvider`.
 - Added `GetDrives` handling behind `IDriveProvider`.
+- Added `GetDirectory` handling behind `IDirectoryProvider`.
+- Added `GetProcesses` handling behind `IProcessProvider`.
+- Added `GetStartupItems` handling behind `IStartupItemProvider`.
+- Added `GetConnections` handling behind `IConnectionProvider`.
 - Added `--handle-one-command` mode to the client host for one command-response loopback slice.
 - Added tests for known-message dispatch, unknown-message handling, faulted handlers,
   duplicate registration, cancellation-token flow, and cancellation propagation.
 - Added tests for mapping client identity options to the protocol identification message.
 - Added tests for `GetSystemInfo` response mapping and response-handler send behavior.
 - Added tests for `GetDrives` success mapping, legacy-style status errors, and response-handler send behavior.
+- Added tests for `GetDirectory` success mapping, legacy-style status errors, and response-handler send behavior.
+- Added tests for `GetProcesses` response mapping and response-handler send behavior.
+- Added tests for `GetStartupItems` success mapping, legacy-style status errors, and response-handler send behavior.
+- Added tests for `GetConnections` response mapping and response-handler send behavior.
 
 Left to do:
 
@@ -137,9 +147,11 @@ Done:
 - Added lifecycle coordinator that records identified sessions and removes disconnected/faulted sessions.
 - Added command dispatch result/status contracts.
 - Added command dispatch requests with correlation IDs, optional operator ID, and optional source.
+- Added command safety classification metadata for read-only, state-changing, consent-sensitive,
+  credential-access, and keystroke-access command families.
 - Added shared command dispatcher that future Web API and CLI projects can call.
 - Added audit event and audit sink abstractions with correlation, operator, source, message,
-  outcome, and error fields.
+  safety class, consent/permission flags, outcome, and error fields.
 - Added handshake coordinator and legacy identification validator for client identification.
 - Added handshake result surface that preserves protocol version and capability metadata.
 - Added minimal remote-client listener and connection abstractions.
@@ -157,6 +169,8 @@ Done:
   command dispatch, missing clients, send failures, audit events, and cancellation.
 - Added tests for caller-supplied correlation metadata, generated correlation IDs,
   and audit metadata flow.
+- Added tests proving completed read-only commands classify as read-only and sensitive
+  parity-target commands require permission, with consent where appropriate.
 - Added tests for lifecycle event emission, registry updates, pre-identification disconnects,
   invalid lifecycle inputs, and lifecycle cancellation flow.
 - Added tests for accepted identification, rejected legacy IDs, injectable validation,
@@ -174,6 +188,16 @@ Done:
   `GetSystemInfo` and send `GetSystemInfoResponse` back to the server sink.
 - Added automated loopback TCP command-response coverage proving the modern client can handle
   `GetDrives` and send `GetDrivesResponse` back to the server sink.
+- Added optional loopback TCP TLS 1.2 support and host tests proving matching pinned
+  server certificates complete handshakes while mismatched certificates are rejected.
+- Added automated loopback TCP command-response coverage proving the modern client can handle
+  `GetDirectory` and send `GetDirectoryResponse` back to the server sink.
+- Added automated loopback TCP command-response coverage proving the modern client can handle
+  `GetProcesses` and send `GetProcessesResponse` back to the server sink.
+- Added automated loopback TCP command-response coverage proving the modern client can handle
+  `GetStartupItems` and send `GetStartupItemsResponse` back to the server sink.
+- Added automated loopback TCP command-response coverage proving the modern client can handle
+  `GetConnections` and send `GetConnectionsResponse` back to the server sink.
 - Verified `MasterSplinter.Server.Host --smoke-test` starts and stops cleanly.
 - Verified `MasterSplinter.Client.Host --smoke-test` creates a modern identification payload.
 - Verified a two-process loopback TCP handshake: server host `--once` plus client host returns
@@ -215,6 +239,13 @@ Parity acceptance should include:
 - Modern command routing matches the tested legacy message behavior.
 - A documented capability matrix exists for supported, deferred, removed, and Windows-only features.
 - `dotnet test .\MasterSplinter.sln` remains green.
+
+Current capability matrix:
+
+- `docs/capability-matrix.md` documents the current keep/redesign/defer/quarantine decisions
+  and should be checked before porting state-changing or sensitive legacy behavior. The
+  matrix treats legacy admin-tool parity as the goal, with compatibility parity separated
+  from runtime parity for features that require additional consent, legal, or safety review.
 
 ## Priority 6: Permissioned Operators And Audit Logging
 
@@ -337,8 +368,8 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add TLS/certificate validation parity for the transport handshake.
-2. Continue extracting tested legacy behavior until the modern runtime parity gate is met.
+1. Add policy enforcement around command safety metadata before state-changing slices.
+2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
 3. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 

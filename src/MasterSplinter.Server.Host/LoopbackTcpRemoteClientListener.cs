@@ -3,8 +3,11 @@ using Quasar.Common.Messages;
 using Quasar.Common.Networking;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.Security;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -77,7 +80,8 @@ namespace MasterSplinter.Server.Host
                 try
                 {
                     TcpClient client = await _listener.AcceptTcpClientAsync(cancellationToken).ConfigureAwait(false);
-                    var connection = new TcpRemoteClientConnection(Guid.NewGuid().ToString("N"), client);
+                    Stream stream = await CreateAuthenticatedStreamAsync(client, cancellationToken).ConfigureAwait(false);
+                    var connection = new TcpRemoteClientConnection(Guid.NewGuid().ToString("N"), client, stream);
                     _connections[connection.ConnectionId] = connection;
                     await _handler.ClientConnectedAsync(connection, cancellationToken).ConfigureAwait(false);
                     _ = ReadLoopAsync(connection, cancellationToken);
@@ -94,6 +98,29 @@ namespace MasterSplinter.Server.Host
                 {
                     Console.Error.WriteLine($"Accept failed: {exception.Message}");
                 }
+            }
+        }
+
+        private async Task<Stream> CreateAuthenticatedStreamAsync(TcpClient client, CancellationToken cancellationToken)
+        {
+            NetworkStream networkStream = client.GetStream();
+            if (Options.ServerCertificate == null)
+                return networkStream;
+
+            var sslStream = new SslStream(networkStream, false);
+            try
+            {
+                await sslStream.AuthenticateAsServerAsync(
+                    Options.ServerCertificate,
+                    false,
+                    SslProtocols.Tls12,
+                    false).WaitAsync(cancellationToken).ConfigureAwait(false);
+                return sslStream;
+            }
+            catch
+            {
+                sslStream.Dispose();
+                throw;
             }
         }
 
@@ -129,13 +156,13 @@ namespace MasterSplinter.Server.Host
         {
             private readonly object _sendLock = new object();
             private readonly TcpClient _client;
-            private readonly NetworkStream _stream;
+            private readonly Stream _stream;
 
-            public TcpRemoteClientConnection(string connectionId, TcpClient client)
+            public TcpRemoteClientConnection(string connectionId, TcpClient client, Stream stream)
             {
                 ConnectionId = connectionId;
                 _client = client;
-                _stream = client.GetStream();
+                _stream = stream;
                 ConnectedAtUtc = DateTimeOffset.UtcNow;
                 LastSeenUtc = ConnectedAtUtc;
             }
@@ -183,6 +210,7 @@ namespace MasterSplinter.Server.Host
 
             public Task DisconnectAsync(string reason, CancellationToken cancellationToken)
             {
+                _stream.Dispose();
                 _client.Close();
                 return Task.CompletedTask;
             }

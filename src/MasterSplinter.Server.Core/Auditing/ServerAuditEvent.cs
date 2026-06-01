@@ -11,6 +11,9 @@ namespace MasterSplinter.Server.Core.Auditing
             string operatorId,
             string source,
             string messageType,
+            string safetyClass,
+            bool requiresPermission,
+            bool requiresConsent,
             string outcome,
             string errorMessage)
         {
@@ -20,6 +23,8 @@ namespace MasterSplinter.Server.Core.Auditing
                 throw new ArgumentException("Client id is required.", nameof(clientId));
             if (string.IsNullOrWhiteSpace(messageType))
                 throw new ArgumentException("Message type is required.", nameof(messageType));
+            if (string.IsNullOrWhiteSpace(safetyClass))
+                throw new ArgumentException("Safety class is required.", nameof(safetyClass));
             if (string.IsNullOrWhiteSpace(outcome))
                 throw new ArgumentException("Outcome is required.", nameof(outcome));
 
@@ -29,6 +34,9 @@ namespace MasterSplinter.Server.Core.Auditing
             OperatorId = operatorId;
             Source = source;
             MessageType = messageType;
+            SafetyClass = safetyClass;
+            RequiresPermission = requiresPermission;
+            RequiresConsent = requiresConsent;
             Outcome = outcome;
             ErrorMessage = errorMessage;
         }
@@ -44,6 +52,12 @@ namespace MasterSplinter.Server.Core.Auditing
         public string Source { get; }
 
         public string MessageType { get; }
+
+        public string SafetyClass { get; }
+
+        public bool RequiresPermission { get; }
+
+        public bool RequiresConsent { get; }
 
         public string Outcome { get; }
 

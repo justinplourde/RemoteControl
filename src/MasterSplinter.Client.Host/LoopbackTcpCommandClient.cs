@@ -2,8 +2,12 @@ using MasterSplinter.Client.Core.Dispatch;
 using Quasar.Common.Messages;
 using Quasar.Common.Networking;
 using System;
+using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,6 +22,23 @@ namespace MasterSplinter.Client.Host
             IMessageDispatcher dispatcher,
             CancellationToken cancellationToken)
         {
+            return await IdentifyAndHandleOneCommandAsync(
+                host,
+                port,
+                identification,
+                dispatcher,
+                null,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<ClientIdentificationResult> IdentifyAndHandleOneCommandAsync(
+            string host,
+            int port,
+            ClientIdentification identification,
+            IMessageDispatcher dispatcher,
+            X509Certificate2 expectedServerCertificate,
+            CancellationToken cancellationToken)
+        {
             if (dispatcher == null)
                 throw new ArgumentNullException(nameof(dispatcher));
 
@@ -25,7 +46,11 @@ namespace MasterSplinter.Client.Host
             using (var client = new TcpClient())
             {
                 await client.ConnectAsync(address, port, cancellationToken).ConfigureAwait(false);
-                using (NetworkStream stream = client.GetStream())
+                using (Stream stream = await CreateAuthenticatedStreamAsync(
+                    client,
+                    address,
+                    expectedServerCertificate,
+                    cancellationToken).ConfigureAwait(false))
                 {
                     using (var writer = new PayloadWriter(stream, true))
                     {
@@ -54,6 +79,36 @@ namespace MasterSplinter.Client.Host
             }
         }
 
+        private static async Task<Stream> CreateAuthenticatedStreamAsync(
+            TcpClient client,
+            IPAddress address,
+            X509Certificate2 expectedServerCertificate,
+            CancellationToken cancellationToken)
+        {
+            NetworkStream networkStream = client.GetStream();
+            if (expectedServerCertificate == null)
+                return networkStream;
+
+            var sslStream = new SslStream(
+                networkStream,
+                false,
+                (sender, certificate, chain, errors) => expectedServerCertificate.Equals(certificate));
+            try
+            {
+                await sslStream.AuthenticateAsClientAsync(
+                    address.ToString(),
+                    null,
+                    SslProtocols.Tls12,
+                    false).WaitAsync(cancellationToken).ConfigureAwait(false);
+                return sslStream;
+            }
+            catch
+            {
+                sslStream.Dispose();
+                throw;
+            }
+        }
+
         private static IPAddress ResolveLoopbackAddress(string host)
         {
             if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
@@ -68,9 +123,9 @@ namespace MasterSplinter.Client.Host
         private sealed class LoopbackClientCommandContext : IClientCommandContext
         {
             private readonly object _sendLock = new object();
-            private readonly NetworkStream _stream;
+            private readonly Stream _stream;
 
-            public LoopbackClientCommandContext(string clientId, NetworkStream stream)
+            public LoopbackClientCommandContext(string clientId, Stream stream)
             {
                 ClientId = clientId;
                 _stream = stream;

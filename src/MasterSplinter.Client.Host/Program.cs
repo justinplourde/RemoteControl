@@ -1,6 +1,9 @@
+using MasterSplinter.Client.Core.Connections;
 using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.FileSystem;
 using MasterSplinter.Client.Core.Identity;
+using MasterSplinter.Client.Core.Processes;
+using MasterSplinter.Client.Core.Startup;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
 using Quasar.Common.Messages;
@@ -34,9 +37,13 @@ namespace MasterSplinter.Client.Host
                     new ClientCapabilities());
 
                 identityOptions.Capabilities.SupportedFeatures.Add("handshake");
+                identityOptions.Capabilities.SupportedFeatures.Add("filesystem.directory");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.drives");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
+                identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
+                identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
+                identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
 
                 ClientIdentification identification = new ClientIdentificationFactory().Create(identityOptions);
 
@@ -54,8 +61,16 @@ namespace MasterSplinter.Client.Host
                 if (options.HandleOneCommand)
                 {
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetConnections>(
+                            new GetConnectionsHandler(new TcpConnectionProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetDirectory>(
+                            new GetDirectoryHandler(new DirectoryProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
                             new GetDrivesHandler(new DriveProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
+                            new GetProcessesHandler(new ProcessProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(
+                            new GetStartupItemsHandler(new StartupItemProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(
                             new GetSystemInfoHandler(new SystemInfoProvider())))
                         .Build();

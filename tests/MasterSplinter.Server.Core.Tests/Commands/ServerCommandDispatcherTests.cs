@@ -35,6 +35,11 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.AreEqual("unit-test", auditSink.Events[0].Source);
             Assert.AreEqual("Sent", auditSink.Events[0].Outcome);
             Assert.AreEqual(typeof(GetSystemInfo).FullName, auditSink.Events[0].MessageType);
+            Assert.AreEqual("ReadOnlyInventory", auditSink.Events[0].SafetyClass);
+            Assert.IsFalse(auditSink.Events[0].RequiresPermission);
+            Assert.IsFalse(auditSink.Events[0].RequiresConsent);
+            Assert.AreEqual(CommandSafetyClass.ReadOnlyInventory, result.SafetyMetadata.SafetyClass);
+            Assert.IsTrue(result.SafetyMetadata.IsReadOnly);
         }
 
         [TestMethod, TestCategory("ServerCore")]
@@ -63,6 +68,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.AreEqual(CommandDispatchStatus.ClientNotFound, result.Status);
             Assert.AreEqual("ClientNotFound", auditSink.Events[0].Outcome);
             Assert.AreEqual(result.CorrelationId, auditSink.Events[0].CorrelationId);
+            Assert.AreEqual(CommandSafetyClass.ReadOnlyInventory, result.SafetyMetadata.SafetyClass);
         }
 
         [TestMethod, TestCategory("ServerCore")]
@@ -82,6 +88,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.AreEqual(result.CorrelationId, auditSink.Events[0].CorrelationId);
             Assert.AreEqual("Faulted", auditSink.Events[0].Outcome);
             Assert.AreEqual("send failed", auditSink.Events[0].ErrorMessage);
+            Assert.AreEqual(CommandSafetyClass.ReadOnlyInventory, result.SafetyMetadata.SafetyClass);
         }
 
         [TestMethod, TestCategory("ServerCore")]

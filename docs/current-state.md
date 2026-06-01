@@ -38,10 +38,10 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 13 passed
-- `MasterSplinter.Server.Core.Tests`: 35 passed
-- `MasterSplinter.Host.Tests`: 9 passed
-- Total: 89 passed, 1 skipped, 0 failed
+- `MasterSplinter.Client.Core.Tests`: 25 passed
+- `MasterSplinter.Server.Core.Tests`: 38 passed
+- `MasterSplinter.Host.Tests`: 15 passed
+- Total: 110 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -62,7 +62,7 @@ The latest manual loopback check returned `Handshake result: True`.
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, and drive-list handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, and TCP-connection listing.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
@@ -101,6 +101,17 @@ All modern projects target `net10.0`.
 - Loopback TCP `GetSystemInfo` command-response path added and tested.
 - `GetDrives` client handler added with deterministic tests.
 - Loopback TCP `GetDrives` command-response path added and tested.
+- Loopback TCP TLS 1.2 transport option added and tested with pinned server certificate validation.
+- `GetDirectory` client handler added with deterministic tests.
+- Loopback TCP `GetDirectory` command-response path added and tested.
+- `GetProcesses` client handler added with deterministic tests.
+- Loopback TCP `GetProcesses` command-response path added and tested.
+- `GetStartupItems` client handler added with deterministic tests.
+- Loopback TCP `GetStartupItems` command-response path added and tested.
+- `GetConnections` client handler added with deterministic tests.
+- Loopback TCP `GetConnections` command-response path added and tested.
+- Capability matrix added at `docs/capability-matrix.md` with legacy admin-tool parity as the goal and with keep/redesign/defer/quarantine decisions.
+- Server command safety classification added and attached to dispatch results and audit events.
 
 ## Current Limitations
 
@@ -111,7 +122,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Extract the next small read-only client handler behind explicit interfaces.
-2. Add parity tests against legacy behavior before moving each behavior slice.
-3. Build a capability matrix that marks each feature as portable, Windows-only, deferred, or removed.
+1. Add policy enforcement around command safety metadata before state-changing slices.
+2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
+3. Add parity tests against legacy behavior before moving each behavior slice.
 4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, CLI, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
