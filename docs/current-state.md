@@ -39,10 +39,10 @@ Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
 - `MasterSplinter.Client.Core.Tests`: 25 passed
-- `MasterSplinter.Cli.Tests`: 5 passed
+- `MasterSplinter.Cli.Tests`: 6 passed
 - `MasterSplinter.Server.Core.Tests`: 47 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 124 passed, 1 skipped, 0 failed
+- Total: 125 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -63,12 +63,13 @@ The latest manual loopback check returned `Handshake result: True`.
 Current manual command-dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47834
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47834 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47835
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47835 --handle-one-command
 ```
 
 The latest manual dispatch check sent `GetDrives`, received `GetDrivesResponse`,
-printed `Safety=FileRead`, and returned `Dispatch result: Sent`.
+printed `Safety=FileRead`, returned `Dispatch result: Sent`, and showed the payload row
+`- C:\ (OS) [Local Disk, NTFS] => C:\`.
 
 Current CLI dispatch command names:
 
@@ -140,6 +141,8 @@ All modern projects target `net10.0`.
 - CLI dispatch expanded to `GetSystemInfo`, `GetDrives`, `GetDirectory`, `GetProcesses`,
   `GetStartupItems`, and `GetConnections`, with command safety metadata and authorization
   service plumbing applied before dispatch.
+- CLI response formatting now prints payload rows for supported read-only responses and has
+  formatter coverage in `MasterSplinter.Cli.Tests`.
 
 ## Current Limitations
 

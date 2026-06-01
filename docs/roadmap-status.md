@@ -65,7 +65,7 @@ Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
 - `MasterSplinter.Client.Core.Tests`: 25 passed.
-- `MasterSplinter.Cli.Tests`: 5 passed.
+- `MasterSplinter.Cli.Tests`: 6 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 47 passed.
 
@@ -224,6 +224,10 @@ Done:
   before sending commands through `ServerCommandDispatcher`.
 - Verified a two-process CLI `get-drives` smoke returns `Dispatch result: Sent`,
   `Safety=FileRead`, and `GetDrivesResponse`.
+- Added CLI response formatting rows for system info, drives, directory entries, processes,
+  startup items, and TCP connections.
+- Verified the latest two-process CLI `get-drives` smoke prints
+  `- C:\ (OS) [Local Disk, NTFS] => C:\`.
 
 Left to do:
 
@@ -426,8 +430,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47834
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47834 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47835
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47835 --handle-one-command
 ```
 
 Legacy check, for awareness:

@@ -7,6 +7,7 @@ using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using Quasar.Common.Messages;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,7 +87,7 @@ namespace MasterSplinter.Cli
                     TimeSpan.FromSeconds(options.TimeoutSeconds),
                     cancellationToken).ConfigureAwait(false);
                 Console.WriteLine($"Dispatch response: {reply.GetType().Name}.");
-                PrintResponseSummary(reply);
+                PrintResponse(reply);
                 return 0;
             }
             finally
@@ -143,29 +144,82 @@ namespace MasterSplinter.Cli
             return request.WithAuthorization(authorization);
         }
 
-        private static void PrintResponseSummary(IMessage reply)
+        public static string[] FormatResponse(IMessage reply)
         {
+            if (reply == null)
+                throw new ArgumentNullException(nameof(reply));
+
+            var lines = new List<string>();
             switch (reply)
             {
                 case GetSystemInfoResponse response:
-                    Console.WriteLine($"System info entries: {Count(response.SystemInfos)}.");
+                    lines.Add($"System info entries: {Count(response.SystemInfos)}.");
+                    if (response.SystemInfos != null)
+                    {
+                        foreach (Tuple<string, string> item in response.SystemInfos)
+                            lines.Add($"- {ValueOrDash(item.Item1)}: {ValueOrDash(item.Item2)}");
+                    }
                     break;
                 case GetDrivesResponse response:
-                    Console.WriteLine($"Drives: {Count(response.Drives)}.");
+                    lines.Add($"Drives: {Count(response.Drives)}.");
+                    if (response.Drives != null)
+                    {
+                        foreach (Quasar.Common.Models.Drive drive in response.Drives)
+                            lines.Add($"- {ValueOrDash(drive.DisplayName)} => {ValueOrDash(drive.RootDirectory)}");
+                    }
                     break;
                 case GetDirectoryResponse response:
-                    Console.WriteLine($"Directory path: {response.RemotePath ?? "-"}; Items: {Count(response.Items)}.");
+                    lines.Add($"Directory path: {ValueOrDash(response.RemotePath)}; Items: {Count(response.Items)}.");
+                    if (response.Items != null)
+                    {
+                        foreach (Quasar.Common.Models.FileSystemEntry item in response.Items)
+                            lines.Add($"- {item.EntryType} {ValueOrDash(item.Name)} Size={item.Size}");
+                    }
                     break;
                 case GetProcessesResponse response:
-                    Console.WriteLine($"Processes: {Count(response.Processes)}.");
+                    lines.Add($"Processes: {Count(response.Processes)}.");
+                    if (response.Processes != null)
+                    {
+                        foreach (Quasar.Common.Models.Process process in response.Processes)
+                            lines.Add($"- PID={process.Id} {ValueOrDash(process.Name)} Title={ValueOrDash(process.MainWindowTitle)}");
+                    }
                     break;
                 case GetStartupItemsResponse response:
-                    Console.WriteLine($"Startup items: {Count(response.StartupItems)}.");
+                    lines.Add($"Startup items: {Count(response.StartupItems)}.");
+                    if (response.StartupItems != null)
+                    {
+                        foreach (Quasar.Common.Models.StartupItem item in response.StartupItems)
+                            lines.Add($"- {item.Type} {ValueOrDash(item.Name)} => {ValueOrDash(item.Path)}");
+                    }
                     break;
                 case GetConnectionsResponse response:
-                    Console.WriteLine($"TCP connections: {Count(response.Connections)}.");
+                    lines.Add($"TCP connections: {Count(response.Connections)}.");
+                    if (response.Connections != null)
+                    {
+                        foreach (Quasar.Common.Models.TcpConnection connection in response.Connections)
+                        {
+                            lines.Add(
+                                $"- {ValueOrDash(connection.ProcessName)} {ValueOrDash(connection.LocalAddress)}:{connection.LocalPort} -> {ValueOrDash(connection.RemoteAddress)}:{connection.RemotePort} {connection.State}");
+                        }
+                    }
+                    break;
+                default:
+                    lines.Add($"No formatter for {reply.GetType().Name}.");
                     break;
             }
+
+            return lines.ToArray();
+        }
+
+        private static void PrintResponse(IMessage reply)
+        {
+            foreach (string line in FormatResponse(reply))
+                Console.WriteLine(line);
+        }
+
+        private static string ValueOrDash(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? "-" : value;
         }
 
         private static int Count(Array items)

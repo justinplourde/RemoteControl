@@ -18,7 +18,7 @@ Current checkpoint:
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
 - Latest committed work before this handoff: `Expand CLI read-only dispatch commands`
-- Latest known full test result: 124 passed, 1 skipped, 0 failed
+- Latest known full test result: 125 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -29,9 +29,11 @@ dotnet test .\MasterSplinter.sln
 Manual command-dispatch smoke check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47834
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47834 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47835
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47835 --handle-one-command
 ```
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
+
+The latest manual `get-drives` smoke printed `- C:\ (OS) [Local Disk, NTFS] => C:\`.
