@@ -64,7 +64,7 @@ Current verification:
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
 - `MasterSplinter.Client.Core.Tests`: 25 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
-- `MasterSplinter.Server.Core.Tests`: 38 passed.
+- `MasterSplinter.Server.Core.Tests`: 41 passed.
 
 Known legacy limitation:
 
@@ -149,6 +149,8 @@ Done:
 - Added command dispatch requests with correlation IDs, optional operator ID, and optional source.
 - Added command safety classification metadata for read-only, state-changing, consent-sensitive,
   credential-access, and keystroke-access command families.
+- Added default command dispatch policy enforcement that denies permission- or consent-gated
+  commands unless the dispatch request carries explicit authorization.
 - Added shared command dispatcher that future Web API and CLI projects can call.
 - Added audit event and audit sink abstractions with correlation, operator, source, message,
   safety class, consent/permission flags, outcome, and error fields.
@@ -171,6 +173,8 @@ Done:
   and audit metadata flow.
 - Added tests proving completed read-only commands classify as read-only and sensitive
   parity-target commands require permission, with consent where appropriate.
+- Added tests proving policy-denied commands are audited and not sent, while sensitive commands
+  with permission and consent are dispatched.
 - Added tests for lifecycle event emission, registry updates, pre-identification disconnects,
   invalid lifecycle inputs, and lifecycle cancellation flow.
 - Added tests for accepted identification, rejected legacy IDs, injectable validation,
@@ -368,7 +372,7 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Add policy enforcement around command safety metadata before state-changing slices.
+1. Add operator/consent models that can populate command dispatch authorization.
 2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
 3. Start original roadmap features: permissioned operators, Web API, CLI, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.

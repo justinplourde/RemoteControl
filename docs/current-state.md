@@ -39,9 +39,9 @@ Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
 - `MasterSplinter.Client.Core.Tests`: 25 passed
-- `MasterSplinter.Server.Core.Tests`: 38 passed
+- `MasterSplinter.Server.Core.Tests`: 41 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 110 passed, 1 skipped, 0 failed
+- Total: 113 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -112,6 +112,7 @@ All modern projects target `net10.0`.
 - Loopback TCP `GetConnections` command-response path added and tested.
 - Capability matrix added at `docs/capability-matrix.md` with legacy admin-tool parity as the goal and with keep/redesign/defer/quarantine decisions.
 - Server command safety classification added and attached to dispatch results and audit events.
+- Server command policy enforcement added so commands requiring permission or consent are denied unless dispatch authorization grants them.
 
 ## Current Limitations
 
@@ -122,7 +123,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Add policy enforcement around command safety metadata before state-changing slices.
+1. Add operator/consent models that can populate command dispatch authorization.
 2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
 3. Add parity tests against legacy behavior before moving each behavior slice.
 4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, CLI, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

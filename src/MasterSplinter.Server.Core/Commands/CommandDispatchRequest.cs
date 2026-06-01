@@ -11,6 +11,17 @@ namespace MasterSplinter.Server.Core.Commands
             IMessage message,
             string operatorId,
             string source)
+            : this(correlationId, clientId, message, operatorId, source, CommandDispatchAuthorization.None)
+        {
+        }
+
+        public CommandDispatchRequest(
+            Guid correlationId,
+            string clientId,
+            IMessage message,
+            string operatorId,
+            string source,
+            CommandDispatchAuthorization authorization)
         {
             if (correlationId == Guid.Empty)
                 throw new ArgumentException("Correlation id is required.", nameof(correlationId));
@@ -24,6 +35,7 @@ namespace MasterSplinter.Server.Core.Commands
             Message = message;
             OperatorId = operatorId;
             Source = source;
+            Authorization = authorization ?? CommandDispatchAuthorization.None;
         }
 
         public Guid CorrelationId { get; }
@@ -35,6 +47,8 @@ namespace MasterSplinter.Server.Core.Commands
         public string OperatorId { get; }
 
         public string Source { get; }
+
+        public CommandDispatchAuthorization Authorization { get; }
 
         public string MessageType => Message.GetType().FullName;
 

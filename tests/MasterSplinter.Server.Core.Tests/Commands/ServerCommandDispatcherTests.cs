@@ -92,6 +92,83 @@ namespace MasterSplinter.Server.Core.Tests.Commands
         }
 
         [TestMethod, TestCategory("ServerCore")]
+        public async Task PermissionRequiredCommandWithoutPermissionIsDeniedBeforeSend()
+        {
+            var session = new RecordingRemoteClientSession("client-1");
+            var registry = new ClientSessionRegistry();
+            registry.AddOrUpdate(session);
+            var auditSink = new RecordingAuditSink();
+            var dispatcher = new ServerCommandDispatcher(registry, auditSink);
+
+            CommandDispatchResult result = await dispatcher.DispatchAsync(
+                "client-1",
+                new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = Quasar.Common.Enums.FileType.File },
+                CancellationToken.None);
+
+            Assert.AreEqual(CommandDispatchStatus.PermissionDenied, result.Status);
+            Assert.AreEqual("Operator permission is required for this command.", result.DenialReason);
+            Assert.AreEqual(0, session.SentMessages.Count);
+            Assert.AreEqual("PermissionDenied", auditSink.Events[0].Outcome);
+            Assert.AreEqual("Operator permission is required for this command.", auditSink.Events[0].ErrorMessage);
+            Assert.AreEqual("FileWrite", auditSink.Events[0].SafetyClass);
+            Assert.IsTrue(auditSink.Events[0].RequiresPermission);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
+        public async Task ConsentRequiredCommandWithPermissionButWithoutConsentIsDeniedBeforeSend()
+        {
+            var session = new RecordingRemoteClientSession("client-1");
+            var registry = new ClientSessionRegistry();
+            registry.AddOrUpdate(session);
+            var auditSink = new RecordingAuditSink();
+            var dispatcher = new ServerCommandDispatcher(registry, auditSink);
+            var request = new CommandDispatchRequest(
+                Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                "client-1",
+                new DoShellExecute { Command = "whoami" },
+                "operator-1",
+                "unit-test",
+                new CommandDispatchAuthorization(true, false));
+
+            CommandDispatchResult result = await dispatcher.DispatchAsync(request, CancellationToken.None);
+
+            Assert.AreEqual(CommandDispatchStatus.ConsentRequired, result.Status);
+            Assert.AreEqual("Client consent is required for this command.", result.DenialReason);
+            Assert.AreEqual(0, session.SentMessages.Count);
+            Assert.AreEqual("ConsentRequired", auditSink.Events[0].Outcome);
+            Assert.AreEqual("Client consent is required for this command.", auditSink.Events[0].ErrorMessage);
+            Assert.AreEqual("Execution", auditSink.Events[0].SafetyClass);
+            Assert.IsTrue(auditSink.Events[0].RequiresConsent);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
+        public async Task SensitiveCommandWithPermissionAndConsentIsSent()
+        {
+            var session = new RecordingRemoteClientSession("client-1");
+            var registry = new ClientSessionRegistry();
+            registry.AddOrUpdate(session);
+            var auditSink = new RecordingAuditSink();
+            var dispatcher = new ServerCommandDispatcher(registry, auditSink);
+            var message = new DoShellExecute { Command = "whoami" };
+            var request = new CommandDispatchRequest(
+                Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                "client-1",
+                message,
+                "operator-1",
+                "unit-test",
+                new CommandDispatchAuthorization(true, true));
+
+            CommandDispatchResult result = await dispatcher.DispatchAsync(request, CancellationToken.None);
+
+            Assert.AreEqual(CommandDispatchStatus.Sent, result.Status);
+            Assert.AreSame(message, session.SentMessages[0]);
+            Assert.AreEqual(CommandSafetyClass.Execution, result.SafetyMetadata.SafetyClass);
+            Assert.AreEqual("Sent", auditSink.Events[0].Outcome);
+            Assert.IsTrue(auditSink.Events[0].RequiresPermission);
+            Assert.IsTrue(auditSink.Events[0].RequiresConsent);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
         public async Task CancellationFromSendIsPropagatedWhenTokenIsCanceled()
         {
             using (var tokenSource = new CancellationTokenSource())

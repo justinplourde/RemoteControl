@@ -4,6 +4,8 @@ namespace MasterSplinter.Server.Core.Commands
     {
         Sent,
         ClientNotFound,
+        PermissionDenied,
+        ConsentRequired,
         Faulted
     }
 }

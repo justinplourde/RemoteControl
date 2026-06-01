@@ -74,7 +74,7 @@ Two kinds of parity are tracked:
 
 The safest next implementation work is not another powerful command. Recommended next steps:
 
-- Add policy enforcement around command safety metadata.
+- Add operator/consent models that can populate command dispatch authorization.
 - Add audit expectations per safety class.
 - Add client capability reporting for completed slices.
 - Start a read/write split for registry and file-manager behavior before any write operations.
