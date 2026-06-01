@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `639c11f Add manual loopback command dispatch smoke`
+- Latest committed roadmap checkpoint before this handoff: `Expand CLI read-only dispatch commands`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -39,10 +39,10 @@ Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
 - `MasterSplinter.Client.Core.Tests`: 25 passed
-- `MasterSplinter.Cli.Tests`: 3 passed
+- `MasterSplinter.Cli.Tests`: 5 passed
 - `MasterSplinter.Server.Core.Tests`: 47 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 122 passed, 1 skipped, 0 failed
+- Total: 124 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -63,19 +63,28 @@ The latest manual loopback check returned `Handshake result: True`.
 Current manual command-dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-system-info --port 47833 --timeout-seconds 60
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47833 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47834
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47834 --handle-one-command
 ```
 
-The latest manual dispatch check sent `GetSystemInfo`, received `GetSystemInfoResponse`,
-and returned `Dispatch result: Sent`.
+The latest manual dispatch check sent `GetDrives`, received `GetDrivesResponse`,
+printed `Safety=FileRead`, and returned `Dispatch result: Sent`.
+
+Current CLI dispatch command names:
+
+- `get-system-info`
+- `get-drives`
+- `get-directory --path <path>`
+- `get-processes`
+- `get-startup-items`
+- `get-connections`
 
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
 - `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, and TCP-connection listing.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
-- `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch smoke testing.
+- `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
 - `tests/*`: MSTest coverage for the modern projects.
@@ -128,6 +137,9 @@ All modern projects target `net10.0`.
 - Server authorization models and services added to derive dispatch authorization from operator permissions and client consent.
 - Server host manual `--dispatch get-system-info` command added for loopback command-response smoke testing.
 - CLI manual `dispatch --command get-system-info` command added for loopback command-response smoke testing.
+- CLI dispatch expanded to `GetSystemInfo`, `GetDrives`, `GetDirectory`, `GetProcesses`,
+  `GetStartupItems`, and `GetConnections`, with command safety metadata and authorization
+  service plumbing applied before dispatch.
 
 ## Current Limitations
 
@@ -138,8 +150,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Wire CLI command request creation through operator/consent authorization metadata.
-2. Expand the CLI from one-command smoke testing to scriptable client listing and additional safe commands.
-3. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
-4. Add parity tests against legacy behavior before moving each behavior slice.
-5. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
+1. Add CLI commands for listing connected clients and selecting a specific client ID.
+2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
+3. Add parity tests against legacy behavior before moving each behavior slice.
+4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

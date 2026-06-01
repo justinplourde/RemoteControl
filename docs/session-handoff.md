@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `639c11f Add manual loopback command dispatch smoke`
-- Latest known full test result: 122 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Expand CLI read-only dispatch commands`
+- Latest known full test result: 124 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -29,6 +29,9 @@ dotnet test .\MasterSplinter.sln
 Manual command-dispatch smoke check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-system-info --port 47833 --timeout-seconds 60
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47833 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47834
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47834 --handle-one-command
 ```
+
+Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
+`get-processes`, `get-startup-items`, and `get-connections`.

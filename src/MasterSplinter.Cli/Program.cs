@@ -1,3 +1,4 @@
+using MasterSplinter.Server.Core.Authorization;
 using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Handshake;
 using MasterSplinter.Server.Core.Lifecycle;
@@ -65,11 +66,18 @@ namespace MasterSplinter.Cli
                 if (session == null)
                     throw new InvalidOperationException("No identified client is available for dispatch.");
 
-                IMessage command = CreateMessage(options.DispatchCommand);
+                IMessage command = CreateMessage(options);
+                CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
+                    options,
+                    session.ClientId,
+                    command,
+                    cancellationToken).ConfigureAwait(false);
+
                 CommandDispatchResult result = await new ServerCommandDispatcher(registry)
-                    .DispatchAsync(session.ClientId, command, cancellationToken)
+                    .DispatchAsync(request, cancellationToken)
                     .ConfigureAwait(false);
-                Console.WriteLine($"Dispatch result: {result.Status}.");
+                Console.WriteLine(
+                    $"Dispatch result: {result.Status}. Safety={result.SafetyMetadata.SafetyClass}; RequiresPermission={result.SafetyMetadata.RequiresPermission}; RequiresConsent={result.SafetyMetadata.RequiresConsent}.");
 
                 if (result.Status != CommandDispatchStatus.Sent)
                     return 2;
@@ -78,6 +86,7 @@ namespace MasterSplinter.Cli
                     TimeSpan.FromSeconds(options.TimeoutSeconds),
                     cancellationToken).ConfigureAwait(false);
                 Console.WriteLine($"Dispatch response: {reply.GetType().Name}.");
+                PrintResponseSummary(reply);
                 return 0;
             }
             finally
@@ -86,12 +95,87 @@ namespace MasterSplinter.Cli
             }
         }
 
-        private static IMessage CreateMessage(string dispatchCommand)
+        public static IMessage CreateMessage(CliOptions options)
         {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            string dispatchCommand = options.DispatchCommand;
             if (string.Equals(dispatchCommand, "get-system-info", StringComparison.OrdinalIgnoreCase))
                 return new GetSystemInfo();
+            if (string.Equals(dispatchCommand, "get-drives", StringComparison.OrdinalIgnoreCase))
+                return new GetDrives();
+            if (string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase))
+                return new GetDirectory { RemotePath = options.Path };
+            if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))
+                return new GetProcesses();
+            if (string.Equals(dispatchCommand, "get-startup-items", StringComparison.OrdinalIgnoreCase))
+                return new GetStartupItems();
+            if (string.Equals(dispatchCommand, "get-connections", StringComparison.OrdinalIgnoreCase))
+                return new GetConnections();
 
             throw new ArgumentException($"Unknown dispatch command '{dispatchCommand}'.");
+        }
+
+        private static async Task<CommandDispatchRequest> CreateAuthorizedRequestAsync(
+            CliOptions options,
+            string clientId,
+            IMessage command,
+            CancellationToken cancellationToken)
+        {
+            var request = new CommandDispatchRequest(
+                Guid.NewGuid(),
+                clientId,
+                command,
+                options.OperatorId,
+                "cli");
+
+            CommandSafetyMetadata safetyMetadata = DefaultCommandSafetyClassifier.Instance.Classify(command);
+            var authorizationService = new CommandAuthorizationService(
+                new CliOperatorPermissionService(options.GrantPermission),
+                new CliClientConsentService(options.GrantConsent));
+            CommandDispatchAuthorization authorization = await authorizationService.AuthorizeAsync(
+                new OperatorIdentity(options.OperatorId, options.OperatorId),
+                request,
+                safetyMetadata,
+                cancellationToken).ConfigureAwait(false);
+
+            return request.WithAuthorization(authorization);
+        }
+
+        private static void PrintResponseSummary(IMessage reply)
+        {
+            switch (reply)
+            {
+                case GetSystemInfoResponse response:
+                    Console.WriteLine($"System info entries: {Count(response.SystemInfos)}.");
+                    break;
+                case GetDrivesResponse response:
+                    Console.WriteLine($"Drives: {Count(response.Drives)}.");
+                    break;
+                case GetDirectoryResponse response:
+                    Console.WriteLine($"Directory path: {response.RemotePath ?? "-"}; Items: {Count(response.Items)}.");
+                    break;
+                case GetProcessesResponse response:
+                    Console.WriteLine($"Processes: {Count(response.Processes)}.");
+                    break;
+                case GetStartupItemsResponse response:
+                    Console.WriteLine($"Startup items: {Count(response.StartupItems)}.");
+                    break;
+                case GetConnectionsResponse response:
+                    Console.WriteLine($"TCP connections: {Count(response.Connections)}.");
+                    break;
+            }
+        }
+
+        private static int Count(Array items)
+        {
+            return items == null ? 0 : items.Length;
+        }
+
+        private static int Count(System.Collections.ICollection items)
+        {
+            return items == null ? 0 : items.Count;
         }
 
         private sealed class CompletionLifecycleSink : IClientConnectionLifecycleSink
@@ -133,6 +217,46 @@ namespace MasterSplinter.Cli
                     $"Received {message.GetType().Name} from client {connection.ClientId ?? "-"} on {connection.ConnectionId}.");
                 _response.TrySetResult(message);
                 return Task.CompletedTask;
+            }
+        }
+
+        private sealed class CliOperatorPermissionService : IOperatorPermissionService
+        {
+            private readonly bool _grantPermission;
+
+            public CliOperatorPermissionService(bool grantPermission)
+            {
+                _grantPermission = grantPermission;
+            }
+
+            public Task<bool> HasPermissionAsync(
+                OperatorIdentity operatorIdentity,
+                OperatorPermission permission,
+                CommandDispatchRequest request,
+                CommandSafetyMetadata safetyMetadata,
+                CancellationToken cancellationToken)
+            {
+                return Task.FromResult(_grantPermission);
+            }
+        }
+
+        private sealed class CliClientConsentService : IClientConsentService
+        {
+            private readonly bool _grantConsent;
+
+            public CliClientConsentService(bool grantConsent)
+            {
+                _grantConsent = grantConsent;
+            }
+
+            public Task<bool> HasConsentAsync(
+                string clientId,
+                OperatorIdentity operatorIdentity,
+                CommandDispatchRequest request,
+                CommandSafetyMetadata safetyMetadata,
+                CancellationToken cancellationToken)
+            {
+                return Task.FromResult(_grantConsent);
             }
         }
     }

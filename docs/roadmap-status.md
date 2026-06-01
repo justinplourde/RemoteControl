@@ -65,7 +65,7 @@ Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
 - `MasterSplinter.Client.Core.Tests`: 25 passed.
-- `MasterSplinter.Cli.Tests`: 3 passed.
+- `MasterSplinter.Cli.Tests`: 5 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 47 passed.
 
@@ -218,6 +218,12 @@ Done:
 - Added CLI option parsing coverage and included `MasterSplinter.Cli.Tests` in the root solution.
 - Verified a two-process CLI dispatch smoke: CLI `dispatch --command get-system-info` plus client
   host `--handle-one-command` returns `Dispatch result: Sent` and `GetSystemInfoResponse`.
+- Expanded CLI dispatch to the current read-only parity slices: `GetSystemInfo`, `GetDrives`,
+  `GetDirectory`, `GetProcesses`, `GetStartupItems`, and `GetConnections`.
+- Routed CLI dispatch through command safety classification and authorization-service plumbing
+  before sending commands through `ServerCommandDispatcher`.
+- Verified a two-process CLI `get-drives` smoke returns `Dispatch result: Sent`,
+  `Safety=FileRead`, and `GetDrivesResponse`.
 
 Left to do:
 
@@ -293,7 +299,8 @@ Status: Planned after modern runtime parity
 Status: Started
 
 - Added a root-level CLI project for manual loopback smoke testing.
-- Support running a server, listing clients, inspecting capabilities, and dispatching safe commands.
+- Supports manual loopback dispatch for the current read-only command set.
+- Still needs listing clients, inspecting capabilities, and dispatching safe commands to selected clients.
 - Use the same shared server core as the Web API.
 - Keep CLI output scriptable and testable.
 - Consider a proxy/forwarding mode from the original roadmap once the listener model is extracted.
@@ -384,10 +391,9 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Wire CLI command request creation through operator/consent authorization metadata.
-2. Expand the CLI from one-command smoke testing to scriptable client listing and additional safe commands.
-3. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
-4. Start original roadmap features: permissioned operators, Web API, consent UI,
+1. Add CLI commands for listing connected clients and selecting a specific client ID.
+2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
+3. Start original roadmap features: permissioned operators, Web API, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -420,8 +426,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-system-info --port 47833 --timeout-seconds 60
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47833 --handle-one-command
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command get-drives --port 47834
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47834 --handle-one-command
 ```
 
 Legacy check, for awareness:
