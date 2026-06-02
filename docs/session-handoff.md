@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add file upload CLI parity`
-- Latest known full test result: 137 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add path rename CLI parity`
+- Latest known full test result: 141 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -35,8 +35,9 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `download-file --path <remote-file> [--output <local-file>]`,
-`upload-file --path <local-file> --remote-path <client-file>`, `get-processes`, `get-startup-items`,
-and `get-connections`.
+`upload-file --path <local-file> --remote-path <client-file>`,
+`rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
+`get-processes`, `get-startup-items`, and `get-connections`.
 
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
 `get-directory --path C:\`, `get-processes`, `get-startup-items`, and `get-connections` on one
@@ -54,5 +55,9 @@ local output path, and source/output SHA-256 hashes matched.
 File upload parity is now implemented for operator-to-client transfers. Manual loopback check:
 `upload-file` required `--grant-permission`, streamed a 34-byte temp file, wrote the requested
 client path, and source/remote SHA-256 hashes matched.
+
+File rename parity is now implemented. Manual loopback check: `rename-path` required
+`--grant-permission`, renamed a 34-byte temp file, removed the old path, created the new path,
+and preserved the SHA-256 hash.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

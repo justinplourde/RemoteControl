@@ -6,12 +6,14 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|upload-file|get-processes|get-startup-items|get-connections>] [--path <path>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|upload-file|rename-path|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
             string dispatchCommand,
             string path,
+            string newPath,
+            string pathType,
             string remotePath,
             string outputPath,
             string host,
@@ -25,6 +27,8 @@ namespace MasterSplinter.Cli
             Command = command;
             DispatchCommand = dispatchCommand;
             Path = path;
+            NewPath = newPath;
+            PathType = pathType;
             RemotePath = remotePath;
             OutputPath = outputPath;
             Host = host;
@@ -39,6 +43,8 @@ namespace MasterSplinter.Cli
         public string Command { get; }
         public string DispatchCommand { get; }
         public string Path { get; }
+        public string NewPath { get; }
+        public string PathType { get; }
         public string RemotePath { get; }
         public string OutputPath { get; }
         public string Host { get; }
@@ -55,12 +61,14 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
             string dispatchCommand = null;
             string path = null;
+            string newPath = null;
+            string pathType = null;
             string remotePath = null;
             string outputPath = null;
             string host = "127.0.0.1";
@@ -77,6 +85,10 @@ namespace MasterSplinter.Cli
                     dispatchCommand = ReadValue(args, ref index, "--command");
                 else if (string.Equals(arg, "--path", StringComparison.OrdinalIgnoreCase))
                     path = ReadValue(args, ref index, "--path");
+                else if (string.Equals(arg, "--new-path", StringComparison.OrdinalIgnoreCase))
+                    newPath = ReadValue(args, ref index, "--new-path");
+                else if (string.Equals(arg, "--type", StringComparison.OrdinalIgnoreCase))
+                    pathType = ReadValue(args, ref index, "--type");
                 else if (string.Equals(arg, "--remote-path", StringComparison.OrdinalIgnoreCase))
                     remotePath = ReadValue(args, ref index, "--remote-path");
                 else if (string.Equals(arg, "--output", StringComparison.OrdinalIgnoreCase))
@@ -118,10 +130,22 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--remote-path is required for upload-file.");
             }
 
+            if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for rename-path.");
+                if (string.IsNullOrWhiteSpace(newPath))
+                    throw new ArgumentException("--new-path is required for rename-path.");
+                if (string.IsNullOrWhiteSpace(pathType))
+                    throw new ArgumentException("--type is required for rename-path.");
+            }
+
             return new CliOptions(
                 command,
                 dispatchCommand,
                 path,
+                newPath,
+                pathType,
                 remotePath,
                 outputPath,
                 host,

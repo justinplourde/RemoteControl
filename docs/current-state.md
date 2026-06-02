@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add file upload CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add path rename CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 2, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 33 passed
+- `MasterSplinter.Client.Core.Tests`: 36 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
-- `MasterSplinter.Server.Core.Tests`: 49 passed
+- `MasterSplinter.Server.Core.Tests`: 50 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 137 passed, 1 skipped, 0 failed
+- Total: 141 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -90,6 +90,7 @@ Current CLI dispatch command names:
 - `get-directory --path <path>`
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
+- `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -175,14 +176,16 @@ All modern projects target `net10.0`.
 - File upload from operator to client added through `FileTransferChunk` and client
   complete/cancel responses, file-write permission enforcement, in-progress temp files,
   deterministic tests, and a manual loopback SHA-256 match check.
+- File rename added through `DoPathRename` and `SetStatusFileManager`, file-write permission
+  enforcement, deterministic tests, and a manual loopback hash-preserving temp-file rename check.
 
 ## Current Limitations
 
 - Legacy `legacy/Quasar/Quasar.sln` is preserved but is not the primary acceptance gate.
 - The legacy WinForms surface has known build/security friction on the current machine.
-- Modern hosts currently prove loopback handshake, read-only runtime parity, and permissioned
-  file download/upload slices, not full remote-management behavior.
-- File mutation, process mutation, shell, registry, desktop, service, and UI behavior are not fully
+- Modern hosts currently prove loopback handshake, read-only runtime parity, permissioned
+  file download/upload slices, and permissioned file rename, not full remote-management behavior.
+- File delete, process mutation, shell, registry, desktop, service, and UI behavior are not fully
   extracted yet.
 
 ## Recommended Next Tasks

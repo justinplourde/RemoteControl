@@ -18,6 +18,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("dispatch", options.Command);
             Assert.AreEqual("get-system-info", options.DispatchCommand);
             Assert.IsNull(options.Path);
+            Assert.IsNull(options.NewPath);
+            Assert.IsNull(options.PathType);
             Assert.IsNull(options.RemotePath);
             Assert.IsNull(options.OutputPath);
             Assert.AreEqual("127.0.0.1", options.Host);
@@ -52,6 +54,8 @@ namespace MasterSplinter.Cli.Tests
                 "--port", "47831",
                 "--timeout-seconds", "3",
                 "--operator-id", "alice",
+                "--new-path", "C:\\Temp\\new.bin",
+                "--type", "file",
                 "--remote-path", "C:\\Temp\\remote.bin",
                 "--output", "C:\\Temp\\out.bin",
                 "--grant-permission",
@@ -62,6 +66,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual(47831, options.Port);
             Assert.AreEqual(3, options.TimeoutSeconds);
             Assert.AreEqual("alice", options.OperatorId);
+            Assert.AreEqual("C:\\Temp\\new.bin", options.NewPath);
+            Assert.AreEqual("file", options.PathType);
             Assert.AreEqual("C:\\Temp\\remote.bin", options.RemotePath);
             Assert.AreEqual("C:\\Temp\\out.bin", options.OutputPath);
             Assert.IsTrue(options.GrantPermission);
@@ -112,6 +118,24 @@ namespace MasterSplinter.Cli.Tests
                 CliOptions.Parse(new[] { "dispatch", "--command", "upload-file", "--path", "C:\\Temp\\local.txt" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "upload-file", "--remote-path", "C:\\Temp\\remote.txt" }));
+
+            CliOptions rename = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "rename-path",
+                "--path", "C:\\Temp\\old.txt",
+                "--new-path", "C:\\Temp\\new.txt",
+                "--type", "file"
+            });
+
+            Assert.AreEqual("rename-path", rename.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\old.txt", rename.Path);
+            Assert.AreEqual("C:\\Temp\\new.txt", rename.NewPath);
+            Assert.AreEqual("file", rename.PathType);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "rename-path", "--path", "C:\\Temp\\old.txt", "--type", "file" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "rename-path", "--path", "C:\\Temp\\old.txt", "--new-path", "C:\\Temp\\new.txt" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -149,6 +173,18 @@ namespace MasterSplinter.Cli.Tests
             }));
             Assert.AreEqual(1, download.Id);
             Assert.AreEqual("C:\\Temp\\report.txt", download.RemotePath);
+
+            var rename = (DoPathRename)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "rename-path",
+                "--path", "C:\\Temp\\old.txt",
+                "--new-path", "C:\\Temp\\new.txt",
+                "--type", "file"
+            }));
+            Assert.AreEqual("C:\\Temp\\old.txt", rename.Path);
+            Assert.AreEqual("C:\\Temp\\new.txt", rename.NewPath);
+            Assert.AreEqual(FileType.File, rename.PathType);
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -195,9 +231,16 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\local.txt", upload.Path);
             Assert.AreEqual("C:\\Temp\\remote.txt", upload.RemotePath);
 
+            ListenCommand rename = ListenCommand.Parse("dispatch first rename-path --path C:\\Temp\\old.txt --new-path C:\\Temp\\new.txt --type file");
+            Assert.AreEqual("rename-path", rename.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\old.txt", rename.Path);
+            Assert.AreEqual("C:\\Temp\\new.txt", rename.NewPath);
+            Assert.AreEqual("file", rename.PathType);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first rename-path --path C:\\Temp\\old.txt --type file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 
@@ -290,6 +333,14 @@ namespace MasterSplinter.Cli.Tests
                     {
                         Tuple.Create("OS", "Windows")
                     }
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "File manager status: Renamed file; SetLastDirectorySeen=False." },
+                Program.FormatResponse(new SetStatusFileManager
+                {
+                    Message = "Renamed file",
+                    SetLastDirectorySeen = false
                 }));
 
             CollectionAssert.AreEqual(

@@ -67,10 +67,10 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 33 passed.
+- `MasterSplinter.Client.Core.Tests`: 36 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
-- `MasterSplinter.Server.Core.Tests`: 49 passed.
+- `MasterSplinter.Server.Core.Tests`: 50 passed.
 
 Known legacy limitation:
 
@@ -262,6 +262,13 @@ Done:
   offset-mismatch cleanup, cancel cleanup, CLI parsing, and safety metadata.
 - Verified loopback `upload-file` manually on June 2, 2026 with `--grant-permission`; a
   34-byte temp file was written to a client destination and source/remote SHA-256 hashes matched.
+- Added permissioned path rename through `DoPathRename` and `SetStatusFileManager`: the client
+  handler supports file/directory renames, refuses target overwrite, returns legacy-style status,
+  and focused tests cover success, existing-target rejection, CLI parsing/formatting, and
+  `FileWrite` safety metadata.
+- Verified loopback `rename-path` manually on June 2, 2026 with `--grant-permission`; a
+  34-byte temp file was renamed, the old path disappeared, the new path existed, and SHA-256
+  matched the pre-rename hash.
 
 Left to do:
 
@@ -488,6 +495,14 @@ Current manual file-upload check:
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47844 --grant-permission
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47844 --handle-commands
 dispatch first upload-file --path <local-file> --remote-path <client-file>
+```
+
+Current manual file-rename check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47845 --grant-permission
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47845 --handle-commands
+dispatch first rename-path --path <client-old-path> --new-path <client-new-path> --type file
 ```
 
 Legacy check, for awareness:

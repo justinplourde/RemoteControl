@@ -40,6 +40,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.directory");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.download");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.drives");
+                identityOptions.Capabilities.SupportedFeatures.Add("filesystem.rename");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.upload");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
@@ -70,6 +71,8 @@ namespace MasterSplinter.Client.Host
                             new GetDirectoryHandler(new DirectoryProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
                             new GetDrivesHandler(new DriveProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoPathRename>(
+                            new DoPathRenameHandler(new PathRenameProvider())))
                         .AddHandler(new FileTransferRequestHandler(new FileDownloadProvider()))
                         .AddHandler<FileTransferChunk>(fileUploadHandler)
                         .AddHandler<FileTransferCancel>(fileUploadHandler)

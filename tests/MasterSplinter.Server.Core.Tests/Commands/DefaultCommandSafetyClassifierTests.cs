@@ -100,6 +100,23 @@ namespace MasterSplinter.Server.Core.Tests.Commands
         }
 
         [TestMethod, TestCategory("ServerCore")]
+        public void PathRenameRequiresFileWritePermissionWithoutConsent()
+        {
+            CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(
+                new DoPathRename
+                {
+                    Path = "C:\\Temp\\old.txt",
+                    NewPath = "C:\\Temp\\new.txt",
+                    PathType = FileType.File
+                });
+
+            Assert.AreEqual(CommandSafetyClass.FileWrite, metadata.SafetyClass);
+            Assert.IsFalse(metadata.IsReadOnly);
+            Assert.IsTrue(metadata.RequiresPermission);
+            Assert.IsFalse(metadata.RequiresConsent);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
         public void UnknownCommandsAreConservative()
         {
             CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(new UnknownMessage());

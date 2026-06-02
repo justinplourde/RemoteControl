@@ -5,6 +5,7 @@ using MasterSplinter.Server.Core.Lifecycle;
 using MasterSplinter.Server.Core.Listeners;
 using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
+using Quasar.Common.Enums;
 using Quasar.Common.Messages;
 using System;
 using System.Collections.Generic;
@@ -194,10 +195,15 @@ namespace MasterSplinter.Cli
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            return CreateMessage(options.DispatchCommand, options.Path);
+            return CreateMessage(options.DispatchCommand, options.Path, options.NewPath, options.PathType);
         }
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
+        {
+            return CreateMessage(dispatchCommand, path, null, null);
+        }
+
+        public static IMessage CreateMessage(string dispatchCommand, string path, string newPath, string pathType)
         {
             if (IsUploadFileCommand(dispatchCommand))
                 throw new ArgumentException("upload-file is a multi-message command and cannot be created as a single message.");
@@ -209,6 +215,13 @@ namespace MasterSplinter.Cli
                 return new GetDirectory { RemotePath = path };
             if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
                 return new FileTransferRequest { Id = 1, RemotePath = path };
+            if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
+                return new DoPathRename
+                {
+                    Path = path,
+                    NewPath = newPath,
+                    PathType = ParsePathType(pathType)
+                };
             if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))
                 return new GetProcesses();
             if (string.Equals(dispatchCommand, "get-startup-items", StringComparison.OrdinalIgnoreCase))
@@ -241,7 +254,11 @@ namespace MasterSplinter.Cli
                 return;
             }
 
-            IMessage message = CreateMessage(listenCommand.DispatchCommand, listenCommand.Path);
+            IMessage message = CreateMessage(
+                listenCommand.DispatchCommand,
+                listenCommand.Path,
+                listenCommand.NewPath,
+                listenCommand.PathType);
             CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
                 options,
                 clientId,
@@ -426,6 +443,16 @@ namespace MasterSplinter.Cli
             return string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static FileType ParsePathType(string pathType)
+        {
+            if (string.Equals(pathType, "file", StringComparison.OrdinalIgnoreCase))
+                return FileType.File;
+            if (string.Equals(pathType, "directory", StringComparison.OrdinalIgnoreCase))
+                return FileType.Directory;
+
+            throw new ArgumentException("--type must be file or directory.");
+        }
+
         private static string ResolveClientId(ClientSessionRegistry registry, string clientId)
         {
             IReadOnlyList<ClientSessionSnapshot> snapshots = registry.GetSnapshots();
@@ -455,7 +482,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
@@ -688,6 +715,9 @@ namespace MasterSplinter.Cli
                                 $"- {ValueOrDash(connection.ProcessName)} {ValueOrDash(connection.LocalAddress)}:{connection.LocalPort} -> {ValueOrDash(connection.RemoteAddress)}:{connection.RemotePort} {connection.State}");
                         }
                     }
+                    break;
+                case SetStatusFileManager response:
+                    lines.Add($"File manager status: {ValueOrDash(response.Message)}; SetLastDirectorySeen={response.SetLastDirectorySeen}.");
                     break;
                 case FileTransferChunk response:
                     int bytes = response.Chunk == null || response.Chunk.Data == null ? 0 : response.Chunk.Data.Length;
