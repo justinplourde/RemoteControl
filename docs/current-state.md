@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Improve system info parity`
+- Latest committed roadmap checkpoint before this handoff: `Add file upload CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 2, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 30 passed
+- `MasterSplinter.Client.Core.Tests`: 33 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
-- `MasterSplinter.Server.Core.Tests`: 48 passed
+- `MasterSplinter.Server.Core.Tests`: 49 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 133 passed, 1 skipped, 0 failed
+- Total: 137 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -89,6 +89,7 @@ Current CLI dispatch command names:
 - `get-drives`
 - `get-directory --path <path>`
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
+- `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -96,7 +97,7 @@ Current CLI dispatch command names:
 Current CLI listen commands:
 
 - `clients`
-- `dispatch <client-id|first> <command> [--path <path>] [--output <local-path>]`
+- `dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>]`
 - `help`
 - `exit`
 
@@ -171,15 +172,18 @@ All modern projects target `net10.0`.
 - File download from client to operator added through `FileTransferRequest`, chunk/complete/cancel
   responses, file-read permission enforcement, CLI output writing, deterministic tests, and a
   manual loopback SHA-256 match check.
+- File upload from operator to client added through `FileTransferChunk` and client
+  complete/cancel responses, file-write permission enforcement, in-progress temp files,
+  deterministic tests, and a manual loopback SHA-256 match check.
 
 ## Current Limitations
 
 - Legacy `legacy/Quasar/Quasar.sln` is preserved but is not the primary acceptance gate.
 - The legacy WinForms surface has known build/security friction on the current machine.
-- Modern hosts currently prove loopback handshake, read-only runtime parity, and a first permissioned
-  file-download slice, not full remote-management behavior.
-- File upload, file mutation, process mutation, shell, registry, desktop, service, and UI behavior
-  are not fully extracted yet.
+- Modern hosts currently prove loopback handshake, read-only runtime parity, and permissioned
+  file download/upload slices, not full remote-management behavior.
+- File mutation, process mutation, shell, registry, desktop, service, and UI behavior are not fully
+  extracted yet.
 
 ## Recommended Next Tasks
 

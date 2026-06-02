@@ -17,6 +17,10 @@ namespace MasterSplinter.Cli
 {
     public static class Program
     {
+        private const int FileTransferId = 1;
+        private const int UploadChunkSize = 64 * 1024;
+        private const long MaxUploadFileSizeBytes = 100L * 1024L * 1024L;
+
         public static async Task<int> Main(string[] args)
         {
             try
@@ -141,6 +145,19 @@ namespace MasterSplinter.Cli
                 if (session == null)
                     throw new InvalidOperationException("No identified client is available for dispatch.");
 
+                if (IsUploadFileCommand(options.DispatchCommand))
+                {
+                    await DispatchUploadFileAsync(
+                        options,
+                        new ServerCommandDispatcher(registry),
+                        responseSink,
+                        session.ClientId,
+                        options.Path,
+                        options.RemotePath,
+                        cancellationToken).ConfigureAwait(false);
+                    return 0;
+                }
+
                 IMessage command = CreateMessage(options);
                 CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
                     options,
@@ -182,6 +199,8 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
+            if (IsUploadFileCommand(dispatchCommand))
+                throw new ArgumentException("upload-file is a multi-message command and cannot be created as a single message.");
             if (string.Equals(dispatchCommand, "get-system-info", StringComparison.OrdinalIgnoreCase))
                 return new GetSystemInfo();
             if (string.Equals(dispatchCommand, "get-drives", StringComparison.OrdinalIgnoreCase))
@@ -209,6 +228,19 @@ namespace MasterSplinter.Cli
             CancellationToken cancellationToken)
         {
             string clientId = ResolveClientId(registry, listenCommand.ClientId);
+            if (IsUploadFileCommand(listenCommand.DispatchCommand))
+            {
+                await DispatchUploadFileAsync(
+                    options,
+                    dispatcher,
+                    responseSink,
+                    clientId,
+                    listenCommand.Path,
+                    listenCommand.RemotePath,
+                    cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
             IMessage message = CreateMessage(listenCommand.DispatchCommand, listenCommand.Path);
             CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
                 options,
@@ -264,6 +296,136 @@ namespace MasterSplinter.Cli
             return request.WithAuthorization(authorization);
         }
 
+        private static async Task DispatchUploadFileAsync(
+            CliOptions options,
+            ServerCommandDispatcher dispatcher,
+            AwaitableMessageSink responseSink,
+            string clientId,
+            string localPath,
+            string remotePath,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(localPath))
+                throw new ArgumentException("Local upload path is required.", nameof(localPath));
+            if (string.IsNullOrWhiteSpace(remotePath))
+                throw new ArgumentException("Remote upload path is required.", nameof(remotePath));
+
+            var fileInfo = new FileInfo(localPath);
+            if (!fileInfo.Exists)
+                throw new FileNotFoundException("Upload source file was not found.", localPath);
+            if ((fileInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                throw new InvalidOperationException("Upload source path is a directory.");
+            if (fileInfo.Length > MaxUploadFileSizeBytes)
+                throw new InvalidOperationException("Upload source file exceeds size limit.");
+
+            Task<IMessage> responseTask = responseSink.WaitForNextAsync(clientId);
+            long offset = 0;
+            bool sentAnyChunk = false;
+            using (FileStream input = File.Open(localPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var buffer = new byte[UploadChunkSize];
+                while (true)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    int read = await input.ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (read == 0 && sentAnyChunk)
+                        break;
+
+                    byte[] data = new byte[read];
+                    if (read > 0)
+                        Buffer.BlockCopy(buffer, 0, data, 0, read);
+
+                    var chunk = new FileTransferChunk
+                    {
+                        Id = FileTransferId,
+                        FilePath = remotePath,
+                        FileSize = fileInfo.Length,
+                        Chunk = new Quasar.Common.Models.FileChunk
+                        {
+                            Offset = offset,
+                            Data = data
+                        }
+                    };
+                    CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
+                        options,
+                        clientId,
+                        chunk,
+                        cancellationToken).ConfigureAwait(false);
+
+                    CommandDispatchResult result = await dispatcher.DispatchAsync(request, cancellationToken)
+                        .ConfigureAwait(false);
+                    Console.WriteLine(
+                        $"Dispatch result: {result.Status}. Safety={result.SafetyMetadata.SafetyClass}; RequiresPermission={result.SafetyMetadata.RequiresPermission}; RequiresConsent={result.SafetyMetadata.RequiresConsent}.");
+
+                    if (result.Status != CommandDispatchStatus.Sent)
+                    {
+                        responseSink.CancelWait(clientId);
+                        return;
+                    }
+
+                    Console.WriteLine($"Upload chunk: Offset={offset}; Bytes={read}; Total={Math.Min(offset + read, fileInfo.Length)}/{fileInfo.Length}.");
+                    sentAnyChunk = true;
+                    offset += read;
+
+                    if (read == 0 || offset >= fileInfo.Length)
+                        break;
+                }
+            }
+
+            await ReceiveUploadCompletionAsync(
+                options,
+                responseSink,
+                clientId,
+                FileTransferId,
+                responseTask,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        private static async Task ReceiveUploadCompletionAsync(
+            CliOptions options,
+            AwaitableMessageSink responseSink,
+            string clientId,
+            int transferId,
+            Task<IMessage> responseTask,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                while (true)
+                {
+                    IMessage response = await responseTask.WaitAsync(TimeSpan.FromSeconds(options.TimeoutSeconds), cancellationToken)
+                        .ConfigureAwait(false);
+                    Console.WriteLine($"Dispatch response: {response.GetType().Name}.");
+
+                    switch (response)
+                    {
+                        case FileTransferComplete complete when complete.Id == transferId:
+                            Console.WriteLine($"File upload complete: {ValueOrDash(complete.FilePath)}.");
+                            return;
+
+                        case FileTransferCancel cancel when cancel.Id == transferId:
+                            throw new InvalidOperationException($"File upload canceled by client: {ValueOrDash(cancel.Reason)}");
+
+                        default:
+                            responseTask = responseSink.WaitForNextAsync(clientId);
+                            break;
+                    }
+                }
+            }
+            catch
+            {
+                responseSink.CancelWait(clientId);
+                throw;
+            }
+        }
+
+        private static bool IsUploadFileCommand(string dispatchCommand)
+        {
+            return string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string ResolveClientId(ClientSessionRegistry registry, string clientId)
         {
             IReadOnlyList<ClientSessionSnapshot> snapshots = registry.GetSnapshots();
@@ -293,7 +455,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(

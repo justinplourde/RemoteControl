@@ -5,12 +5,13 @@ namespace MasterSplinter.Cli
 {
     public sealed class ListenCommand
     {
-        private ListenCommand(string verb, string clientId, string dispatchCommand, string path, string outputPath)
+        private ListenCommand(string verb, string clientId, string dispatchCommand, string path, string remotePath, string outputPath)
         {
             Verb = verb;
             ClientId = clientId;
             DispatchCommand = dispatchCommand;
             Path = path;
+            RemotePath = remotePath;
             OutputPath = outputPath;
         }
 
@@ -18,31 +19,33 @@ namespace MasterSplinter.Cli
         public string ClientId { get; }
         public string DispatchCommand { get; }
         public string Path { get; }
+        public string RemotePath { get; }
         public string OutputPath { get; }
 
         public static ListenCommand Parse(string line)
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
             if (tokens.Length < 3)
-                throw new ArgumentException("Usage: dispatch <client-id|first> <command> [--path <path>]");
+                throw new ArgumentException("Usage: dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>]");
 
             string clientId = tokens[1];
             string dispatchCommand = tokens[2];
             string path = null;
+            string remotePath = null;
             string outputPath = null;
             for (int index = 3; index < tokens.Length; index++)
             {
@@ -53,6 +56,14 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--path requires a value.");
 
                     path = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--remote-path", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--remote-path requires a value.");
+
+                    remotePath = tokens[index];
                 }
                 else if (string.Equals(tokens[index], "--output", StringComparison.OrdinalIgnoreCase))
                 {
@@ -73,7 +84,15 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(path))
                 throw new ArgumentException($"--path is required for {dispatchCommand}.");
 
-            return new ListenCommand("dispatch", clientId, dispatchCommand, path, outputPath);
+            if (string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for upload-file.");
+                if (string.IsNullOrWhiteSpace(remotePath))
+                    throw new ArgumentException("--remote-path is required for upload-file.");
+            }
+
+            return new ListenCommand("dispatch", clientId, dispatchCommand, path, remotePath, outputPath);
         }
 
         private static string[] Tokenize(string line)

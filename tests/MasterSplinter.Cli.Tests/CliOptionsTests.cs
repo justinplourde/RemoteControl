@@ -18,6 +18,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("dispatch", options.Command);
             Assert.AreEqual("get-system-info", options.DispatchCommand);
             Assert.IsNull(options.Path);
+            Assert.IsNull(options.RemotePath);
             Assert.IsNull(options.OutputPath);
             Assert.AreEqual("127.0.0.1", options.Host);
             Assert.AreEqual(4782, options.Port);
@@ -51,6 +52,7 @@ namespace MasterSplinter.Cli.Tests
                 "--port", "47831",
                 "--timeout-seconds", "3",
                 "--operator-id", "alice",
+                "--remote-path", "C:\\Temp\\remote.bin",
                 "--output", "C:\\Temp\\out.bin",
                 "--grant-permission",
                 "--grant-consent"
@@ -60,6 +62,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual(47831, options.Port);
             Assert.AreEqual(3, options.TimeoutSeconds);
             Assert.AreEqual("alice", options.OperatorId);
+            Assert.AreEqual("C:\\Temp\\remote.bin", options.RemotePath);
             Assert.AreEqual("C:\\Temp\\out.bin", options.OutputPath);
             Assert.IsTrue(options.GrantPermission);
             Assert.IsTrue(options.GrantConsent);
@@ -93,6 +96,22 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\report.copy.txt", download.OutputPath);
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "download-file" }));
+
+            CliOptions upload = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "upload-file",
+                "--path", "C:\\Temp\\local.txt",
+                "--remote-path", "C:\\Temp\\remote.txt"
+            });
+
+            Assert.AreEqual("upload-file", upload.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\local.txt", upload.Path);
+            Assert.AreEqual("C:\\Temp\\remote.txt", upload.RemotePath);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "upload-file", "--path", "C:\\Temp\\local.txt" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "upload-file", "--remote-path", "C:\\Temp\\remote.txt" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -141,6 +160,14 @@ namespace MasterSplinter.Cli.Tests
                 CliOptions.Parse(new[] { "dispatch", "--command", "get-system-info", "--nope" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "unknown" })));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[]
+                {
+                    "dispatch",
+                    "--command", "upload-file",
+                    "--path", "C:\\Temp\\local.txt",
+                    "--remote-path", "C:\\Temp\\remote.txt"
+                })));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -163,8 +190,14 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\report.txt", download.Path);
             Assert.AreEqual("C:\\Temp\\copy.txt", download.OutputPath);
 
+            ListenCommand upload = ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt --remote-path C:\\Temp\\remote.txt");
+            Assert.AreEqual("upload-file", upload.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\local.txt", upload.Path);
+            Assert.AreEqual("C:\\Temp\\remote.txt", upload.RemotePath);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 

@@ -40,6 +40,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.directory");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.download");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.drives");
+                identityOptions.Capabilities.SupportedFeatures.Add("filesystem.upload");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
                 identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
@@ -61,6 +62,7 @@ namespace MasterSplinter.Client.Host
                 ClientIdentificationResult result;
                 if (options.HandleOneCommand || options.HandleCommands)
                 {
+                    var fileUploadHandler = new FileTransferUploadHandler(new FileUploadProvider());
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
                         .AddHandler(new ResponseMessageHandlerAdapter<GetConnections>(
                             new GetConnectionsHandler(new TcpConnectionProvider())))
@@ -69,6 +71,8 @@ namespace MasterSplinter.Client.Host
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
                             new GetDrivesHandler(new DriveProvider())))
                         .AddHandler(new FileTransferRequestHandler(new FileDownloadProvider()))
+                        .AddHandler<FileTransferChunk>(fileUploadHandler)
+                        .AddHandler<FileTransferCancel>(fileUploadHandler)
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(

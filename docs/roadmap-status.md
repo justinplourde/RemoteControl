@@ -67,10 +67,10 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 30 passed.
+- `MasterSplinter.Client.Core.Tests`: 33 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
-- `MasterSplinter.Server.Core.Tests`: 48 passed.
+- `MasterSplinter.Server.Core.Tests`: 49 passed.
 
 Known legacy limitation:
 
@@ -256,13 +256,18 @@ Done:
   `FileRead` safety metadata.
 - Verified loopback `download-file` manually on June 2, 2026 with `--grant-permission`; a
   35-byte temp file was saved through the CLI and source/output SHA-256 hashes matched.
+- Added permissioned operator-to-client file upload through the legacy file-transfer messages:
+  CLI streams chunks through `FileWrite` policy enforcement, the client writes to an in-progress
+  temp file and finalizes only on the declared byte count, and focused tests cover completion,
+  offset-mismatch cleanup, cancel cleanup, CLI parsing, and safety metadata.
+- Verified loopback `upload-file` manually on June 2, 2026 with `--grant-permission`; a
+  34-byte temp file was written to a client destination and source/remote SHA-256 hashes matched.
 
 Left to do:
 
 - Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
 - Add integration tests for broader client/server behavior once client handlers are extracted.
-- Add file upload parity through the remaining file-transfer protocol path.
 - Continue confirming remaining kept-feature parity gaps before Web API work.
 
 ## Priority 5: Modern Runtime Parity
@@ -475,6 +480,14 @@ Current manual file-download check:
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47843 --grant-permission
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47843 --handle-commands
 dispatch first download-file --path <remote-file> --output <local-file>
+```
+
+Current manual file-upload check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47844 --grant-permission
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47844 --handle-commands
+dispatch first upload-file --path <local-file> --remote-path <client-file>
 ```
 
 Legacy check, for awareness:

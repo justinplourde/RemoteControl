@@ -78,6 +78,28 @@ namespace MasterSplinter.Server.Core.Tests.Commands
         }
 
         [TestMethod, TestCategory("ServerCore")]
+        public void FileTransferUploadRequiresFileWritePermissionWithoutConsent()
+        {
+            CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(
+                new FileTransferChunk
+                {
+                    Id = 1,
+                    FilePath = "C:\\Temp\\remote.txt",
+                    FileSize = 3,
+                    Chunk = new Quasar.Common.Models.FileChunk
+                    {
+                        Offset = 0,
+                        Data = new byte[] { 1, 2, 3 }
+                    }
+                });
+
+            Assert.AreEqual(CommandSafetyClass.FileWrite, metadata.SafetyClass);
+            Assert.IsFalse(metadata.IsReadOnly);
+            Assert.IsTrue(metadata.RequiresPermission);
+            Assert.IsFalse(metadata.RequiresConsent);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
         public void UnknownCommandsAreConservative()
         {
             CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(new UnknownMessage());
