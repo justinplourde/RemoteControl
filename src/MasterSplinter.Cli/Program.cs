@@ -195,15 +195,15 @@ namespace MasterSplinter.Cli
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            return CreateMessage(options.DispatchCommand, options.Path, options.NewPath, options.PathType);
+            return CreateMessage(options.DispatchCommand, options.Path, options.NewPath, options.PathType, options.Pid);
         }
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null);
         }
 
-        public static IMessage CreateMessage(string dispatchCommand, string path, string newPath, string pathType)
+        public static IMessage CreateMessage(string dispatchCommand, string path, string newPath, string pathType, int? pid)
         {
             if (IsUploadFileCommand(dispatchCommand))
                 throw new ArgumentException("upload-file is a multi-message command and cannot be created as a single message.");
@@ -228,6 +228,8 @@ namespace MasterSplinter.Cli
                     Path = path,
                     PathType = ParsePathType(pathType)
                 };
+            if (string.Equals(dispatchCommand, "end-process", StringComparison.OrdinalIgnoreCase))
+                return new DoProcessEnd { Pid = pid.GetValueOrDefault() };
             if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))
                 return new GetProcesses();
             if (string.Equals(dispatchCommand, "get-startup-items", StringComparison.OrdinalIgnoreCase))
@@ -264,7 +266,8 @@ namespace MasterSplinter.Cli
                 listenCommand.DispatchCommand,
                 listenCommand.Path,
                 listenCommand.NewPath,
-                listenCommand.PathType);
+                listenCommand.PathType,
+                listenCommand.Pid);
             CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
                 options,
                 clientId,
@@ -488,7 +491,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
@@ -724,6 +727,9 @@ namespace MasterSplinter.Cli
                     break;
                 case SetStatusFileManager response:
                     lines.Add($"File manager status: {ValueOrDash(response.Message)}; SetLastDirectorySeen={response.SetLastDirectorySeen}.");
+                    break;
+                case DoProcessResponse response:
+                    lines.Add($"Process response: Action={response.Action}; Result={response.Result}.");
                     break;
                 case FileTransferChunk response:
                     int bytes = response.Chunk == null || response.Chunk.Data == null ? 0 : response.Chunk.Data.Length;

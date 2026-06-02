@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|upload-file|rename-path|delete-path|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|upload-file|rename-path|delete-path|end-process|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -14,6 +14,7 @@ namespace MasterSplinter.Cli
             string path,
             string newPath,
             string pathType,
+            int? pid,
             string remotePath,
             string outputPath,
             string host,
@@ -29,6 +30,7 @@ namespace MasterSplinter.Cli
             Path = path;
             NewPath = newPath;
             PathType = pathType;
+            Pid = pid;
             RemotePath = remotePath;
             OutputPath = outputPath;
             Host = host;
@@ -45,6 +47,7 @@ namespace MasterSplinter.Cli
         public string Path { get; }
         public string NewPath { get; }
         public string PathType { get; }
+        public int? Pid { get; }
         public string RemotePath { get; }
         public string OutputPath { get; }
         public string Host { get; }
@@ -61,7 +64,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -69,6 +72,7 @@ namespace MasterSplinter.Cli
             string path = null;
             string newPath = null;
             string pathType = null;
+            int? pid = null;
             string remotePath = null;
             string outputPath = null;
             string host = "127.0.0.1";
@@ -89,6 +93,8 @@ namespace MasterSplinter.Cli
                     newPath = ReadValue(args, ref index, "--new-path");
                 else if (string.Equals(arg, "--type", StringComparison.OrdinalIgnoreCase))
                     pathType = ReadValue(args, ref index, "--type");
+                else if (string.Equals(arg, "--pid", StringComparison.OrdinalIgnoreCase))
+                    pid = int.Parse(ReadValue(args, ref index, "--pid"), CultureInfo.InvariantCulture);
                 else if (string.Equals(arg, "--remote-path", StringComparison.OrdinalIgnoreCase))
                     remotePath = ReadValue(args, ref index, "--remote-path");
                 else if (string.Equals(arg, "--output", StringComparison.OrdinalIgnoreCase))
@@ -148,12 +154,17 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--type is required for delete-path.");
             }
 
+            if (string.Equals(dispatchCommand, "end-process", StringComparison.OrdinalIgnoreCase) &&
+                !pid.HasValue)
+                throw new ArgumentException("--pid is required for end-process.");
+
             return new CliOptions(
                 command,
                 dispatchCommand,
                 path,
                 newPath,
                 pathType,
+                pid,
                 remotePath,
                 outputPath,
                 host,

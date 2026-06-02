@@ -1,6 +1,6 @@
 # MasterSplinter Capability Matrix
 
-Last updated: June 1, 2026
+Last updated: June 2, 2026
 
 ## Intent
 
@@ -43,7 +43,7 @@ Two kinds of parity are tracked:
 | TCP connection listing | `GetConnections`, `GetConnectionsResponse` | done; manually verified | Windows-specific today, portable concept | read-only network inventory | keep | Latest manual pass returned 50 TCP connections; platform-specific providers and degraded behavior on unsupported OSes |
 | File download from client / file upload to client | `FileTransferRequest`, `FileTransferChunk`, `FileTransferComplete`, `FileTransferCancel` | download/upload done and manually verified | portable with platform-specific filesystem constraints | sensitive data movement | keep | Download requires file-read permission and refuses overwrite; upload requires file-write permission and writes through in-progress temp files; both were SHA-256 verified on loopback |
 | File delete and rename | `DoPathDelete`, `DoPathRename`, `SetStatusFileManager` | file rename/delete done and manually verified; recursive directory delete deferred | portable with platform-specific permissions | state-changing filesystem | keep | Rename refuses target overwrite and delete currently supports files only; both require file-write permission and were verified on loopback |
-| Process start and process end | `DoProcessStart`, `DoProcessEnd`, `DoProcessResponse` | protocol only | platform-specific | state-changing execution | keep | Operator permission, audit, explicit command provenance, allow/deny policy |
+| Process start and process end | `DoProcessStart`, `DoProcessEnd`, `DoProcessResponse` | process end done and manually verified; process start protocol only | platform-specific | state-changing execution | keep | Process end requires execution permission plus client consent, guards protected/self PIDs, and was manually verified against a harmless spawned sleep process; process start still needs provenance, allow/deny policy, and consent design |
 | Remote shell | `DoShellExecute`, `DoShellExecuteResponse` | protocol only | platform-specific | sensitive execution | redesign | Strong operator permission, full audit transcript, optional client consent/status |
 | Registry read/write | `DoLoadRegistryKey`, registry create/delete/rename/change messages and responses | protocol only | Windows-only unless rethought | state-changing configuration | keep for Windows | Operator permission, audit, registry provider abstraction, read/write split |
 | Startup item add/remove | `DoStartupItemAdd`, `DoStartupItemRemove`, `SetStatus` | protocol only | Windows-specific today, portable concept | persistence-changing | redesign | Separate permission for persistence changes, audit, explicit UI language |

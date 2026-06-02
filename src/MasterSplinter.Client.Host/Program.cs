@@ -44,6 +44,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.rename");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.upload");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
+                identityOptions.Capabilities.SupportedFeatures.Add("processes.end");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
                 identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
@@ -79,6 +80,8 @@ namespace MasterSplinter.Client.Host
                         .AddHandler(new FileTransferRequestHandler(new FileDownloadProvider()))
                         .AddHandler<FileTransferChunk>(fileUploadHandler)
                         .AddHandler<FileTransferCancel>(fileUploadHandler)
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoProcessEnd>(
+                            new DoProcessEndHandler(new ProcessEndProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(

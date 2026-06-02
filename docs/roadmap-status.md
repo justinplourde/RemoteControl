@@ -1,6 +1,6 @@
 # MasterSplinter Roadmap Status
 
-Last updated: June 1, 2026
+Last updated: June 2, 2026
 
 ## Current Goal
 
@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 39 passed.
+- `MasterSplinter.Client.Core.Tests`: 42 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -135,6 +135,7 @@ Done:
 - Added tests for `GetProcesses` response mapping and response-handler send behavior.
 - Added tests for `GetStartupItems` success mapping, legacy-style status errors, and response-handler send behavior.
 - Added tests for `GetConnections` response mapping and response-handler send behavior.
+- Added tests for `DoProcessEnd` success/failure response mapping and protected-PID rejection.
 
 Left to do:
 
@@ -274,6 +275,12 @@ Done:
   and focused tests cover success, directory refusal, CLI parsing, and `FileWrite` safety metadata.
 - Verified loopback `delete-path` manually on June 2, 2026 with `--grant-permission`; a temp file
   returned `Deleted file` and no longer existed after the command.
+- Added consent-gated process end through `DoProcessEnd` and `DoProcessResponse`: the client
+  handler terminates eligible PIDs, refuses protected/self PIDs, CLI parsing and response
+  formatting are covered, and execution safety metadata requires both permission and consent.
+- Verified loopback `end-process` manually on June 2, 2026 with `--grant-permission --grant-consent`;
+  a harmless spawned sleep process returned `Process response: Action=End; Result=True.` and
+  the PID was no longer alive afterward.
 
 Left to do:
 
@@ -516,6 +523,14 @@ Current manual file-delete check:
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47846 --grant-permission
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47846 --handle-commands
 dispatch first delete-path --path <client-file> --type file
+```
+
+Current manual process-end check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47847 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47847 --handle-commands
+dispatch first end-process --pid <pid>
 ```
 
 Legacy check, for awareness:

@@ -59,6 +59,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
 
             Assert.IsTrue(classifier.Classify(new DoShellExecute { Command = "whoami" }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoProcessStart { FilePath = "C:\\Tools\\agent.exe" }).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoProcessEnd { Pid = 1234 }).RequiresConsent);
             Assert.IsFalse(classifier.Classify(new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = FileType.File }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoShutdownAction { Action = ShutdownAction.Restart }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetPasswords()).RequiresConsent);

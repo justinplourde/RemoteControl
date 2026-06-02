@@ -5,7 +5,7 @@ namespace MasterSplinter.Cli
 {
     public sealed class ListenCommand
     {
-        private ListenCommand(string verb, string clientId, string dispatchCommand, string path, string newPath, string pathType, string remotePath, string outputPath)
+        private ListenCommand(string verb, string clientId, string dispatchCommand, string path, string newPath, string pathType, int? pid, string remotePath, string outputPath)
         {
             Verb = verb;
             ClientId = clientId;
@@ -13,6 +13,7 @@ namespace MasterSplinter.Cli
             Path = path;
             NewPath = newPath;
             PathType = pathType;
+            Pid = pid;
             RemotePath = remotePath;
             OutputPath = outputPath;
         }
@@ -23,6 +24,7 @@ namespace MasterSplinter.Cli
         public string Path { get; }
         public string NewPath { get; }
         public string PathType { get; }
+        public int? Pid { get; }
         public string RemotePath { get; }
         public string OutputPath { get; }
 
@@ -30,27 +32,28 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
             if (tokens.Length < 3)
-                throw new ArgumentException("Usage: dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>]");
+                throw new ArgumentException("Usage: dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--remote-path <client-path>] [--output <local-path>]");
 
             string clientId = tokens[1];
             string dispatchCommand = tokens[2];
             string path = null;
             string newPath = null;
             string pathType = null;
+            int? pid = null;
             string remotePath = null;
             string outputPath = null;
             for (int index = 3; index < tokens.Length; index++)
@@ -78,6 +81,14 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--type requires a value.");
 
                     pathType = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--pid", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--pid requires a value.");
+
+                    pid = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
                 }
                 else if (string.Equals(tokens[index], "--remote-path", StringComparison.OrdinalIgnoreCase))
                 {
@@ -132,7 +143,11 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--type is required for delete-path.");
             }
 
-            return new ListenCommand("dispatch", clientId, dispatchCommand, path, newPath, pathType, remotePath, outputPath);
+            if (string.Equals(dispatchCommand, "end-process", StringComparison.OrdinalIgnoreCase) &&
+                !pid.HasValue)
+                throw new ArgumentException("--pid is required for end-process.");
+
+            return new ListenCommand("dispatch", clientId, dispatchCommand, path, newPath, pathType, pid, remotePath, outputPath);
         }
 
         private static string[] Tokenize(string line)
