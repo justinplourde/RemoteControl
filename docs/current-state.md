@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add CLI listen parity harness`
+- Latest committed roadmap checkpoint before this handoff: `Improve system info parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 1, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 25 passed
+- `MasterSplinter.Client.Core.Tests`: 27 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 47 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 127 passed, 1 skipped, 0 failed
+- Total: 129 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -63,8 +63,8 @@ The latest manual loopback check returned `Handshake result: True`.
 Current manual read-only parity check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47838
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47838 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47840
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47840 --handle-commands
 ```
 
 At the CLI prompt, the latest manual check listed one connected client and successfully ran
@@ -77,8 +77,9 @@ all current read-only commands on the same persistent client connection:
 - `dispatch first get-startup-items`: `GetStartupItemsResponse`, 5 entries.
 - `dispatch first get-connections`: `GetConnectionsResponse`, 47 TCP connections.
 
-Both CLI and client exited cleanly. Note: several `GetSystemInfo` fields are still placeholder
-`-` values and need provider parity follow-up even though the command path works.
+Both CLI and client exited cleanly. The latest focused `get-system-info` check populated CPU,
+RAM, GPU, username, PC/host/domain, system paths, uptime, MAC, LAN IP, WAN IP, ASN, ISP,
+antivirus, firewall, time zone, and country on this PC.
 
 Current CLI dispatch command names:
 
@@ -137,6 +138,8 @@ All modern projects target `net10.0`.
 - Loopback TCP handshake path added and tested.
 - Loopback TCP server-to-client command dispatch path added and tested.
 - `GetSystemInfo` client handler added with deterministic tests.
+- `GetSystemInfo` provider parity improved with Windows/local system, security product,
+  LAN/MAC, uptime, and bounded public network enrichment providers.
 - Loopback TCP `GetSystemInfo` command-response path added and tested.
 - `GetDrives` client handler added with deterministic tests.
 - Loopback TCP `GetDrives` command-response path added and tested.
@@ -172,7 +175,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Fill system-info provider placeholders or document intentional degraded fields.
+1. Re-run the full read-only CLI parity pass and update counts after system-info enrichment.
 2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
 3. Add parity tests against legacy behavior before moving each behavior slice.
 4. Confirm full legacy admin-tool parity for kept features before starting Web API work.

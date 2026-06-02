@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 25 passed.
+- `MasterSplinter.Client.Core.Tests`: 27 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 47 passed.
@@ -129,6 +129,7 @@ Done:
   duplicate registration, cancellation-token flow, and cancellation propagation.
 - Added tests for mapping client identity options to the protocol identification message.
 - Added tests for `GetSystemInfo` response mapping and response-handler send behavior.
+- Added deterministic tests for `GetSystemInfo` provider field ordering and fallback behavior.
 - Added tests for `GetDrives` success mapping, legacy-style status errors, and response-handler send behavior.
 - Added tests for `GetDirectory` success mapping, legacy-style status errors, and response-handler send behavior.
 - Added tests for `GetProcesses` response mapping and response-handler send behavior.
@@ -241,13 +242,17 @@ Done:
   returned 19 rows, `get-drives` returned 1 drive, `get-directory --path C:\` returned 24 entries,
   `get-processes` returned 280 processes, `get-startup-items` returned 5 entries, and
   `get-connections` returned 47 TCP connections.
+- Improved `GetSystemInfo` provider parity with Windows/local WMI-backed CPU, RAM, GPU,
+  security-product, LAN/MAC, uptime, and bounded public network enrichment.
+- Verified a focused CLI `get-system-info` pass populated CPU, RAM, GPU, uptime, MAC, LAN IP,
+  WAN IP, ASN, ISP, antivirus, firewall, time zone, and country on this PC.
 
 Left to do:
 
 - Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
 - Add integration tests for broader client/server behavior once client handlers are extracted.
-- Fill or explicitly document placeholder fields in the modern `GetSystemInfo` provider.
+- Re-run the full read-only CLI parity pass after system-info enrichment.
 
 ## Priority 5: Modern Runtime Parity
 
@@ -414,7 +419,7 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Fill system-info provider placeholders or document intentional degraded fields.
+1. Re-run the full read-only CLI parity pass after system-info enrichment.
 2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
 3. Confirm full legacy admin-tool parity for kept features before starting Web API work.
 4. Start original roadmap features: permissioned operators, Web API, consent UI,
@@ -450,8 +455,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47838
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47838 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47840
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47840 --handle-commands
 ```
 
 Legacy check, for awareness:

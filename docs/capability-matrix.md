@@ -35,7 +35,7 @@ Two kinds of parity are tracked:
 | --- | --- | --- | --- | --- | --- | --- |
 | Client identification and handshake | `ClientIdentification`, `ClientIdentificationResult` | done | portable | connection lifecycle | keep | Existing validation, protocol compatibility tests, audit lifecycle events |
 | TLS transport with pinned server certificate | legacy `SslStream` transport | done for loopback host | portable transport, cert storage platform-specific | connection security | keep | Certificate loading/storage plan before non-loopback use |
-| System information | `GetSystemInfo`, `GetSystemInfoResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest manual pass returned 19 rows, but several fields are placeholders; fill or document degraded fields |
+| System information | `GetSystemInfo`, `GetSystemInfoResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest focused manual pass returned populated CPU, RAM, GPU, uptime, MAC, LAN IP, WAN IP, ASN, ISP, antivirus, firewall, time zone, and country on this PC |
 | Drive listing | `GetDrives`, `GetDrivesResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest manual pass returned `C:\ (OS) [Local Disk, NTFS] => C:\` |
 | Directory listing | `GetDirectory`, `GetDirectoryResponse`, `SetStatusFileManager` | done; manually verified | portable with platform-specific permissions | read-only filesystem | keep | Latest manual pass returned 24 entries for `C:\`; path normalization and access-denial reporting before broader file manager work |
 | Process listing | `GetProcesses`, `GetProcessesResponse` | done; manually verified | platform-specific | read-only inventory | keep | Latest manual pass returned 280 processes; capability reporting for process metadata differences |
@@ -78,5 +78,5 @@ The safest next implementation work is not another powerful command. Recommended
 - Add audit expectations per safety class.
 - Add client capability reporting for completed slices.
 - Start a read/write split for registry and file-manager behavior before any write operations.
-- CLI `listen` mode verified all current read-only runtime slices on June 1, 2026; address
-  system-info placeholder fields before treating read-only inventory parity as complete.
+- CLI `listen` mode verified all current read-only runtime slices on June 1, 2026; re-run
+  the full pass after the system-info enrichment before treating read-only inventory parity as complete.
