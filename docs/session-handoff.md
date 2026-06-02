@@ -29,8 +29,8 @@ dotnet test .\MasterSplinter.sln
 Manual command-dispatch smoke check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47840
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47840 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47841
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47841 --handle-commands
 ```
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
@@ -39,10 +39,10 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
 `get-directory --path C:\`, `get-processes`, `get-startup-items`, and `get-connections` on one
 persistent client connection. Results: 19 system-info rows, 1 drive, 24 directory entries,
-280 processes, 5 startup items, and 47 TCP connections.
+302 processes, 5 startup items, and 50 TCP connections.
 
-After system-info enrichment, a focused manual `get-system-info` pass populated CPU, RAM, GPU,
-uptime, MAC, LAN IP, WAN IP, ASN, ISP, antivirus, firewall, time zone, and country on this PC.
-Re-run the full read-only CLI parity pass next.
+After system-info enrichment, the full read-only CLI parity pass was re-run on June 2, 2026.
+`get-system-info` populated CPU, RAM, GPU, uptime, MAC, LAN IP, WAN IP, ASN, ISP, antivirus,
+firewall, time zone, and country on this PC.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

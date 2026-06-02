@@ -63,8 +63,8 @@ The latest manual loopback check returned `Handshake result: True`.
 Current manual read-only parity check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47840
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47840 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47841
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47841 --handle-commands
 ```
 
 At the CLI prompt, the latest manual check listed one connected client and successfully ran
@@ -73,13 +73,15 @@ all current read-only commands on the same persistent client connection:
 - `dispatch first get-system-info`: `GetSystemInfoResponse`, 19 rows.
 - `dispatch first get-drives`: `GetDrivesResponse`, 1 drive, `- C:\ (OS) [Local Disk, NTFS] => C:\`.
 - `dispatch first get-directory --path C:\`: `GetDirectoryResponse`, 24 entries.
-- `dispatch first get-processes`: `GetProcessesResponse`, 280 processes.
+- `dispatch first get-processes`: `GetProcessesResponse`, 302 processes.
 - `dispatch first get-startup-items`: `GetStartupItemsResponse`, 5 entries.
-- `dispatch first get-connections`: `GetConnectionsResponse`, 47 TCP connections.
+- `dispatch first get-connections`: `GetConnectionsResponse`, 50 TCP connections.
 
 Both CLI and client exited cleanly. The latest focused `get-system-info` check populated CPU,
 RAM, GPU, username, PC/host/domain, system paths, uptime, MAC, LAN IP, WAN IP, ASN, ISP,
-antivirus, firewall, time zone, and country on this PC.
+antivirus, firewall, time zone, and country on this PC. The full read-only CLI parity pass was
+re-run after this enrichment on June 2, 2026 and all current commands responded on one persistent
+client connection.
 
 Current CLI dispatch command names:
 
@@ -175,8 +177,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Re-run the full read-only CLI parity pass and update counts after system-info enrichment.
+1. Continue confirming remaining legacy admin-tool parity gaps for kept features before Web API work.
 2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
 3. Add parity tests against legacy behavior before moving each behavior slice.
-4. Confirm full legacy admin-tool parity for kept features before starting Web API work.
-5. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
+4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

@@ -238,21 +238,25 @@ Done:
   and `exit` commands for repeated manual dispatch against connected clients.
 - Verified a persistent CLI/client session can list the connected client, run `get-drives`,
   then run `get-system-info` on the same client connection.
-- Verified a full read-only CLI parity pass on one persistent client connection: `get-system-info`
-  returned 19 rows, `get-drives` returned 1 drive, `get-directory --path C:\` returned 24 entries,
+- Verified a pre-enrichment full read-only CLI parity pass on one persistent client connection:
+  `get-system-info` returned 19 rows, `get-drives` returned 1 drive, `get-directory --path C:\` returned 24 entries,
   `get-processes` returned 280 processes, `get-startup-items` returned 5 entries, and
   `get-connections` returned 47 TCP connections.
 - Improved `GetSystemInfo` provider parity with Windows/local WMI-backed CPU, RAM, GPU,
   security-product, LAN/MAC, uptime, and bounded public network enrichment.
 - Verified a focused CLI `get-system-info` pass populated CPU, RAM, GPU, uptime, MAC, LAN IP,
   WAN IP, ASN, ISP, antivirus, firewall, time zone, and country on this PC.
+- Re-ran the full read-only CLI parity pass after system-info enrichment on June 2, 2026:
+  `get-system-info` returned 19 populated rows, `get-drives` returned 1 drive,
+  `get-directory --path C:\` returned 24 entries, `get-processes` returned 302 processes,
+  `get-startup-items` returned 5 entries, and `get-connections` returned 50 TCP connections.
 
 Left to do:
 
 - Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
 - Add integration tests for broader client/server behavior once client handlers are extracted.
-- Re-run the full read-only CLI parity pass after system-info enrichment.
+- Continue confirming remaining kept-feature parity gaps before Web API work.
 
 ## Priority 5: Modern Runtime Parity
 
@@ -419,10 +423,9 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Re-run the full read-only CLI parity pass after system-info enrichment.
-2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
-3. Confirm full legacy admin-tool parity for kept features before starting Web API work.
-4. Start original roadmap features: permissioned operators, Web API, consent UI,
+1. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
+2. Confirm full legacy admin-tool parity for kept features before starting Web API work.
+3. Start original roadmap features: permissioned operators, Web API, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
@@ -455,8 +458,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Current manual command dispatch check:
 
 ```powershell
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47840
-dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47840 --handle-commands
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47841
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47841 --handle-commands
 ```
 
 Legacy check, for awareness:
