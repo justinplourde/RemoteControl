@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 46 passed.
+- `MasterSplinter.Client.Core.Tests`: 48 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -138,6 +138,8 @@ Done:
 - Added tests for `DoProcessEnd` success/failure response mapping and protected-PID rejection.
 - Added tests for `DoProcessStart` success/failure response mapping, blank-path rejection,
   and explicit rejection of URL-download/update start requests.
+- Added tests for `DoLoadRegistryKey` success/error response mapping and read-only command
+  safety classification.
 
 Left to do:
 
@@ -290,6 +292,12 @@ Done:
 - Verified loopback `start-process` manually on June 2, 2026 with `--grant-permission --grant-consent`;
   a harmless temp command script returned `Process response: Action=Start; Result=True.` and
   wrote its expected marker file afterward.
+- Added read-only registry key loading through `DoLoadRegistryKey` and `GetRegistryKeysResponse`:
+  the client handler loads child keys and value metadata behind a registry provider, CLI parsing
+  and response formatting are covered, and registry load is classified as read-only inventory.
+- Verified loopback `get-registry-key` manually on June 2, 2026 without permission or consent
+  grants; `HKCU\Software` returned `Safety=ReadOnlyInventory`, `RequiresPermission=False`,
+  `RequiresConsent=False`, and 17 child-key matches.
 
 Left to do:
 
@@ -317,7 +325,7 @@ Planned work:
 - Prove handshake parity against the legacy protocol fixtures.
 - Prove command dispatch parity for a small safe vertical slice before moving broader behavior.
 - Build out behavior tests for file-system operations, system info, process metadata, shell behavior,
-  remote desktop contracts, registry behavior, startup/service behavior, and reverse proxy behavior
+  remote desktop contracts, registry write behavior, startup/service behavior, and reverse proxy behavior
   before or while each area is extracted.
 - Classify each legacy feature as keep, redesign, defer, or remove before porting behavior.
 
@@ -500,6 +508,14 @@ Current manual command dispatch check:
 ```powershell
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47841
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47841 --handle-commands
+```
+
+Current manual registry-read check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47849
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47849 --handle-commands
+dispatch first get-registry-key --path HKCU\Software
 ```
 
 Current manual file-download check:

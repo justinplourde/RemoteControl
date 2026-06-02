@@ -3,6 +3,7 @@ using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.FileSystem;
 using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Core.Processes;
+using MasterSplinter.Client.Core.Registry;
 using MasterSplinter.Client.Core.Startup;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
@@ -47,6 +48,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.end");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.start");
+                identityOptions.Capabilities.SupportedFeatures.Add("registry.read");
                 identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
                 identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
@@ -87,6 +89,8 @@ namespace MasterSplinter.Client.Host
                             new DoProcessEndHandler(new ProcessEndProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoLoadRegistryKey>(
+                            new DoLoadRegistryKeyHandler(new RegistryKeyProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(
                             new GetStartupItemsHandler(new StartupItemProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(

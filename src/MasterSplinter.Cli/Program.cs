@@ -213,6 +213,8 @@ namespace MasterSplinter.Cli
                 return new GetDrives();
             if (string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase))
                 return new GetDirectory { RemotePath = path };
+            if (string.Equals(dispatchCommand, "get-registry-key", StringComparison.OrdinalIgnoreCase))
+                return new DoLoadRegistryKey { RootKeyName = path };
             if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
                 return new FileTransferRequest { Id = 1, RemotePath = path };
             if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
@@ -725,6 +727,14 @@ namespace MasterSplinter.Cli
                             lines.Add(
                                 $"- {ValueOrDash(connection.ProcessName)} {ValueOrDash(connection.LocalAddress)}:{connection.LocalPort} -> {ValueOrDash(connection.RemoteAddress)}:{connection.RemotePort} {connection.State}");
                         }
+                    }
+                    break;
+                case GetRegistryKeysResponse response:
+                    lines.Add($"Registry key: {ValueOrDash(response.RootKey)}; Matches={Count(response.Matches)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    if (response.Matches != null)
+                    {
+                        foreach (Quasar.Common.Models.RegSeekerMatch match in response.Matches)
+                            lines.Add($"- {ValueOrDash(match.Key)} Values={Count(match.Data)} HasSubKeys={match.HasSubKeys}");
                     }
                     break;
                 case SetStatusFileManager response:

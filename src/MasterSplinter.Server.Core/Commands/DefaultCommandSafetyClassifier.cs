@@ -63,7 +63,7 @@ namespace MasterSplinter.Server.Core.Commands
                     return CommandSafetyMetadata.Controlled(CommandSafetyClass.NetworkControl, requiresConsent: false);
 
                 case DoLoadRegistryKey _:
-                    return CommandSafetyMetadata.Controlled(CommandSafetyClass.ReadOnlyInventory, requiresConsent: false);
+                    return CommandSafetyMetadata.ReadOnly(CommandSafetyClass.ReadOnlyInventory);
                 case DoCreateRegistryKey _:
                 case DoDeleteRegistryKey _:
                 case DoRenameRegistryKey _:

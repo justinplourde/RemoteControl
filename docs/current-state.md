@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add process start CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add registry read CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 2, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 46 passed
+- `MasterSplinter.Client.Core.Tests`: 48 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 154 passed, 1 skipped, 0 failed
+- Total: 156 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -88,6 +88,7 @@ Current CLI dispatch command names:
 - `get-system-info`
 - `get-drives`
 - `get-directory --path <path>`
+- `get-registry-key --path <hive\subkey>`
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
@@ -189,6 +190,9 @@ All modern projects target `net10.0`.
 - Local process start added through `DoProcessStart` and `DoProcessResponse`, execution
   permission and consent enforcement, deterministic tests, and a manual loopback check that ran
   a harmless temp command script and verified its marker output.
+- Registry key read added through `DoLoadRegistryKey` and `GetRegistryKeysResponse`, deterministic
+  tests, read-only safety classification, CLI formatting, and a manual loopback `HKCU\Software`
+  check that returned 17 child-key matches without requiring permission or consent.
 
 ## Current Limitations
 
@@ -197,7 +201,7 @@ All modern projects target `net10.0`.
 - Modern hosts currently prove loopback handshake, read-only runtime parity, permissioned
   file download/upload slices, permissioned file rename, and permissioned file delete, not full
   remote-management behavior.
-- Recursive directory delete, process-start URL download/update behavior, shell, registry,
+- Recursive directory delete, process-start URL download/update behavior, registry writes, shell,
   desktop, service, and UI behavior are not fully extracted yet.
 
 ## Recommended Next Tasks

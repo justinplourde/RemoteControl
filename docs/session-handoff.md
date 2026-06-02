@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add process start CLI parity`
-- Latest known full test result: 154 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add registry read CLI parity`
+- Latest known full test result: 156 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -34,6 +34,7 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 ```
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
+`get-registry-key --path <hive\subkey>`,
 `download-file --path <remote-file> [--output <local-file>]`,
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
@@ -76,5 +77,10 @@ Local process start parity is now implemented. Manual loopback check: `start-pro
 `Process response: Action=Start; Result=True.`, and the expected marker file existed afterward.
 URL-download and update-style process start remain deferred until provenance and update policy
 are defined.
+
+Registry read parity is now implemented. Manual loopback check: `get-registry-key --path
+HKCU\Software` required no permission or consent, returned `Safety=ReadOnlyInventory`, and loaded
+17 child-key matches. Registry writes remain deferred until the permission/audit boundary is
+defined.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

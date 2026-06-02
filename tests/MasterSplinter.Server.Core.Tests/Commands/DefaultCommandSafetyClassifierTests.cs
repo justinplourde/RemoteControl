@@ -20,7 +20,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new GetDirectory { RemotePath = "C:\\" }] = CommandSafetyClass.FileRead,
                 [new GetProcesses()] = CommandSafetyClass.ReadOnlyInventory,
                 [new GetStartupItems()] = CommandSafetyClass.ReadOnlyInventory,
-                [new GetConnections()] = CommandSafetyClass.ReadOnlyInventory
+                [new GetConnections()] = CommandSafetyClass.ReadOnlyInventory,
+                [new DoLoadRegistryKey { RootKeyName = "HKCU\\Software" }] = CommandSafetyClass.ReadOnlyInventory
             };
 
             foreach (KeyValuePair<IMessage, CommandSafetyClass> command in commands)

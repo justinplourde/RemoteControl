@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MasterSplinter.Cli;
+using Microsoft.Win32;
 using Quasar.Common.Enums;
 using Quasar.Common.Messages;
 using Quasar.Common.Models;
@@ -177,6 +178,18 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "start-process" }));
+
+            CliOptions registryKey = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "get-registry-key",
+                "--path", "HKCU\\Software"
+            });
+
+            Assert.AreEqual("get-registry-key", registryKey.DispatchCommand);
+            Assert.AreEqual("HKCU\\Software", registryKey.Path);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "get-registry-key" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -214,6 +227,14 @@ namespace MasterSplinter.Cli.Tests
             }));
             Assert.AreEqual(1, download.Id);
             Assert.AreEqual("C:\\Temp\\report.txt", download.RemotePath);
+
+            var registryKey = (DoLoadRegistryKey)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "get-registry-key",
+                "--path", "HKCU\\Software"
+            }));
+            Assert.AreEqual("HKCU\\Software", registryKey.RootKeyName);
 
             var rename = (DoPathRename)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -317,6 +338,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("start-process", startProcess.DispatchCommand);
             Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
 
+            ListenCommand registryKey = ListenCommand.Parse("dispatch first get-registry-key --path HKCU\\Software");
+            Assert.AreEqual("get-registry-key", registryKey.DispatchCommand);
+            Assert.AreEqual("HKCU\\Software", registryKey.Path);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
@@ -324,6 +349,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first start-process"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-registry-key"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 
@@ -415,6 +441,30 @@ namespace MasterSplinter.Cli.Tests
                     SystemInfos = new List<Tuple<string, string>>
                     {
                         Tuple.Create("OS", "Windows")
+                    }
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Registry key: HKCU\\Software; Matches=1; IsError=False; Error=-.", "- Classes Values=1 HasSubKeys=True" },
+                Program.FormatResponse(new GetRegistryKeysResponse
+                {
+                    RootKey = "HKCU\\Software",
+                    Matches = new[]
+                    {
+                        new RegSeekerMatch
+                        {
+                            Key = "Classes",
+                            HasSubKeys = true,
+                            Data = new[]
+                            {
+                                new RegValueData
+                                {
+                                    Name = "",
+                                    Kind = (RegistryValueKind)1,
+                                    Data = new byte[0]
+                                }
+                            }
+                        }
                     }
                 }));
 

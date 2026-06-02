@@ -113,6 +113,7 @@ namespace MasterSplinter.Cli
             }
 
             if ((string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dispatchCommand, "get-registry-key", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(dispatchCommand, "start-process", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase)) &&
                 string.IsNullOrWhiteSpace(path))
