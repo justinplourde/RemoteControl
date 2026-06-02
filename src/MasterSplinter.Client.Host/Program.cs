@@ -38,6 +38,7 @@ namespace MasterSplinter.Client.Host
 
                 identityOptions.Capabilities.SupportedFeatures.Add("handshake");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.directory");
+                identityOptions.Capabilities.SupportedFeatures.Add("filesystem.delete");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.download");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.drives");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.rename");
@@ -71,6 +72,8 @@ namespace MasterSplinter.Client.Host
                             new GetDirectoryHandler(new DirectoryProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
                             new GetDrivesHandler(new DriveProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoPathDelete>(
+                            new DoPathDeleteHandler(new PathDeleteProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoPathRename>(
                             new DoPathRenameHandler(new PathRenameProvider())))
                         .AddHandler(new FileTransferRequestHandler(new FileDownloadProvider()))

@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add path rename CLI parity`
-- Latest known full test result: 141 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add file delete CLI parity`
+- Latest known full test result: 145 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -37,6 +37,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `download-file --path <remote-file> [--output <local-file>]`,
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
+`delete-path --path <client-file> --type file`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
@@ -59,5 +60,9 @@ client path, and source/remote SHA-256 hashes matched.
 File rename parity is now implemented. Manual loopback check: `rename-path` required
 `--grant-permission`, renamed a 34-byte temp file, removed the old path, created the new path,
 and preserved the SHA-256 hash.
+
+File delete parity is now implemented for files only. Manual loopback check: `delete-path`
+required `--grant-permission`, deleted a temp file, and the path no longer existed. Recursive
+directory delete remains deferred until explicit policy is defined.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

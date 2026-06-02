@@ -222,6 +222,12 @@ namespace MasterSplinter.Cli
                     NewPath = newPath,
                     PathType = ParsePathType(pathType)
                 };
+            if (string.Equals(dispatchCommand, "delete-path", StringComparison.OrdinalIgnoreCase))
+                return new DoPathDelete
+                {
+                    Path = path,
+                    PathType = ParsePathType(pathType)
+                };
             if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))
                 return new GetProcesses();
             if (string.Equals(dispatchCommand, "get-startup-items", StringComparison.OrdinalIgnoreCase))

@@ -117,6 +117,22 @@ namespace MasterSplinter.Server.Core.Tests.Commands
         }
 
         [TestMethod, TestCategory("ServerCore")]
+        public void PathDeleteRequiresFileWritePermissionWithoutConsent()
+        {
+            CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(
+                new DoPathDelete
+                {
+                    Path = "C:\\Temp\\old.txt",
+                    PathType = FileType.File
+                });
+
+            Assert.AreEqual(CommandSafetyClass.FileWrite, metadata.SafetyClass);
+            Assert.IsFalse(metadata.IsReadOnly);
+            Assert.IsTrue(metadata.RequiresPermission);
+            Assert.IsFalse(metadata.RequiresConsent);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
         public void UnknownCommandsAreConservative()
         {
             CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(new UnknownMessage());

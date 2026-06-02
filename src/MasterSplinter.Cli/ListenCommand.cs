@@ -124,6 +124,14 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--type is required for rename-path.");
             }
 
+            if (string.Equals(dispatchCommand, "delete-path", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for delete-path.");
+                if (string.IsNullOrWhiteSpace(pathType))
+                    throw new ArgumentException("--type is required for delete-path.");
+            }
+
             return new ListenCommand("dispatch", clientId, dispatchCommand, path, newPath, pathType, remotePath, outputPath);
         }
 

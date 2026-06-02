@@ -136,6 +136,20 @@ namespace MasterSplinter.Cli.Tests
                 CliOptions.Parse(new[] { "dispatch", "--command", "rename-path", "--path", "C:\\Temp\\old.txt", "--type", "file" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "rename-path", "--path", "C:\\Temp\\old.txt", "--new-path", "C:\\Temp\\new.txt" }));
+
+            CliOptions delete = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "delete-path",
+                "--path", "C:\\Temp\\old.txt",
+                "--type", "file"
+            });
+
+            Assert.AreEqual("delete-path", delete.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\old.txt", delete.Path);
+            Assert.AreEqual("file", delete.PathType);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "delete-path", "--path", "C:\\Temp\\old.txt" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -185,6 +199,16 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\old.txt", rename.Path);
             Assert.AreEqual("C:\\Temp\\new.txt", rename.NewPath);
             Assert.AreEqual(FileType.File, rename.PathType);
+
+            var delete = (DoPathDelete)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "delete-path",
+                "--path", "C:\\Temp\\old.txt",
+                "--type", "file"
+            }));
+            Assert.AreEqual("C:\\Temp\\old.txt", delete.Path);
+            Assert.AreEqual(FileType.File, delete.PathType);
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -237,10 +261,16 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\new.txt", rename.NewPath);
             Assert.AreEqual("file", rename.PathType);
 
+            ListenCommand delete = ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt --type file");
+            Assert.AreEqual("delete-path", delete.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\old.txt", delete.Path);
+            Assert.AreEqual("file", delete.PathType);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first rename-path --path C:\\Temp\\old.txt --type file"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 

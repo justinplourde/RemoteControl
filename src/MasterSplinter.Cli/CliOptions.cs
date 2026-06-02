@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|upload-file|rename-path|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|upload-file|rename-path|delete-path|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -138,6 +138,14 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--new-path is required for rename-path.");
                 if (string.IsNullOrWhiteSpace(pathType))
                     throw new ArgumentException("--type is required for rename-path.");
+            }
+
+            if (string.Equals(dispatchCommand, "delete-path", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for delete-path.");
+                if (string.IsNullOrWhiteSpace(pathType))
+                    throw new ArgumentException("--type is required for delete-path.");
             }
 
             return new CliOptions(
