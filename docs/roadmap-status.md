@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 42 passed.
+- `MasterSplinter.Client.Core.Tests`: 46 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -136,6 +136,8 @@ Done:
 - Added tests for `GetStartupItems` success mapping, legacy-style status errors, and response-handler send behavior.
 - Added tests for `GetConnections` response mapping and response-handler send behavior.
 - Added tests for `DoProcessEnd` success/failure response mapping and protected-PID rejection.
+- Added tests for `DoProcessStart` success/failure response mapping, blank-path rejection,
+  and explicit rejection of URL-download/update start requests.
 
 Left to do:
 
@@ -281,6 +283,13 @@ Done:
 - Verified loopback `end-process` manually on June 2, 2026 with `--grant-permission --grant-consent`;
   a harmless spawned sleep process returned `Process response: Action=End; Result=True.` and
   the PID was no longer alive afterward.
+- Added consent-gated local process start through `DoProcessStart` and `DoProcessResponse`: the
+  client handler starts explicit local file paths only, rejects URL-download/update requests for
+  now, CLI parsing and response formatting are covered, and execution safety metadata requires
+  both permission and consent.
+- Verified loopback `start-process` manually on June 2, 2026 with `--grant-permission --grant-consent`;
+  a harmless temp command script returned `Process response: Action=Start; Result=True.` and
+  wrote its expected marker file afterward.
 
 Left to do:
 
@@ -531,6 +540,14 @@ Current manual process-end check:
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47847 --grant-permission --grant-consent
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47847 --handle-commands
 dispatch first end-process --pid <pid>
+```
+
+Current manual process-start check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47848 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47848 --handle-commands
+dispatch first start-process --path <client-file>
 ```
 
 Legacy check, for awareness:

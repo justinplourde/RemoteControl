@@ -113,6 +113,7 @@ namespace MasterSplinter.Cli
             }
 
             if ((string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dispatchCommand, "start-process", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase)) &&
                 string.IsNullOrWhiteSpace(path))
                 throw new ArgumentException($"--path is required for {dispatchCommand}.");

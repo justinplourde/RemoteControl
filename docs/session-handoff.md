@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add process end CLI parity`
-- Latest known full test result: 150 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add process start CLI parity`
+- Latest known full test result: 154 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -38,6 +38,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
 `delete-path --path <client-file> --type file`,
+`start-process --path <client-file>`,
 `end-process --pid <pid>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
@@ -69,5 +70,11 @@ directory delete remains deferred until explicit policy is defined.
 Process end parity is now implemented. Manual loopback check: `end-process` required
 `--grant-permission --grant-consent`, terminated a harmless spawned sleep process, returned
 `Process response: Action=End; Result=True.`, and the PID was no longer alive afterward.
+
+Local process start parity is now implemented. Manual loopback check: `start-process` required
+`--grant-permission --grant-consent`, ran a harmless temp command script, returned
+`Process response: Action=Start; Result=True.`, and the expected marker file existed afterward.
+URL-download and update-style process start remain deferred until provenance and update policy
+are defined.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

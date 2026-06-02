@@ -228,6 +228,8 @@ namespace MasterSplinter.Cli
                     Path = path,
                     PathType = ParsePathType(pathType)
                 };
+            if (string.Equals(dispatchCommand, "start-process", StringComparison.OrdinalIgnoreCase))
+                return new DoProcessStart { FilePath = path };
             if (string.Equals(dispatchCommand, "end-process", StringComparison.OrdinalIgnoreCase))
                 return new DoProcessEnd { Pid = pid.GetValueOrDefault() };
             if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))

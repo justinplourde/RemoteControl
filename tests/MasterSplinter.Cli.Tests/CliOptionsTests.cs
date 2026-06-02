@@ -165,6 +165,18 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual(4321, endProcess.Pid);
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "end-process" }));
+
+            CliOptions startProcess = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "start-process",
+                "--path", "C:\\Temp\\run.cmd"
+            });
+
+            Assert.AreEqual("start-process", startProcess.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "start-process" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -232,6 +244,14 @@ namespace MasterSplinter.Cli.Tests
                 "--pid", "4321"
             }));
             Assert.AreEqual(4321, endProcess.Pid);
+
+            var startProcess = (DoProcessStart)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "start-process",
+                "--path", "C:\\Temp\\run.cmd"
+            }));
+            Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.FilePath);
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -293,12 +313,17 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("end-process", endProcess.DispatchCommand);
             Assert.AreEqual(4321, endProcess.Pid);
 
+            ListenCommand startProcess = ListenCommand.Parse("dispatch first start-process --path C:\\Temp\\run.cmd");
+            Assert.AreEqual("start-process", startProcess.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first rename-path --path C:\\Temp\\old.txt --type file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first start-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 
@@ -406,6 +431,14 @@ namespace MasterSplinter.Cli.Tests
                 Program.FormatResponse(new DoProcessResponse
                 {
                     Action = ProcessAction.End,
+                    Result = true
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Process response: Action=Start; Result=True." },
+                Program.FormatResponse(new DoProcessResponse
+                {
+                    Action = ProcessAction.Start,
                     Result = true
                 }));
 
