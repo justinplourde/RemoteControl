@@ -38,6 +38,7 @@ namespace MasterSplinter.Client.Host
 
                 identityOptions.Capabilities.SupportedFeatures.Add("handshake");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.directory");
+                identityOptions.Capabilities.SupportedFeatures.Add("filesystem.download");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.drives");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
@@ -67,6 +68,7 @@ namespace MasterSplinter.Client.Host
                             new GetDirectoryHandler(new DirectoryProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(
                             new GetDrivesHandler(new DriveProvider())))
+                        .AddHandler(new FileTransferRequestHandler(new FileDownloadProvider()))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(

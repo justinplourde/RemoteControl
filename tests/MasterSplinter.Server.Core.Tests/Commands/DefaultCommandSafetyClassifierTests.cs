@@ -66,6 +66,18 @@ namespace MasterSplinter.Server.Core.Tests.Commands
         }
 
         [TestMethod, TestCategory("ServerCore")]
+        public void FileTransferDownloadRequiresFileReadPermissionWithoutConsent()
+        {
+            CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(
+                new FileTransferRequest { Id = 1, RemotePath = "C:\\Temp\\report.txt" });
+
+            Assert.AreEqual(CommandSafetyClass.FileRead, metadata.SafetyClass);
+            Assert.IsFalse(metadata.IsReadOnly);
+            Assert.IsTrue(metadata.RequiresPermission);
+            Assert.IsFalse(metadata.RequiresConsent);
+        }
+
+        [TestMethod, TestCategory("ServerCore")]
         public void UnknownCommandsAreConservative()
         {
             CommandSafetyMetadata metadata = DefaultCommandSafetyClassifier.Instance.Classify(new UnknownMessage());

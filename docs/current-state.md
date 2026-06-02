@@ -35,14 +35,14 @@ Primary acceptance check:
 dotnet test .\MasterSplinter.sln
 ```
 
-Latest result from June 1, 2026:
+Latest result from June 2, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 27 passed
+- `MasterSplinter.Client.Core.Tests`: 30 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
-- `MasterSplinter.Server.Core.Tests`: 47 passed
+- `MasterSplinter.Server.Core.Tests`: 48 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 129 passed, 1 skipped, 0 failed
+- Total: 133 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -88,6 +88,7 @@ Current CLI dispatch command names:
 - `get-system-info`
 - `get-drives`
 - `get-directory --path <path>`
+- `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -95,7 +96,7 @@ Current CLI dispatch command names:
 Current CLI listen commands:
 
 - `clients`
-- `dispatch <client-id|first> <command> [--path <path>]`
+- `dispatch <client-id|first> <command> [--path <path>] [--output <local-path>]`
 - `help`
 - `exit`
 
@@ -167,13 +168,18 @@ All modern projects target `net10.0`.
   formatter coverage in `MasterSplinter.Cli.Tests`.
 - CLI `listen` mode added for repeated manual dispatch against connected clients, paired with
   client host `--handle-commands` persistent command handling.
+- File download from client to operator added through `FileTransferRequest`, chunk/complete/cancel
+  responses, file-read permission enforcement, CLI output writing, deterministic tests, and a
+  manual loopback SHA-256 match check.
 
 ## Current Limitations
 
 - Legacy `legacy/Quasar/Quasar.sln` is preserved but is not the primary acceptance gate.
 - The legacy WinForms surface has known build/security friction on the current machine.
-- Modern hosts currently prove loopback handshake and selected read-only runtime parity, not full remote-management behavior.
-- File-system, process, shell, registry, desktop, service, and UI behavior are not fully extracted yet.
+- Modern hosts currently prove loopback handshake, read-only runtime parity, and a first permissioned
+  file-download slice, not full remote-management behavior.
+- File upload, file mutation, process mutation, shell, registry, desktop, service, and UI behavior
+  are not fully extracted yet.
 
 ## Recommended Next Tasks
 

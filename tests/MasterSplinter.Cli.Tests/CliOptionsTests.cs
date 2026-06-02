@@ -18,6 +18,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("dispatch", options.Command);
             Assert.AreEqual("get-system-info", options.DispatchCommand);
             Assert.IsNull(options.Path);
+            Assert.IsNull(options.OutputPath);
             Assert.AreEqual("127.0.0.1", options.Host);
             Assert.AreEqual(4782, options.Port);
             Assert.AreEqual(60, options.TimeoutSeconds);
@@ -50,6 +51,7 @@ namespace MasterSplinter.Cli.Tests
                 "--port", "47831",
                 "--timeout-seconds", "3",
                 "--operator-id", "alice",
+                "--output", "C:\\Temp\\out.bin",
                 "--grant-permission",
                 "--grant-consent"
             });
@@ -58,6 +60,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual(47831, options.Port);
             Assert.AreEqual(3, options.TimeoutSeconds);
             Assert.AreEqual("alice", options.OperatorId);
+            Assert.AreEqual("C:\\Temp\\out.bin", options.OutputPath);
             Assert.IsTrue(options.GrantPermission);
             Assert.IsTrue(options.GrantConsent);
         }
@@ -76,6 +79,20 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp", options.Path);
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "get-directory" }));
+
+            CliOptions download = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "download-file",
+                "--path", "C:\\Temp\\report.txt",
+                "--output", "C:\\Temp\\report.copy.txt"
+            });
+
+            Assert.AreEqual("download-file", download.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\report.txt", download.Path);
+            Assert.AreEqual("C:\\Temp\\report.copy.txt", download.OutputPath);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "download-file" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -104,6 +121,15 @@ namespace MasterSplinter.Cli.Tests
                 "--path", "C:\\Temp"
             }));
             Assert.AreEqual("C:\\Temp", directory.RemotePath);
+
+            var download = (FileTransferRequest)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "download-file",
+                "--path", "C:\\Temp\\report.txt"
+            }));
+            Assert.AreEqual(1, download.Id);
+            Assert.AreEqual("C:\\Temp\\report.txt", download.RemotePath);
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -132,7 +158,13 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("get-directory", dispatch.DispatchCommand);
             Assert.AreEqual("C:\\Program Files", dispatch.Path);
 
+            ListenCommand download = ListenCommand.Parse("dispatch first download-file --path C:\\Temp\\report.txt --output C:\\Temp\\copy.txt");
+            Assert.AreEqual("download-file", download.DispatchCommand);
+            Assert.AreEqual("C:\\Temp\\report.txt", download.Path);
+            Assert.AreEqual("C:\\Temp\\copy.txt", download.OutputPath);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 
@@ -226,6 +258,28 @@ namespace MasterSplinter.Cli.Tests
                         Tuple.Create("OS", "Windows")
                     }
                 }));
+
+            CollectionAssert.AreEqual(
+                new[] { "File transfer chunk: Id=7; Offset=10; Bytes=3; FileSize=13; Path=C:\\Temp\\a.txt." },
+                Program.FormatResponse(new FileTransferChunk
+                {
+                    Id = 7,
+                    FilePath = "C:\\Temp\\a.txt",
+                    FileSize = 13,
+                    Chunk = new FileChunk
+                    {
+                        Offset = 10,
+                        Data = new byte[] { 1, 2, 3 }
+                    }
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "File transfer complete: Id=7; Path=C:\\Temp\\a.txt." },
+                Program.FormatResponse(new FileTransferComplete { Id = 7, FilePath = "C:\\Temp\\a.txt" }));
+
+            CollectionAssert.AreEqual(
+                new[] { "File transfer canceled: Id=7; Reason=No permission." },
+                Program.FormatResponse(new FileTransferCancel { Id = 7, Reason = "No permission" }));
         }
     }
 }

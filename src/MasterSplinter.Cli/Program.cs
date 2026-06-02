@@ -7,8 +7,8 @@ using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using Quasar.Common.Messages;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -117,7 +117,7 @@ namespace MasterSplinter.Cli
         {
             var registry = new ClientSessionRegistry();
             var identified = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var response = new TaskCompletionSource<IMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var responseSink = new AwaitableMessageSink();
             var lifecycle = new ClientConnectionLifecycleCoordinator(registry, new CompletionLifecycleSink(identified));
             var handshake = new ClientHandshakeCoordinator(lifecycle);
             var listener = new LoopbackTcpRemoteClientListener();
@@ -125,7 +125,7 @@ namespace MasterSplinter.Cli
                 listener,
                 lifecycle,
                 handshake,
-                new CompletionMessageSink(response));
+                responseSink);
 
             await orchestrator.StartAsync(
                 new ServerListenOptions(options.Host, options.Port),
@@ -157,11 +157,13 @@ namespace MasterSplinter.Cli
                 if (result.Status != CommandDispatchStatus.Sent)
                     return 2;
 
-                IMessage reply = await response.Task.WaitAsync(
-                    TimeSpan.FromSeconds(options.TimeoutSeconds),
+                await ReceiveAndPrintResponseAsync(
+                    options,
+                    responseSink,
+                    session.ClientId,
+                    command,
+                    options.OutputPath,
                     cancellationToken).ConfigureAwait(false);
-                Console.WriteLine($"Dispatch response: {reply.GetType().Name}.");
-                PrintResponse(reply);
                 return 0;
             }
             finally
@@ -186,6 +188,8 @@ namespace MasterSplinter.Cli
                 return new GetDrives();
             if (string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase))
                 return new GetDirectory { RemotePath = path };
+            if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
+                return new FileTransferRequest { Id = 1, RemotePath = path };
             if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))
                 return new GetProcesses();
             if (string.Equals(dispatchCommand, "get-startup-items", StringComparison.OrdinalIgnoreCase))
@@ -224,20 +228,14 @@ namespace MasterSplinter.Cli
                 return;
             }
 
-            IMessage response;
-            try
-            {
-                response = await responseTask.WaitAsync(TimeSpan.FromSeconds(options.TimeoutSeconds), cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            catch
-            {
-                responseSink.CancelWait(clientId);
-                throw;
-            }
-
-            Console.WriteLine($"Dispatch response: {response.GetType().Name}.");
-            PrintResponse(response);
+            await ReceiveAndPrintResponseAsync(
+                options,
+                responseSink,
+                clientId,
+                message,
+                listenCommand.OutputPath ?? options.OutputPath,
+                responseTask,
+                cancellationToken).ConfigureAwait(false);
         }
 
         private static async Task<CommandDispatchRequest> CreateAuthorizedRequestAsync(
@@ -295,7 +293,179 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--output <local-path>] | help | exit");
+        }
+
+        private static async Task ReceiveAndPrintResponseAsync(
+            CliOptions options,
+            AwaitableMessageSink responseSink,
+            string clientId,
+            IMessage command,
+            string outputPath,
+            CancellationToken cancellationToken)
+        {
+            await ReceiveAndPrintResponseAsync(
+                options,
+                responseSink,
+                clientId,
+                command,
+                outputPath,
+                responseSink.WaitForNextAsync(clientId),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        private static async Task ReceiveAndPrintResponseAsync(
+            CliOptions options,
+            AwaitableMessageSink responseSink,
+            string clientId,
+            IMessage command,
+            string outputPath,
+            Task<IMessage> firstResponseTask,
+            CancellationToken cancellationToken)
+        {
+            if (command is FileTransferRequest request)
+            {
+                await ReceiveFileTransferAsync(
+                    options,
+                    responseSink,
+                    clientId,
+                    request,
+                    outputPath,
+                    firstResponseTask,
+                    cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            IMessage response;
+            try
+            {
+                response = await firstResponseTask.WaitAsync(TimeSpan.FromSeconds(options.TimeoutSeconds), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch
+            {
+                responseSink.CancelWait(clientId);
+                throw;
+            }
+
+            Console.WriteLine($"Dispatch response: {response.GetType().Name}.");
+            PrintResponse(response);
+        }
+
+        private static async Task ReceiveFileTransferAsync(
+            CliOptions options,
+            AwaitableMessageSink responseSink,
+            string clientId,
+            FileTransferRequest request,
+            string outputPath,
+            Task<IMessage> firstResponseTask,
+            CancellationToken cancellationToken)
+        {
+            string resolvedOutputPath = ResolveDownloadOutputPath(request.RemotePath, outputPath);
+            long totalBytes = 0;
+            long expectedSize = -1;
+            bool completed = false;
+
+            try
+            {
+                using (FileStream output = File.Open(resolvedOutputPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    Task<IMessage> nextResponseTask = firstResponseTask;
+                    while (true)
+                    {
+                        IMessage response;
+                        try
+                        {
+                            response = await nextResponseTask.WaitAsync(TimeSpan.FromSeconds(options.TimeoutSeconds), cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            responseSink.CancelWait(clientId);
+                            throw;
+                        }
+
+                        Console.WriteLine($"Dispatch response: {response.GetType().Name}.");
+                        switch (response)
+                        {
+                            case FileTransferChunk chunk when chunk.Id == request.Id:
+                                if (chunk.Chunk == null || chunk.Chunk.Data == null)
+                                    throw new InvalidOperationException("File transfer chunk was empty.");
+                                if (chunk.Chunk.Offset != output.Position)
+                                    throw new InvalidOperationException("File transfer chunk offset was not contiguous.");
+
+                                expectedSize = chunk.FileSize;
+                                await output.WriteAsync(chunk.Chunk.Data, 0, chunk.Chunk.Data.Length, cancellationToken)
+                                    .ConfigureAwait(false);
+                                totalBytes += chunk.Chunk.Data.Length;
+                                Console.WriteLine($"File transfer chunk: Offset={chunk.Chunk.Offset}; Bytes={chunk.Chunk.Data.Length}; Total={totalBytes}/{chunk.FileSize}.");
+                                break;
+
+                            case FileTransferComplete complete when complete.Id == request.Id:
+                                if (expectedSize >= 0 && totalBytes != expectedSize)
+                                    throw new InvalidOperationException("File transfer completed with an unexpected byte count.");
+
+                                completed = true;
+                                Console.WriteLine($"File transfer complete: {totalBytes} bytes saved to {resolvedOutputPath}.");
+                                return;
+
+                            case FileTransferCancel cancel when cancel.Id == request.Id:
+                                throw new InvalidOperationException($"File transfer canceled by client: {ValueOrDash(cancel.Reason)}");
+
+                            default:
+                                throw new InvalidOperationException($"Unexpected file transfer response '{response.GetType().Name}'.");
+                        }
+
+                        nextResponseTask = responseSink.WaitForNextAsync(clientId);
+                    }
+                }
+            }
+            finally
+            {
+                if (!completed && File.Exists(resolvedOutputPath))
+                {
+                    try
+                    {
+                        File.Delete(resolvedOutputPath);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+        private static string ResolveDownloadOutputPath(string remotePath, string outputPath)
+        {
+            if (!string.IsNullOrWhiteSpace(outputPath))
+            {
+                string resolved = Path.GetFullPath(outputPath);
+                string directory = Path.GetDirectoryName(resolved);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+
+                return resolved;
+            }
+
+            string fileName = Path.GetFileName(remotePath);
+            if (string.IsNullOrWhiteSpace(fileName))
+                fileName = "download.bin";
+
+            string downloadDirectory = Path.Combine(Environment.CurrentDirectory, "downloads");
+            Directory.CreateDirectory(downloadDirectory);
+
+            string candidate = Path.Combine(downloadDirectory, fileName);
+            if (!File.Exists(candidate))
+                return candidate;
+
+            string stem = Path.GetFileNameWithoutExtension(fileName);
+            string extension = Path.GetExtension(fileName);
+            for (int index = 1; ; index++)
+            {
+                candidate = Path.Combine(downloadDirectory, $"{stem}-{index}{extension}");
+                if (!File.Exists(candidate))
+                    return candidate;
+            }
         }
 
         public static string[] FormatResponse(IMessage reply)
@@ -356,6 +526,16 @@ namespace MasterSplinter.Cli
                                 $"- {ValueOrDash(connection.ProcessName)} {ValueOrDash(connection.LocalAddress)}:{connection.LocalPort} -> {ValueOrDash(connection.RemoteAddress)}:{connection.RemotePort} {connection.State}");
                         }
                     }
+                    break;
+                case FileTransferChunk response:
+                    int bytes = response.Chunk == null || response.Chunk.Data == null ? 0 : response.Chunk.Data.Length;
+                    lines.Add($"File transfer chunk: Id={response.Id}; Offset={(response.Chunk == null ? 0 : response.Chunk.Offset)}; Bytes={bytes}; FileSize={response.FileSize}; Path={ValueOrDash(response.FilePath)}.");
+                    break;
+                case FileTransferComplete response:
+                    lines.Add($"File transfer complete: Id={response.Id}; Path={ValueOrDash(response.FilePath)}.");
+                    break;
+                case FileTransferCancel response:
+                    lines.Add($"File transfer canceled: Id={response.Id}; Reason={ValueOrDash(response.Reason)}.");
                     break;
                 default:
                     lines.Add($"No formatter for {reply.GetType().Name}.");
@@ -430,25 +610,42 @@ namespace MasterSplinter.Cli
 
         private sealed class AwaitableMessageSink : IRemoteClientMessageSink
         {
-            private readonly ConcurrentDictionary<string, TaskCompletionSource<IMessage>> _pending =
-                new ConcurrentDictionary<string, TaskCompletionSource<IMessage>>(StringComparer.OrdinalIgnoreCase);
+            private readonly object _gate = new object();
+            private readonly Dictionary<string, TaskCompletionSource<IMessage>> _pending =
+                new Dictionary<string, TaskCompletionSource<IMessage>>(StringComparer.OrdinalIgnoreCase);
+            private readonly Dictionary<string, Queue<IMessage>> _queued =
+                new Dictionary<string, Queue<IMessage>>(StringComparer.OrdinalIgnoreCase);
 
             public Task<IMessage> WaitForNextAsync(string clientId)
             {
                 if (string.IsNullOrWhiteSpace(clientId))
                     throw new ArgumentException("Client id is required.", nameof(clientId));
 
-                var pending = new TaskCompletionSource<IMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-                if (!_pending.TryAdd(clientId, pending))
-                    throw new InvalidOperationException($"A dispatch is already waiting for client '{clientId}'.");
+                lock (_gate)
+                {
+                    Queue<IMessage> queue = GetQueue(clientId);
+                    if (queue.Count > 0)
+                        return Task.FromResult(queue.Dequeue());
 
-                return pending.Task;
+                    if (_pending.ContainsKey(clientId))
+                        throw new InvalidOperationException($"A dispatch is already waiting for client '{clientId}'.");
+
+                    var pending = new TaskCompletionSource<IMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _pending.Add(clientId, pending);
+                    return pending.Task;
+                }
             }
 
             public void CancelWait(string clientId)
             {
-                if (_pending.TryRemove(clientId, out TaskCompletionSource<IMessage> pending))
-                    pending.TrySetCanceled();
+                TaskCompletionSource<IMessage> pending = null;
+                lock (_gate)
+                {
+                    if (_pending.TryGetValue(clientId, out pending))
+                        _pending.Remove(clientId);
+                }
+
+                pending?.TrySetCanceled();
             }
 
             public Task HandleAsync(
@@ -460,10 +657,32 @@ namespace MasterSplinter.Cli
                 Console.WriteLine(
                     $"Received {message.GetType().Name} from client {connection.ClientId ?? "-"} on {connection.ConnectionId}.");
 
-                if (_pending.TryRemove(clientId, out TaskCompletionSource<IMessage> pending))
-                    pending.TrySetResult(message);
+                TaskCompletionSource<IMessage> pending = null;
+                lock (_gate)
+                {
+                    if (_pending.TryGetValue(clientId, out pending))
+                    {
+                        _pending.Remove(clientId);
+                    }
+                    else
+                    {
+                        GetQueue(clientId).Enqueue(message);
+                    }
+                }
 
+                pending?.TrySetResult(message);
                 return Task.CompletedTask;
+            }
+
+            private Queue<IMessage> GetQueue(string clientId)
+            {
+                if (!_queued.TryGetValue(clientId, out Queue<IMessage> queue))
+                {
+                    queue = new Queue<IMessage>();
+                    _queued.Add(clientId, queue);
+                }
+
+                return queue;
             }
         }
 

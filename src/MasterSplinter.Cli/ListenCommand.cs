@@ -5,33 +5,35 @@ namespace MasterSplinter.Cli
 {
     public sealed class ListenCommand
     {
-        private ListenCommand(string verb, string clientId, string dispatchCommand, string path)
+        private ListenCommand(string verb, string clientId, string dispatchCommand, string path, string outputPath)
         {
             Verb = verb;
             ClientId = clientId;
             DispatchCommand = dispatchCommand;
             Path = path;
+            OutputPath = outputPath;
         }
 
         public string Verb { get; }
         public string ClientId { get; }
         public string DispatchCommand { get; }
         public string Path { get; }
+        public string OutputPath { get; }
 
         public static ListenCommand Parse(string line)
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null);
+                return new ListenCommand("empty", null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null);
+                return new ListenCommand("exit", null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null);
+                return new ListenCommand("help", null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null);
+                return new ListenCommand("clients", null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -41,6 +43,7 @@ namespace MasterSplinter.Cli
             string clientId = tokens[1];
             string dispatchCommand = tokens[2];
             string path = null;
+            string outputPath = null;
             for (int index = 3; index < tokens.Length; index++)
             {
                 if (string.Equals(tokens[index], "--path", StringComparison.OrdinalIgnoreCase))
@@ -51,17 +54,26 @@ namespace MasterSplinter.Cli
 
                     path = tokens[index];
                 }
+                else if (string.Equals(tokens[index], "--output", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--output requires a value.");
+
+                    outputPath = tokens[index];
+                }
                 else
                 {
                     throw new ArgumentException($"Unknown dispatch argument '{tokens[index]}'.");
                 }
             }
 
-            if (string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase) &&
+            if ((string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase)) &&
                 string.IsNullOrWhiteSpace(path))
-                throw new ArgumentException("--path is required for get-directory.");
+                throw new ArgumentException($"--path is required for {dispatchCommand}.");
 
-            return new ListenCommand("dispatch", clientId, dispatchCommand, path);
+            return new ListenCommand("dispatch", clientId, dispatchCommand, path, outputPath);
         }
 
         private static string[] Tokenize(string line)

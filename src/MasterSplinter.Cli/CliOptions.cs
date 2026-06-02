@@ -6,12 +6,13 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-processes|get-startup-items|get-connections>] [--path <path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|download-file|get-processes|get-startup-items|get-connections>] [--path <path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
             string dispatchCommand,
             string path,
+            string outputPath,
             string host,
             int port,
             int timeoutSeconds,
@@ -23,6 +24,7 @@ namespace MasterSplinter.Cli
             Command = command;
             DispatchCommand = dispatchCommand;
             Path = path;
+            OutputPath = outputPath;
             Host = host;
             Port = port;
             TimeoutSeconds = timeoutSeconds;
@@ -35,6 +37,7 @@ namespace MasterSplinter.Cli
         public string Command { get; }
         public string DispatchCommand { get; }
         public string Path { get; }
+        public string OutputPath { get; }
         public string Host { get; }
         public int Port { get; }
         public int TimeoutSeconds { get; }
@@ -49,12 +52,13 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
             string dispatchCommand = null;
             string path = null;
+            string outputPath = null;
             string host = "127.0.0.1";
             int port = 4782;
             int timeoutSeconds = 60;
@@ -69,6 +73,8 @@ namespace MasterSplinter.Cli
                     dispatchCommand = ReadValue(args, ref index, "--command");
                 else if (string.Equals(arg, "--path", StringComparison.OrdinalIgnoreCase))
                     path = ReadValue(args, ref index, "--path");
+                else if (string.Equals(arg, "--output", StringComparison.OrdinalIgnoreCase))
+                    outputPath = ReadValue(args, ref index, "--output");
                 else if (string.Equals(arg, "--host", StringComparison.OrdinalIgnoreCase))
                     host = ReadValue(args, ref index, "--host");
                 else if (string.Equals(arg, "--port", StringComparison.OrdinalIgnoreCase))
@@ -93,14 +99,16 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(dispatchCommand))
                 throw new ArgumentException("--command is required for dispatch.");
 
-            if (string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase) &&
+            if ((string.Equals(dispatchCommand, "get-directory", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase)) &&
                 string.IsNullOrWhiteSpace(path))
-                throw new ArgumentException("--path is required for get-directory.");
+                throw new ArgumentException($"--path is required for {dispatchCommand}.");
 
             return new CliOptions(
                 command,
                 dispatchCommand,
                 path,
+                outputPath,
                 host,
                 port,
                 timeoutSeconds,
