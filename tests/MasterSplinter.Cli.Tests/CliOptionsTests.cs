@@ -39,6 +39,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsFalse(options.RemotePort.HasValue);
             Assert.IsNull(options.RemotePath);
             Assert.IsNull(options.OutputPath);
+            Assert.IsFalse(options.Frames.HasValue);
+            Assert.IsFalse(options.FrameDelayMilliseconds.HasValue);
             Assert.AreEqual("127.0.0.1", options.Host);
             Assert.AreEqual(4782, options.Port);
             Assert.AreEqual(60, options.TimeoutSeconds);
@@ -85,6 +87,8 @@ namespace MasterSplinter.Cli.Tests
                 "--url", "https://example.test",
                 "--quality", "80",
                 "--display-index", "2",
+                "--frames", "5",
+                "--frame-delay-ms", "25",
                 "--mouse-action", "move",
                 "--x", "10",
                 "--y", "20",
@@ -120,6 +124,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("https://example.test", options.Url);
             Assert.AreEqual(80, options.Quality);
             Assert.AreEqual(2, options.DisplayIndex);
+            Assert.AreEqual(5, options.Frames);
+            Assert.AreEqual(25, options.FrameDelayMilliseconds);
             Assert.AreEqual("move", options.MouseAction);
             Assert.AreEqual(10, options.X);
             Assert.AreEqual(20, options.Y);
@@ -311,6 +317,29 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsTrue(desktop.CreateNew);
             Assert.AreEqual(80, desktop.Quality);
             Assert.AreEqual(1, desktop.DisplayIndex);
+
+            var stream = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "get-desktop-stream",
+                "--quality", "70",
+                "--display-index", "1",
+                "--frames", "3",
+                "--frame-delay-ms", "10",
+                "--output", "C:\\Temp\\stream"
+            });
+            Assert.AreEqual("get-desktop-stream", stream.DispatchCommand);
+            Assert.AreEqual(70, stream.Quality);
+            Assert.AreEqual(1, stream.DisplayIndex);
+            Assert.AreEqual(3, stream.Frames);
+            Assert.AreEqual(10, stream.FrameDelayMilliseconds);
+            Assert.AreEqual("C:\\Temp\\stream", stream.OutputPath);
+            Assert.ThrowsException<ArgumentException>(() => Program.CreateMessage(stream));
+
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "get-desktop-stream", "--frames", "0" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "get-desktop-stream", "--frame-delay-ms", "-1" }));
 
             var directory = (GetDirectory)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -704,6 +733,14 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual(80, desktop.Quality);
             Assert.AreEqual(1, desktop.DisplayIndex);
             Assert.AreEqual("C:\\Temp\\desktop.jpg", desktop.OutputPath);
+
+            ListenCommand desktopStream = ListenCommand.Parse("dispatch first get-desktop-stream --quality 70 --display-index 1 --frames 3 --frame-delay-ms 10 --output C:\\Temp\\stream");
+            Assert.AreEqual("get-desktop-stream", desktopStream.DispatchCommand);
+            Assert.AreEqual(70, desktopStream.Quality);
+            Assert.AreEqual(1, desktopStream.DisplayIndex);
+            Assert.AreEqual(3, desktopStream.Frames);
+            Assert.AreEqual(10, desktopStream.FrameDelayMilliseconds);
+            Assert.AreEqual("C:\\Temp\\stream", desktopStream.OutputPath);
 
             ListenCommand mouseEvent = ListenCommand.Parse("dispatch first mouse-event --mouse-action move --x 10 --y 20 --monitor-index 1");
             Assert.AreEqual("mouse-event", mouseEvent.DispatchCommand);

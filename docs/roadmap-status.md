@@ -363,12 +363,17 @@ Done:
   paths; manual verification requires a published client executable.
 - Added consent-gated monitor count parity through `GetMonitors`: the client host wires a
   Windows monitor provider, CLI exposes `get-monitors`, and `RemoteCapture` permission plus
-  consent enforcement is covered. Desktop image streaming remains deferred.
+  consent enforcement is covered.
 - Added consent-gated single-frame desktop capture parity through `GetDesktop` and
   `GetDesktopResponse`: the client host wires a Windows JPEG capture provider, CLI exposes
   `get-desktop --quality <1-100> --display-index <index> --output <local-jpg>`, and
   `RemoteCapture` permission plus consent enforcement is covered. A gentle local manual check
-  saved a valid 39,634-byte JPEG at `1280x720`; continuous delta streaming remains deferred.
+  saved a valid 39,634-byte JPEG at `1280x720`.
+- Added consent-gated remote desktop request-loop streaming through `get-desktop-stream`: the
+  first frame sends legacy `GetDesktop.CreateNew=true`, later frames continue the session with
+  `CreateNew=false`, and the CLI saves numbered JPEG frames to an output directory. GUI/live
+  viewer rendering remains pending. A June 7, 2026 loopback smoke test saved two `1280x720`
+  JPEG frames at quality 45, each 36,110 bytes.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle

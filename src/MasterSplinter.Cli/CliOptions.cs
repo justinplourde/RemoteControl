@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|registry-create-key|registry-delete-key|registry-rename-key|registry-create-value|registry-delete-value|registry-rename-value|registry-change-value|shell-execute|get-monitors|get-desktop|mouse-event|keyboard-event|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|uninstall-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <string|expand-string|binary|dword|qword|multi-string>] [--data <value>] [--shell-command <command>] [--quality <1-100>] [--display-index <index>] [--mouse-action <left-down|left-up|right-down|right-up|move|scroll-up|scroll-down|none>] [--x <pixels>] [--y <pixels>] [--monitor-index <index>] [--key <byte>] [--key-down|--key-up] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|registry-create-key|registry-delete-key|registry-rename-key|registry-create-value|registry-delete-value|registry-rename-value|registry-change-value|shell-execute|get-monitors|get-desktop|get-desktop-stream|mouse-event|keyboard-event|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|uninstall-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <string|expand-string|binary|dword|qword|multi-string>] [--data <value>] [--shell-command <command>] [--quality <1-100>] [--display-index <index>] [--frames <count>] [--frame-delay-ms <milliseconds>] [--mouse-action <left-down|left-up|right-down|right-up|move|scroll-up|scroll-down|none>] [--x <pixels>] [--y <pixels>] [--monitor-index <index>] [--key <byte>] [--key-down|--key-up] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path-or-directory>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -21,6 +21,8 @@ namespace MasterSplinter.Cli
             string shellCommand,
             int? quality,
             int? displayIndex,
+            int? frames,
+            int? frameDelayMilliseconds,
             string mouseAction,
             int? x,
             int? y,
@@ -62,6 +64,8 @@ namespace MasterSplinter.Cli
             ShellCommand = shellCommand;
             Quality = quality;
             DisplayIndex = displayIndex;
+            Frames = frames;
+            FrameDelayMilliseconds = frameDelayMilliseconds;
             MouseAction = mouseAction;
             X = x;
             Y = y;
@@ -104,6 +108,8 @@ namespace MasterSplinter.Cli
         public string ShellCommand { get; }
         public int? Quality { get; }
         public int? DisplayIndex { get; }
+        public int? Frames { get; }
+        public int? FrameDelayMilliseconds { get; }
         public string MouseAction { get; }
         public int? X { get; }
         public int? Y { get; }
@@ -139,7 +145,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -154,6 +160,8 @@ namespace MasterSplinter.Cli
             string shellCommand = null;
             int? quality = null;
             int? displayIndex = null;
+            int? frames = null;
+            int? frameDelayMilliseconds = null;
             string mouseAction = null;
             int? x = null;
             int? y = null;
@@ -207,6 +215,10 @@ namespace MasterSplinter.Cli
                     quality = int.Parse(ReadValue(args, ref index, "--quality"), CultureInfo.InvariantCulture);
                 else if (string.Equals(arg, "--display-index", StringComparison.OrdinalIgnoreCase))
                     displayIndex = int.Parse(ReadValue(args, ref index, "--display-index"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--frames", StringComparison.OrdinalIgnoreCase))
+                    frames = int.Parse(ReadValue(args, ref index, "--frames"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--frame-delay-ms", StringComparison.OrdinalIgnoreCase))
+                    frameDelayMilliseconds = int.Parse(ReadValue(args, ref index, "--frame-delay-ms"), CultureInfo.InvariantCulture);
                 else if (string.Equals(arg, "--mouse-action", StringComparison.OrdinalIgnoreCase))
                     mouseAction = ReadValue(args, ref index, "--mouse-action");
                 else if (string.Equals(arg, "--x", StringComparison.OrdinalIgnoreCase))
@@ -343,12 +355,17 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(shellCommand))
                 throw new ArgumentException("--shell-command is required for shell-execute.");
 
-            if (string.Equals(dispatchCommand, "get-desktop", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(dispatchCommand, "get-desktop", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dispatchCommand, "get-desktop-stream", StringComparison.OrdinalIgnoreCase))
             {
                 if (quality.HasValue && (quality.Value < 1 || quality.Value > 100))
                     throw new ArgumentException("--quality must be between 1 and 100.");
                 if (displayIndex.HasValue && displayIndex.Value < 0)
                     throw new ArgumentException("--display-index must be zero or greater.");
+                if (frames.HasValue && frames.Value < 1)
+                    throw new ArgumentException("--frames must be one or greater.");
+                if (frameDelayMilliseconds.HasValue && frameDelayMilliseconds.Value < 0)
+                    throw new ArgumentException("--frame-delay-ms must be zero or greater.");
             }
 
             if (string.Equals(dispatchCommand, "mouse-event", StringComparison.OrdinalIgnoreCase))
@@ -458,6 +475,8 @@ namespace MasterSplinter.Cli
                 shellCommand,
                 quality,
                 displayIndex,
+                frames,
+                frameDelayMilliseconds,
                 mouseAction,
                 x,
                 y,

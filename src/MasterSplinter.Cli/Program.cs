@@ -26,6 +26,7 @@ namespace MasterSplinter.Cli
         private const int FileTransferId = 1;
         private const int UploadChunkSize = 64 * 1024;
         private const long MaxUploadFileSizeBytes = 100L * 1024L * 1024L;
+        private const int DefaultDesktopStreamFrames = 30;
 
         public static async Task<int> Main(string[] args)
         {
@@ -168,6 +169,22 @@ namespace MasterSplinter.Cli
                     return 0;
                 }
 
+                if (IsDesktopStreamCommand(options.DispatchCommand))
+                {
+                    await DispatchDesktopStreamAsync(
+                        options,
+                        new ServerCommandDispatcher(registry),
+                        responseSink,
+                        session.ClientId,
+                        options.OutputPath,
+                        options.Quality.GetValueOrDefault(75),
+                        options.DisplayIndex.GetValueOrDefault(),
+                        options.Frames.GetValueOrDefault(DefaultDesktopStreamFrames),
+                        options.FrameDelayMilliseconds.GetValueOrDefault(),
+                        cancellationToken).ConfigureAwait(false);
+                    return 0;
+                }
+
                 IMessage command = CreateMessage(options);
                 CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
                     options,
@@ -306,6 +323,8 @@ namespace MasterSplinter.Cli
         {
             if (IsUploadFileCommand(dispatchCommand))
                 throw new ArgumentException("upload-file is a multi-message command and cannot be created as a single message.");
+            if (IsDesktopStreamCommand(dispatchCommand))
+                throw new ArgumentException("get-desktop-stream is a multi-message command and cannot be created as a single message.");
             if (string.Equals(dispatchCommand, "get-system-info", StringComparison.OrdinalIgnoreCase))
                 return new GetSystemInfo();
             if (string.Equals(dispatchCommand, "get-drives", StringComparison.OrdinalIgnoreCase))
@@ -467,6 +486,22 @@ namespace MasterSplinter.Cli
                     clientId,
                     listenCommand.Path,
                     listenCommand.RemotePath,
+                    cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            if (IsDesktopStreamCommand(listenCommand.DispatchCommand))
+            {
+                await DispatchDesktopStreamAsync(
+                    options,
+                    dispatcher,
+                    responseSink,
+                    clientId,
+                    listenCommand.OutputPath ?? options.OutputPath,
+                    listenCommand.Quality.GetValueOrDefault(options.Quality.GetValueOrDefault(75)),
+                    listenCommand.DisplayIndex.GetValueOrDefault(options.DisplayIndex.GetValueOrDefault()),
+                    listenCommand.Frames.GetValueOrDefault(options.Frames.GetValueOrDefault(DefaultDesktopStreamFrames)),
+                    listenCommand.FrameDelayMilliseconds.GetValueOrDefault(options.FrameDelayMilliseconds.GetValueOrDefault()),
                     cancellationToken).ConfigureAwait(false);
                 return;
             }
@@ -681,9 +716,90 @@ namespace MasterSplinter.Cli
             }
         }
 
+        private static async Task DispatchDesktopStreamAsync(
+            CliOptions options,
+            ServerCommandDispatcher dispatcher,
+            AwaitableMessageSink responseSink,
+            string clientId,
+            string outputPath,
+            int quality,
+            int displayIndex,
+            int frames,
+            int frameDelayMilliseconds,
+            CancellationToken cancellationToken)
+        {
+            if (frames < 1)
+                throw new ArgumentOutOfRangeException(nameof(frames), "Frame count must be one or greater.");
+            if (frameDelayMilliseconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(frameDelayMilliseconds), "Frame delay must be zero or greater.");
+
+            string outputDirectory = ResolveDesktopStreamOutputDirectory(outputPath);
+            Console.WriteLine(
+                $"Desktop stream started: Frames={frames}; Quality={quality}; DisplayIndex={displayIndex}; Output={outputDirectory}.");
+
+            for (int frameNumber = 1; frameNumber <= frames; frameNumber++)
+            {
+                var message = new GetDesktop
+                {
+                    CreateNew = frameNumber == 1,
+                    Quality = quality,
+                    DisplayIndex = displayIndex
+                };
+                Task<IMessage> responseTask = responseSink.WaitForNextAsync(clientId);
+                CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
+                    options,
+                    clientId,
+                    message,
+                    cancellationToken).ConfigureAwait(false);
+
+                CommandDispatchResult result = await dispatcher.DispatchAsync(request, cancellationToken)
+                    .ConfigureAwait(false);
+                Console.WriteLine(
+                    $"Desktop stream dispatch {frameNumber}/{frames}: {result.Status}. Safety={result.SafetyMetadata.SafetyClass}; RequiresPermission={result.SafetyMetadata.RequiresPermission}; RequiresConsent={result.SafetyMetadata.RequiresConsent}.");
+
+                if (result.Status != CommandDispatchStatus.Sent)
+                {
+                    responseSink.CancelWait(clientId);
+                    return;
+                }
+
+                IMessage response;
+                try
+                {
+                    response = await responseTask.WaitAsync(TimeSpan.FromSeconds(options.TimeoutSeconds), cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch
+                {
+                    responseSink.CancelWait(clientId);
+                    throw;
+                }
+
+                if (!(response is GetDesktopResponse desktopResponse))
+                    throw new InvalidOperationException($"Expected GetDesktopResponse but received {response.GetType().Name}.");
+
+                string savedPath = SaveDesktopStreamFrame(desktopResponse, outputDirectory, frameNumber);
+                Console.WriteLine(
+                    $"Desktop stream frame {frameNumber}/{frames}: Monitor={desktopResponse.Monitor}; Quality={desktopResponse.Quality}; Resolution={(desktopResponse.Resolution == null ? "-" : desktopResponse.Resolution.ToString())}; Saved={ValueOrDash(savedPath)}.");
+
+                if (desktopResponse.Image == null || desktopResponse.Image.Length == 0)
+                    break;
+
+                if (frameDelayMilliseconds > 0 && frameNumber < frames)
+                    await Task.Delay(frameDelayMilliseconds, cancellationToken).ConfigureAwait(false);
+            }
+
+            Console.WriteLine("Desktop stream stopped.");
+        }
+
         private static bool IsUploadFileCommand(string dispatchCommand)
         {
             return string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsDesktopStreamCommand(string dispatchCommand)
+        {
+            return string.Equals(dispatchCommand, "get-desktop-stream", StringComparison.OrdinalIgnoreCase);
         }
 
         private static FileType ParsePathType(string pathType)
@@ -948,7 +1064,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--shell-command <command>] [--quality <1-100>] [--display-index <index>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--shell-command <command>] [--quality <1-100>] [--display-index <index>] [--frames <count>] [--frame-delay-ms <milliseconds>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path-or-directory>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
@@ -1024,6 +1140,26 @@ namespace MasterSplinter.Cli
             string resolvedOutputPath = ResolveDesktopOutputPath(response.Monitor, outputPath);
             File.WriteAllBytes(resolvedOutputPath, image);
             Console.WriteLine($"Desktop frame saved: {image.Length} bytes to {resolvedOutputPath}.");
+        }
+
+        private static string SaveDesktopStreamFrame(
+            GetDesktopResponse response,
+            string outputDirectory,
+            int frameNumber)
+        {
+            if (response == null)
+                throw new ArgumentNullException(nameof(response));
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+                throw new ArgumentException("Output directory is required.", nameof(outputDirectory));
+            if (frameNumber < 1)
+                throw new ArgumentOutOfRangeException(nameof(frameNumber), "Frame number must be one or greater.");
+            if (response.Image == null || response.Image.Length == 0)
+                return null;
+
+            byte[] image = ExtractLegacyFirstFrameJpeg(response.Image);
+            string path = Path.Combine(outputDirectory, $"desktop-monitor{response.Monitor}-frame{frameNumber:0000}.jpg");
+            File.WriteAllBytes(path, image);
+            return path;
         }
 
         private static byte[] ExtractLegacyFirstFrameJpeg(byte[] image)
@@ -1181,6 +1317,16 @@ namespace MasterSplinter.Cli
                 if (!File.Exists(candidate))
                     return candidate;
             }
+        }
+
+        private static string ResolveDesktopStreamOutputDirectory(string outputPath)
+        {
+            string directory = string.IsNullOrWhiteSpace(outputPath)
+                ? Path.Combine(Environment.CurrentDirectory, "captures", $"desktop-stream-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}")
+                : Path.GetFullPath(outputPath);
+
+            Directory.CreateDirectory(directory);
+            return directory;
         }
 
         public static string[] FormatResponse(IMessage reply)

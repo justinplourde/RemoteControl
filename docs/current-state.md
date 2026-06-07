@@ -118,6 +118,7 @@ Current CLI dispatch command names:
 - `get-directory --path <path>`
 - `get-monitors` (requires `--grant-permission --grant-consent`; returns remote monitor count)
 - `get-desktop [--quality <1-100>] [--display-index <index>] [--output <local-jpg>]` (requires `--grant-permission --grant-consent`; requests one legacy first-frame desktop capture and saves a JPEG locally)
+- `get-desktop-stream [--quality <1-100>] [--display-index <index>] [--frames <count>] [--frame-delay-ms <milliseconds>] [--output <local-directory>]` (requires `--grant-permission --grant-consent`; repeats the legacy request-response desktop frame loop and saves numbered JPEG frames)
 - `mouse-event --mouse-action <left-down|left-up|right-down|right-up|move|scroll-up|scroll-down|none> --x <pixels> --y <pixels> --monitor-index <index>` (requires `--grant-permission --grant-consent`; sends mouse input to the client desktop)
 - `keyboard-event --key <byte> (--key-down|--key-up)` (requires `--grant-permission --grant-consent`; sends keyboard input to the client desktop)
 - `get-registry-key --path <hive\subkey>`
@@ -315,7 +316,12 @@ All modern projects target `net10.0`.
 - Single-frame desktop capture parity is now wired through `GetDesktop` and `GetDesktopResponse`,
   a Windows JPEG capture provider, CLI `get-desktop`, and `RemoteCapture` permission plus consent
   enforcement. The provider returns a legacy first-frame length-prefixed JPEG payload, and the CLI
-  saves a viewable JPEG. Continuous delta streaming remains deferred.
+  saves a viewable JPEG.
+- Continuous remote desktop request-loop parity is now wired through CLI `get-desktop-stream`.
+  The first request sets `GetDesktop.CreateNew=true`, later frames continue with
+  `CreateNew=false`, and numbered JPEG frames are written to a local output directory for manual
+  inspection. A June 7, 2026 loopback smoke test saved two `1280x720` JPEG frames at quality 45,
+  each 36,110 bytes. GUI/live viewer rendering and richer session controls remain pending.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
@@ -345,8 +351,8 @@ All modern projects target `net10.0`.
   implemented with a persistent session, but manual verification should use harmless commands only.
   Remote input dispatch has a gentle local manual verification, but broader manual verification
   should still use harmless pointer/key actions on a prepared visible Windows desktop session.
-  Single-frame desktop capture has a gentle local manual verification; continuous remote desktop
-  delta streaming remains deferred.
+  Single-frame desktop capture has a gentle local manual verification; `get-desktop-stream` now
+  covers the request-response frame loop, while GUI/live-viewer verification remains pending.
 
 ## Recommended Next Tasks
 

@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: client status row parity through `SetStatus` and
-  `SetUserStatus`
+- Latest committed work before this handoff: continuous remote desktop request-loop streaming
+  through `get-desktop-stream`
 - Latest known full test result: 192 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -37,6 +37,7 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `get-monitors`,
 `get-desktop [--quality <1-100>] [--display-index <index>] [--output <local-jpg>]`,
+`get-desktop-stream [--quality <1-100>] [--display-index <index>] [--frames <count>] [--frame-delay-ms <milliseconds>] [--output <local-directory>]`,
 `mouse-event --mouse-action <action> --x <pixels> --y <pixels> --monitor-index <index>`,
 `keyboard-event --key <byte> (--key-down|--key-up)`,
 `get-registry-key --path <hive\subkey>`,
@@ -75,7 +76,12 @@ Single-frame desktop capture parity is wired through `get-desktop`. It requires
 `GetDesktopResponse`, strips the legacy first-frame JPEG length prefix, and saves a viewable JPEG.
 The latest gentle local manual check on June 7, 2026 saved a valid 39,634-byte `1280x720` JPEG
 with SHA-256 `1656A0CD8F74247D19A4D78767F2271B4E61FC40CE7FCFB14B399FF71DDBFF4C`.
-Continuous remote desktop delta streaming remains deferred.
+
+Continuous remote desktop request-loop parity is wired through `get-desktop-stream`. It requires
+`--grant-permission --grant-consent`, maps each frame request to `RemoteCapture`, sends
+`GetDesktop.CreateNew=true` for the first frame and `CreateNew=false` for subsequent frames, and
+saves numbered JPEG frames to the output directory. A June 7, 2026 loopback smoke test saved two
+`1280x720` JPEG frames at quality 45, each 36,110 bytes. GUI/live viewer rendering remains pending.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard

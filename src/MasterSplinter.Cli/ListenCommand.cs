@@ -19,6 +19,8 @@ namespace MasterSplinter.Cli
             string shellCommand,
             int? quality,
             int? displayIndex,
+            int? frames,
+            int? frameDelayMilliseconds,
             string mouseAction,
             int? x,
             int? y,
@@ -54,6 +56,8 @@ namespace MasterSplinter.Cli
             ShellCommand = shellCommand;
             Quality = quality;
             DisplayIndex = displayIndex;
+            Frames = frames;
+            FrameDelayMilliseconds = frameDelayMilliseconds;
             MouseAction = mouseAction;
             X = x;
             Y = y;
@@ -90,6 +94,8 @@ namespace MasterSplinter.Cli
         public string ShellCommand { get; }
         public int? Quality { get; }
         public int? DisplayIndex { get; }
+        public int? Frames { get; }
+        public int? FrameDelayMilliseconds { get; }
         public string MouseAction { get; }
         public int? X { get; }
         public int? Y { get; }
@@ -116,16 +122,16 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -144,6 +150,8 @@ namespace MasterSplinter.Cli
             string shellCommand = null;
             int? quality = null;
             int? displayIndex = null;
+            int? frames = null;
+            int? frameDelayMilliseconds = null;
             string mouseAction = null;
             int? x = null;
             int? y = null;
@@ -246,6 +254,22 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--display-index requires a value.");
 
                     displayIndex = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--frames", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--frames requires a value.");
+
+                    frames = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--frame-delay-ms", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--frame-delay-ms requires a value.");
+
+                    frameDelayMilliseconds = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
                 }
                 else if (string.Equals(tokens[index], "--mouse-action", StringComparison.OrdinalIgnoreCase))
                 {
@@ -485,12 +509,17 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(shellCommand))
                 throw new ArgumentException("--shell-command is required for shell-execute.");
 
-            if (string.Equals(dispatchCommand, "get-desktop", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(dispatchCommand, "get-desktop", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dispatchCommand, "get-desktop-stream", StringComparison.OrdinalIgnoreCase))
             {
                 if (quality.HasValue && (quality.Value < 1 || quality.Value > 100))
                     throw new ArgumentException("--quality must be between 1 and 100.");
                 if (displayIndex.HasValue && displayIndex.Value < 0)
                     throw new ArgumentException("--display-index must be zero or greater.");
+                if (frames.HasValue && frames.Value < 1)
+                    throw new ArgumentException("--frames must be one or greater.");
+                if (frameDelayMilliseconds.HasValue && frameDelayMilliseconds.Value < 0)
+                    throw new ArgumentException("--frame-delay-ms must be zero or greater.");
             }
 
             if (string.Equals(dispatchCommand, "mouse-event", StringComparison.OrdinalIgnoreCase))
@@ -599,6 +628,8 @@ namespace MasterSplinter.Cli
                 shellCommand,
                 quality,
                 displayIndex,
+                frames,
+                frameDelayMilliseconds,
                 mouseAction,
                 x,
                 y,
