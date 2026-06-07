@@ -83,6 +83,20 @@ antivirus, firewall, time zone, and country on this PC. The full read-only CLI p
 re-run after this enrichment on June 2, 2026 and all current commands responded on one persistent
 client connection.
 
+Current manual remote-input parity check:
+
+```powershell
+dotnet exec .\src\MasterSplinter.Cli\bin\Debug\net10.0\MasterSplinter.Cli.dll listen --port 47866 --grant-permission --grant-consent
+dotnet exec .\src\MasterSplinter.Client.Host\bin\Debug\net10.0\MasterSplinter.Client.Host.dll --port 47866 --handle-commands
+dispatch first mouse-event --mouse-action move --x 10 --y 10 --monitor-index 0
+dispatch first keyboard-event --key 16 --key-down
+dispatch first keyboard-event --key 16 --key-up
+```
+
+The latest manual check on June 7, 2026 connected one local client, classified all three commands
+as `RemoteInput` with permission and consent required, returned `Status: Mouse event sent.` for
+the pointer move, and returned `Status: Keyboard event sent.` for Shift down/up.
+
 Current CLI dispatch command names:
 
 - `get-system-info`
@@ -278,8 +292,8 @@ All modern projects target `net10.0`.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
-  creation, handler status mapping, and safety metadata; manual verification should be run from a
-  prepared visible Windows desktop session.
+  creation, handler status mapping, and safety metadata; a gentle local manual check moved the
+  pointer to `10,10` and sent Shift down/up successfully.
 
 ## Current Limitations
 
@@ -302,9 +316,9 @@ All modern projects target `net10.0`.
   remove it afterward. Registry key and value mutations are implemented, but manual verification
   should use a harmless `HKCU\Software` test key/value and remove them afterward. Shell execute is
   implemented with a persistent session, but manual verification should use harmless commands only.
-  Remote input dispatch is implemented, but manual verification should use harmless pointer/key
-  actions on a prepared visible Windows desktop session. Remote desktop image streaming remains
-  deferred beyond monitor count.
+  Remote input dispatch has a gentle local manual verification, but broader manual verification
+  should still use harmless pointer/key actions on a prepared visible Windows desktop session.
+  Remote desktop image streaming remains deferred beyond monitor count.
 
 ## Recommended Next Tasks
 

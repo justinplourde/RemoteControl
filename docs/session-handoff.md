@@ -70,8 +70,11 @@ start desktop image capture.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard
-events through the client host. Manual verification should be done from a prepared visible
-Windows desktop session using harmless pointer/key actions, for example:
+events through the client host. The latest gentle local manual check on June 7, 2026 connected
+one client, returned `Safety=RemoteInput; RequiresPermission=True; RequiresConsent=True`, moved
+the pointer to `10,10`, and sent Shift down/up with `Status: Mouse event sent.` and
+`Status: Keyboard event sent.`. Use harmless pointer/key actions for any broader visible desktop
+verification, for example:
 
 ```powershell
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47864 --grant-permission --grant-consent

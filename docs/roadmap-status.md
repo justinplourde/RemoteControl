@@ -363,8 +363,8 @@ Done:
   consent enforcement is covered. Desktop image streaming remains deferred.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
-  `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. Visible
-  desktop verification remains pending.
+  `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
+  local manual check moved the pointer to `10,10` and sent Shift down/up successfully.
 - Added consent-gated message box parity through `DoShowMessageBox`: the client host wires a
   Windows `user32!MessageBoxW` provider, CLI exposes `show-message --text <message>
   [--caption <title>] [--button <button>] [--icon <icon>]`, and response formatting prints the
@@ -765,8 +765,11 @@ dispatch first keyboard-event --key 16 --key-down
 dispatch first keyboard-event --key 16 --key-up
 ```
 
-Run from a prepared visible Windows desktop session only. Use harmless pointer/key actions and
-confirm the CLI returns `Status: Mouse event sent.` or `Status: Keyboard event sent.`.
+The latest gentle local manual check on June 7, 2026 used `dotnet exec` for the client DLL to
+bypass the published executable's elevation manifest, connected one local client, returned
+`Safety=RemoteInput; RequiresPermission=True; RequiresConsent=True`, and confirmed
+`Status: Mouse event sent.` plus `Status: Keyboard event sent.`. Use harmless pointer/key actions
+for any broader visible desktop verification.
 
 Current manual file-download check:
 
