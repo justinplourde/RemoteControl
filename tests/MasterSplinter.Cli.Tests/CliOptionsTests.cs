@@ -417,6 +417,16 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\old.txt", delete.Path);
             Assert.AreEqual(FileType.File, delete.PathType);
 
+            var deleteDirectory = (DoPathDelete)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "delete-path",
+                "--path", "C:\\Temp\\old-folder",
+                "--type", "directory"
+            }));
+            Assert.AreEqual("C:\\Temp\\old-folder", deleteDirectory.Path);
+            Assert.AreEqual(FileType.Directory, deleteDirectory.PathType);
+
             var startupAdd = (DoStartupItemAdd)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",

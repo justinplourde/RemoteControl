@@ -24,7 +24,13 @@ namespace MasterSplinter.Client.Core.FileSystem
                 }
 
                 if (pathType == FileType.Directory)
-                    return PathDeleteResult.Error("DeletePath Directory delete requires explicit recursive policy");
+                {
+                    if (!Directory.Exists(path))
+                        return PathDeleteResult.Error("DeletePath Path not found");
+
+                    Directory.Delete(path, true);
+                    return PathDeleteResult.Success("Deleted directory");
+                }
 
                 return PathDeleteResult.Error("DeletePath Unsupported path type");
             }

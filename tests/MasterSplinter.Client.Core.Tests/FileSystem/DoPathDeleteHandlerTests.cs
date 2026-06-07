@@ -41,17 +41,19 @@ namespace MasterSplinter.Client.Core.Tests.FileSystem
         }
 
         [TestMethod, TestCategory("ClientCore")]
-        public void ProviderRefusesDirectoryDeleteUntilRecursivePolicyExists()
+        public void ProviderDeletesDirectoryRecursively()
         {
             string directory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(directory);
+            string childDirectory = Path.Combine(directory, "child");
+            Directory.CreateDirectory(childDirectory);
+            File.WriteAllText(Path.Combine(childDirectory, "nested.txt"), "delete directory parity", Encoding.UTF8);
 
             PathDeleteResult result = new PathDeleteProvider().Delete(directory, FileType.Directory);
 
-            Assert.IsFalse(result.IsSuccess);
-            Assert.AreEqual("DeletePath Directory delete requires explicit recursive policy", result.Message);
-            Assert.IsTrue(Directory.Exists(directory));
-            Directory.Delete(directory);
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual("Deleted directory", result.Message);
+            Assert.IsFalse(Directory.Exists(directory));
         }
 
         private sealed class TestPathDeleteProvider : IPathDeleteProvider

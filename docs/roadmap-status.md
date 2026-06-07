@@ -298,9 +298,9 @@ Done:
 - Verified loopback `rename-path` manually on June 2, 2026 with `--grant-permission`; a
   34-byte temp file was renamed, the old path disappeared, the new path existed, and SHA-256
   matched the pre-rename hash.
-- Added permissioned file delete through `DoPathDelete` and `SetStatusFileManager`: the client
-  handler deletes files, intentionally refuses directory delete until recursive policy is defined,
-  and focused tests cover success, directory refusal, CLI parsing, and `FileWrite` safety metadata.
+- Added permissioned file/directory delete through `DoPathDelete` and `SetStatusFileManager`: the
+  client handler deletes files and recursively deletes directories, and focused tests cover file
+  success, recursive directory success, CLI parsing, and `FileWrite` safety metadata.
 - Verified loopback `delete-path` manually on June 2, 2026 with `--grant-permission`; a temp file
   returned `Deleted file` and no longer existed after the command.
 - Added consent-gated process end through `DoProcessEnd` and `DoProcessResponse`: the client
@@ -745,6 +745,7 @@ Current manual file-delete check:
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47846 --grant-permission
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47846 --handle-commands
 dispatch first delete-path --path <client-file> --type file
+dispatch first delete-path --path <client-directory> --type directory
 ```
 
 Current manual process-end check:

@@ -46,7 +46,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `download-file --path <remote-file> [--output <local-file>]`,
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
-`delete-path --path <client-file> --type file`,
+`delete-path --path <client-path> --type <file|directory>`,
 `start-process --path <client-file>`,
 `end-process --pid <pid>`,
 `ask-elevate`,
@@ -81,9 +81,10 @@ File rename parity is now implemented. Manual loopback check: `rename-path` requ
 `--grant-permission`, renamed a 34-byte temp file, removed the old path, created the new path,
 and preserved the SHA-256 hash.
 
-File delete parity is now implemented for files only. Manual loopback check: `delete-path`
-required `--grant-permission`, deleted a temp file, and the path no longer existed. Recursive
-directory delete remains deferred until explicit policy is defined.
+File delete parity is now implemented for files and recursive directories. Manual loopback check:
+`delete-path` required `--grant-permission`, deleted a temp file, and the path no longer existed.
+Directory delete is covered by provider tests and should be manually verified with a harmless temp
+folder.
 
 Process end parity is now implemented. Manual loopback check: `end-process` required
 `--grant-permission --grant-consent`, terminated a harmless spawned sleep process, returned

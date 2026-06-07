@@ -100,7 +100,7 @@ Current CLI dispatch command names:
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
-- `delete-path --path <client-file> --type file` (requires `--grant-permission`; directory delete intentionally deferred)
+- `delete-path --path <client-path> --type <file|directory>` (requires `--grant-permission`; directory deletes are recursive)
 - `start-process --path <client-file>` (requires `--grant-permission --grant-consent`; local file path only)
 - `end-process --pid <pid>` (requires `--grant-permission --grant-consent`)
 - `ask-elevate` (requires `--grant-permission --grant-consent`; triggers Windows UAC in the client session)
@@ -272,8 +272,8 @@ All modern projects target `net10.0`.
 - Modern hosts currently prove loopback handshake, read-only runtime parity, permissioned
   file download/upload slices, permissioned file rename, and permissioned file delete, not full
   remote-management behavior.
-- Recursive directory delete, process-start URL download/update behavior,
-  desktop, service, and UI behavior are not fully extracted yet. TCP connection close requires
+- Process-start URL download/update behavior, desktop, service, and UI behavior are not fully
+  extracted yet. TCP connection close requires
   the Windows client host to run elevated. Elevation request dispatch is implemented, but the
   actual UAC acceptance path still needs manual desktop verification. Shutdown/restart/standby
   dispatch is implemented, but manual verification should only be run on a disposable or prepared
