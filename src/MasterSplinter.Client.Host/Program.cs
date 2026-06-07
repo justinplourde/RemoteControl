@@ -110,6 +110,12 @@ namespace MasterSplinter.Client.Host
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoLoadRegistryKey>(
                             new DoLoadRegistryKeyHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoCreateRegistryKey>(
+                            new DoCreateRegistryKeyHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoDeleteRegistryKey>(
+                            new DoDeleteRegistryKeyHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoRenameRegistryKey>(
+                            new DoRenameRegistryKeyHandler(new RegistryKeyProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(
                             new GetStartupItemsHandler(new StartupItemProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoStartupItemAdd>(

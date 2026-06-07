@@ -7,9 +7,13 @@ using System.Runtime.Versioning;
 
 namespace MasterSplinter.Client.Core.Registry
 {
-    public sealed class RegistryKeyProvider : IRegistryKeyProvider
+#pragma warning disable CA1416
+    public sealed class RegistryKeyProvider : IRegistryKeyProvider, IRegistryKeyMutationProvider
     {
         private const string DefaultValueName = "";
+        private const string RegistryKeyCreateError = "Cannot create key: Error writing to the registry";
+        private const string RegistryKeyDeleteError = "Cannot delete key: Error writing to the registry";
+        private const string RegistryKeyRenameError = "Cannot rename key: Error writing to the registry";
 
         public RegistryKeyLoadResult LoadKey(string rootKeyName)
         {
@@ -23,6 +27,118 @@ namespace MasterSplinter.Client.Core.Registry
             catch (Exception ex)
             {
                 return RegistryKeyLoadResult.Error(ex.Message);
+            }
+        }
+
+        public RegistryKeyMutationResult CreateKey(string parentPath)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryKeyMutationResult.Error("Registry access is only supported on Windows.");
+
+            string name = string.Empty;
+            try
+            {
+                using (RegistryKey parent = OpenWritableKey(parentPath))
+                {
+                    if (parent == null)
+                        return RegistryKeyMutationResult.Error(GetWriteAccessError(parentPath), name);
+
+                    int index = 1;
+                    name = $"New Key #{index}";
+                    while (ContainsSubKey(parent, name))
+                    {
+                        index++;
+                        name = $"New Key #{index}";
+                    }
+
+                    using (RegistryKey child = parent.CreateSubKey(name, true))
+                    {
+                        if (child == null)
+                            return RegistryKeyMutationResult.Error(RegistryKeyCreateError, name);
+                    }
+                }
+
+                return RegistryKeyMutationResult.Success(name, new RegSeekerMatch
+                {
+                    Key = name,
+                    Data = GetDefaultValues(),
+                    HasSubKeys = false
+                });
+            }
+            catch (Exception exception)
+            {
+                return RegistryKeyMutationResult.Error(exception.Message, name);
+            }
+        }
+
+        public RegistryKeyMutationResult DeleteKey(string parentPath, string keyName)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryKeyMutationResult.Error("Registry access is only supported on Windows.", keyName);
+
+            try
+            {
+                ValidateChildKeyName(keyName);
+                using (RegistryKey parent = OpenWritableKey(parentPath))
+                {
+                    if (parent == null)
+                        return RegistryKeyMutationResult.Error(GetWriteAccessError(parentPath), keyName);
+
+                    if (!ContainsSubKey(parent, keyName))
+                        return RegistryKeyMutationResult.Success(keyName, null);
+
+                    try
+                    {
+                        parent.DeleteSubKeyTree(keyName);
+                    }
+                    catch
+                    {
+                        return RegistryKeyMutationResult.Error(RegistryKeyDeleteError, keyName);
+                    }
+                }
+
+                return RegistryKeyMutationResult.Success(keyName, null);
+            }
+            catch (Exception exception)
+            {
+                return RegistryKeyMutationResult.Error(exception.Message, keyName);
+            }
+        }
+
+        public RegistryKeyMutationResult RenameKey(string parentPath, string oldKeyName, string newKeyName)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryKeyMutationResult.Error("Registry access is only supported on Windows.", oldKeyName);
+
+            try
+            {
+                ValidateChildKeyName(oldKeyName);
+                ValidateChildKeyName(newKeyName);
+                using (RegistryKey parent = OpenWritableKey(parentPath))
+                {
+                    if (parent == null)
+                        return RegistryKeyMutationResult.Error(GetWriteAccessError(parentPath), oldKeyName);
+                    if (!ContainsSubKey(parent, oldKeyName))
+                        return RegistryKeyMutationResult.Error($"The registry: {oldKeyName} does not exist in: {parentPath}", oldKeyName);
+                    if (ContainsSubKey(parent, newKeyName))
+                        return RegistryKeyMutationResult.Error(RegistryKeyRenameError, oldKeyName);
+
+                    try
+                    {
+                        CopySubKey(parent, oldKeyName, newKeyName);
+                        parent.DeleteSubKeyTree(oldKeyName);
+                    }
+                    catch
+                    {
+                        return RegistryKeyMutationResult.Error(RegistryKeyRenameError, oldKeyName);
+                    }
+                }
+
+                return RegistryKeyMutationResult.Success(newKeyName, null);
+            }
+            catch (Exception exception)
+            {
+                return RegistryKeyMutationResult.Error(exception.Message, oldKeyName);
             }
         }
 
@@ -217,6 +333,74 @@ namespace MasterSplinter.Client.Core.Registry
             }
         }
 
+        [SupportedOSPlatform("windows")]
+        private static RegistryKey OpenWritableKey(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new InvalidOperationException("Invalid rootkey, could not be found.");
+
+            string normalizedPath = NormalizeRootName(path);
+            RegistryKey root = OpenRootKey(normalizedPath);
+            if (root.Name == normalizedPath)
+                return root;
+
+            string subKeyName = normalizedPath.Substring(root.Name.Length + 1);
+            RegistryKey subKey = root.OpenSubKey(subKeyName, true);
+            root.Dispose();
+            return subKey;
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static bool ContainsSubKey(RegistryKey key, string subKeyName)
+        {
+            return Array.IndexOf(key.GetSubKeyNames(), subKeyName) >= 0;
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static void CopySubKey(RegistryKey parentKey, string oldName, string newName)
+        {
+            using (RegistryKey sourceKey = parentKey.OpenSubKey(oldName, false))
+            using (RegistryKey destinationKey = parentKey.CreateSubKey(newName, true))
+            {
+                if (sourceKey == null || destinationKey == null)
+                    throw new InvalidOperationException(RegistryKeyRenameError);
+
+                RecursiveCopyKey(sourceKey, destinationKey);
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static void RecursiveCopyKey(RegistryKey sourceKey, RegistryKey destinationKey)
+        {
+            foreach (string valueName in sourceKey.GetValueNames())
+            {
+                destinationKey.SetValue(valueName, sourceKey.GetValue(valueName), sourceKey.GetValueKind(valueName));
+            }
+
+            foreach (string subKeyName in sourceKey.GetSubKeyNames())
+            {
+                using (RegistryKey sourceSubKey = sourceKey.OpenSubKey(subKeyName, false))
+                using (RegistryKey destinationSubKey = destinationKey.CreateSubKey(subKeyName, true))
+                {
+                    if (sourceSubKey != null && destinationSubKey != null)
+                        RecursiveCopyKey(sourceSubKey, destinationSubKey);
+                }
+            }
+        }
+
+        private static void ValidateChildKeyName(string keyName)
+        {
+            if (string.IsNullOrWhiteSpace(keyName))
+                throw new ArgumentException("Registry key name is required.", nameof(keyName));
+            if (keyName.IndexOf('\\') >= 0)
+                throw new ArgumentException("Registry key name must be a child name, not a path.", nameof(keyName));
+        }
+
+        private static string GetWriteAccessError(string parentPath)
+        {
+            return $"You do not have write access to registry: {parentPath}, try running client as administrator";
+        }
+
         private static string NormalizeRootName(string path)
         {
             string[] parts = path.Split(new[] { '\\' }, 2);
@@ -247,4 +431,5 @@ namespace MasterSplinter.Client.Core.Registry
             return parts.Length == 1 ? normalizedRoot : normalizedRoot + "\\" + parts[1];
         }
     }
+#pragma warning restore CA1416
 }

@@ -53,6 +53,9 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoVisitWebsite { Url = "https://example.test" }] = CommandSafetyClass.UserInteraction,
                 [new DoStartupItemAdd { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Path = "C:\\Tools\\agent.exe", Type = StartupType.CurrentUserRun } }] = CommandSafetyClass.Persistence,
                 [new DoStartupItemRemove { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Type = StartupType.CurrentUserRun } }] = CommandSafetyClass.Persistence,
+                [new DoCreateRegistryKey { ParentPath = "HKCU\\Software" }] = CommandSafetyClass.Persistence,
+                [new DoDeleteRegistryKey { ParentPath = "HKCU\\Software", KeyName = "Old" }] = CommandSafetyClass.Persistence,
+                [new DoRenameRegistryKey { ParentPath = "HKCU\\Software", OldKeyName = "Old", NewKeyName = "New" }] = CommandSafetyClass.Persistence,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };

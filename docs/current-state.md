@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add startup mutation CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add registry key mutation CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 64 passed
+- `MasterSplinter.Client.Core.Tests`: 67 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 172 passed, 1 skipped, 0 failed
+- Total: 175 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -89,6 +89,9 @@ Current CLI dispatch command names:
 - `get-drives`
 - `get-directory --path <path>`
 - `get-registry-key --path <hive\subkey>`
+- `registry-create-key --path <hive\parent-subkey>` (requires `--grant-permission`; creates legacy-style `New Key #n`)
+- `registry-delete-key --path <hive\parent-subkey> --name <child-key>` (requires `--grant-permission`)
+- `registry-rename-key --path <hive\parent-subkey> --name <old-child-key> --new-name <new-child-key>` (requires `--grant-permission`)
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
@@ -119,7 +122,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -241,6 +244,10 @@ All modern projects target `net10.0`.
   the existing startup provider, CLI `startup-add`/`startup-remove`, and `Persistence` permission
   plus consent enforcement. The provider supports the legacy registry Run/RunOnce locations and
   Startup folder `.url` shortcut behavior; machine-wide locations may require an elevated client.
+- Registry key create/delete/rename parity is now wired through `DoCreateRegistryKey`,
+  `DoDeleteRegistryKey`, and `DoRenameRegistryKey`, the registry provider, CLI
+  `registry-create-key`/`registry-delete-key`/`registry-rename-key`, and `Persistence`
+  permission enforcement. Create preserves the legacy auto-generated `New Key #n` behavior.
 
 ## Current Limitations
 
@@ -260,7 +267,8 @@ All modern projects target `net10.0`.
   needs manual verification. Website visit dispatch is implemented, but visible browser launch
   and hidden GET behavior still need manual verification from a prepared client session. Startup
   add/remove dispatch is implemented, but manual verification should use a harmless test entry and
-  remove it afterward.
+  remove it afterward. Registry key create/delete/rename dispatch is implemented, but manual
+  verification should use a harmless `HKCU\Software` test key and remove it afterward.
 
 ## Recommended Next Tasks
 

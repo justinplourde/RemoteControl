@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add startup mutation CLI parity`
-- Latest known full test result: 172 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add registry key mutation CLI parity`
+- Latest known full test result: 175 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -35,6 +35,9 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `get-registry-key --path <hive\subkey>`,
+`registry-create-key --path <hive\parent-subkey>`,
+`registry-delete-key --path <hive\parent-subkey> --name <child-key>`,
+`registry-rename-key --path <hive\parent-subkey> --name <old-child-key> --new-name <new-child-key>`,
 `download-file --path <remote-file> [--output <local-file>]`,
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
@@ -137,5 +140,10 @@ Startup add/remove parity is wired through `startup-add` and `startup-remove`. B
 `--grant-permission --grant-consent`, map to `Persistence`, support legacy Run/RunOnce and
 Startup-folder types, and should be manually verified with a harmless test entry that is removed
 afterward.
+
+Registry key create/delete/rename parity is wired through `registry-create-key`,
+`registry-delete-key`, and `registry-rename-key`. They require `--grant-permission`, map to
+`Persistence`, preserve legacy response DTOs and generated `New Key #n` naming, and should be
+manually verified with a harmless `HKCU\Software` test key that is removed afterward.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

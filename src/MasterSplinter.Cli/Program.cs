@@ -201,6 +201,7 @@ namespace MasterSplinter.Cli
                 options.NewPath,
                 options.PathType,
                 options.Name,
+                options.NewName,
                 options.StartupType,
                 options.Pid,
                 options.Action,
@@ -218,7 +219,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -227,6 +228,7 @@ namespace MasterSplinter.Cli
             string newPath,
             string pathType,
             string name,
+            string newName,
             string startupType,
             int? pid,
             string action,
@@ -251,6 +253,12 @@ namespace MasterSplinter.Cli
                 return new GetDirectory { RemotePath = path };
             if (string.Equals(dispatchCommand, "get-registry-key", StringComparison.OrdinalIgnoreCase))
                 return new DoLoadRegistryKey { RootKeyName = path };
+            if (string.Equals(dispatchCommand, "registry-create-key", StringComparison.OrdinalIgnoreCase))
+                return new DoCreateRegistryKey { ParentPath = path };
+            if (string.Equals(dispatchCommand, "registry-delete-key", StringComparison.OrdinalIgnoreCase))
+                return new DoDeleteRegistryKey { ParentPath = path, KeyName = name };
+            if (string.Equals(dispatchCommand, "registry-rename-key", StringComparison.OrdinalIgnoreCase))
+                return new DoRenameRegistryKey { ParentPath = path, OldKeyName = name, NewKeyName = newName };
             if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
                 return new FileTransferRequest { Id = 1, RemotePath = path };
             if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
@@ -357,6 +365,7 @@ namespace MasterSplinter.Cli
                 listenCommand.NewPath,
                 listenCommand.PathType,
                 listenCommand.Name,
+                listenCommand.NewName,
                 listenCommand.StartupType,
                 listenCommand.Pid,
                 listenCommand.Action,
@@ -936,6 +945,15 @@ namespace MasterSplinter.Cli
                         foreach (MasterSplinter.Common.Models.RegSeekerMatch match in response.Matches)
                             lines.Add($"- {ValueOrDash(match.Key)} Values={Count(match.Data)} HasSubKeys={match.HasSubKeys}");
                     }
+                    break;
+                case GetCreateRegistryKeyResponse response:
+                    lines.Add($"Registry create key: Parent={ValueOrDash(response.ParentPath)}; Key={ValueOrDash(response.Match == null ? null : response.Match.Key)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
+                case GetDeleteRegistryKeyResponse response:
+                    lines.Add($"Registry delete key: Parent={ValueOrDash(response.ParentPath)}; Key={ValueOrDash(response.KeyName)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
+                case GetRenameRegistryKeyResponse response:
+                    lines.Add($"Registry rename key: Parent={ValueOrDash(response.ParentPath)}; OldKey={ValueOrDash(response.OldKeyName)}; NewKey={ValueOrDash(response.NewKeyName)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
                     break;
                 case SetStatusFileManager response:
                     lines.Add($"File manager status: {ValueOrDash(response.Message)}; SetLastDirectorySeen={response.SetLastDirectorySeen}.");

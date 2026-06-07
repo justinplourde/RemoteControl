@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 64 passed.
+- `MasterSplinter.Client.Core.Tests`: 67 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -155,6 +155,9 @@ Done:
   hidden-mode parsing, and `UserInteraction` permission plus consent classification.
 - Added tests for `DoStartupItemAdd` and `DoStartupItemRemove` status mapping, CLI startup item
   parsing, and `Persistence` permission plus consent classification.
+- Added tests for `DoCreateRegistryKey`, `DoDeleteRegistryKey`, and `DoRenameRegistryKey`
+  response mapping, CLI key mutation parsing/formatting, and `Persistence` permission
+  classification.
 
 Left to do:
 
@@ -353,6 +356,10 @@ Done:
   `DoStartupItemRemove`: the client host wires the startup mutation provider, CLI exposes
   `startup-add` and `startup-remove`, and the provider supports legacy registry Run/RunOnce
   locations plus Startup folder `.url` entries.
+- Added registry key create/delete/rename parity through `DoCreateRegistryKey`,
+  `DoDeleteRegistryKey`, and `DoRenameRegistryKey`: the client host wires registry mutation
+  handlers, CLI exposes `registry-create-key`, `registry-delete-key`, and `registry-rename-key`,
+  and create preserves the legacy `New Key #n` naming behavior.
 
 Left to do:
 
@@ -650,6 +657,19 @@ dispatch first startup-remove --name MasterSplinterTest --startup-type current-u
 
 Use a harmless test entry and remove it afterward. Machine-wide startup types require an elevated
 client process.
+
+Current manual registry key mutation check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47859 --grant-permission
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47859 --handle-commands
+dispatch first registry-create-key --path HKCU\Software
+dispatch first registry-rename-key --path HKCU\Software --name "New Key #1" --new-name MasterSplinterTestKey
+dispatch first registry-delete-key --path HKCU\Software --name MasterSplinterTestKey
+```
+
+Use only a harmless test key under `HKCU\Software` and remove it afterward. Machine-wide hives may
+require an elevated client process.
 
 Current manual file-download check:
 
