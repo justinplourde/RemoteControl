@@ -18,7 +18,7 @@ Current checkpoint:
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
 - Latest committed work before this handoff: `Add shell execute CLI parity`
-- Latest known full test result: 182 passed, 1 skipped, 0 failed
+- Latest known full test result: 183 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -34,6 +34,7 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 ```
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
+`get-monitors`,
 `get-registry-key --path <hive\subkey>`,
 `registry-create-key --path <hive\parent-subkey>`,
 `registry-delete-key --path <hive\parent-subkey> --name <child-key>`,
@@ -60,6 +61,10 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `startup-remove --name <name> --startup-type <type>`,
 `close-connection --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
+
+Monitor count parity is wired through `get-monitors`. It requires `--grant-permission
+--grant-consent`, maps to `RemoteCapture`, returns `GetMonitorsResponse.Number`, and does not
+start desktop image capture.
 
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
 `get-directory --path C:\`, `get-processes`, `get-startup-items`, and `get-connections` on one

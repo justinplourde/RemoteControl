@@ -271,6 +271,9 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsInstanceOfType(
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "get-connections" })),
                 typeof(GetConnections));
+            Assert.IsInstanceOfType(
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "get-monitors" })),
+                typeof(GetMonitors));
 
             var directory = (GetDirectory)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -631,6 +634,9 @@ namespace MasterSplinter.Cli.Tests
             ListenCommand uninstallClient = ListenCommand.Parse("dispatch first uninstall-client");
             Assert.AreEqual("uninstall-client", uninstallClient.DispatchCommand);
 
+            ListenCommand monitors = ListenCommand.Parse("dispatch first get-monitors");
+            Assert.AreEqual("get-monitors", monitors.DispatchCommand);
+
             ListenCommand shutdownAction = ListenCommand.Parse("dispatch first shutdown-action --action standby");
             Assert.AreEqual("shutdown-action", shutdownAction.DispatchCommand);
             Assert.AreEqual("standby", shutdownAction.Action);
@@ -797,6 +803,10 @@ namespace MasterSplinter.Cli.Tests
                         }
                     }
                 }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Monitors: 2." },
+                Program.FormatResponse(new GetMonitorsResponse { Number = 2 }));
 
             CollectionAssert.AreEqual(
                 new[] { "System info entries: 1.", "- OS: Windows" },

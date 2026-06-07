@@ -42,7 +42,7 @@ Latest result from June 7, 2026:
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 182 passed, 1 skipped, 0 failed
+- Total: 183 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -88,6 +88,7 @@ Current CLI dispatch command names:
 - `get-system-info`
 - `get-drives`
 - `get-directory --path <path>`
+- `get-monitors` (requires `--grant-permission --grant-consent`; returns remote monitor count)
 - `get-registry-key --path <hive\subkey>`
 - `registry-create-key --path <hive\parent-subkey>` (requires `--grant-permission`; creates legacy-style `New Key #n`)
 - `registry-delete-key --path <hive\parent-subkey> --name <child-key>` (requires `--grant-permission`)
@@ -128,7 +129,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -269,6 +270,9 @@ All modern projects target `net10.0`.
   provider, CLI `uninstall-client`, and `Persistence` permission plus consent enforcement. The
   provider intentionally refuses `dotnet run` because the process path is `dotnet.exe`; manual
   verification requires a published client executable.
+- Monitor count parity is now wired through `GetMonitors`, a Windows monitor provider, CLI
+  `get-monitors`, and `RemoteCapture` permission plus consent enforcement. It returns the legacy
+  `GetMonitorsResponse.Number` count; actual remote desktop image streaming remains deferred.
 
 ## Current Limitations
 

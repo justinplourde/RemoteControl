@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 76 passed.
+- `MasterSplinter.Client.Core.Tests`: 77 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -150,6 +150,7 @@ Done:
 - Added lifecycle-capable client contexts plus tests for `DoClientDisconnect` and
   `DoClientReconnect` status-and-lifecycle request behavior.
 - Added tests for `DoClientUninstall` status/failure/lifecycle behavior.
+- Added tests for `GetMonitors` monitor-count response mapping.
 - Added tests for `DoShowMessageBox` provider mapping/failure status, CLI caption/text/button/icon
   parsing, and `UserInteraction` permission plus consent classification.
 - Added tests for `DoVisitWebsite` provider mapping/failure status, CLI URL normalization and
@@ -355,6 +356,9 @@ Done:
   a Windows self-delete batch provider, CLI exposes `uninstall-client`, and `Persistence`
   permission plus consent enforcement is covered. The provider refuses `dotnet run` self-delete
   paths; manual verification requires a published client executable.
+- Added consent-gated monitor count parity through `GetMonitors`: the client host wires a
+  Windows monitor provider, CLI exposes `get-monitors`, and `RemoteCapture` permission plus
+  consent enforcement is covered. Desktop image streaming remains deferred.
 - Added consent-gated message box parity through `DoShowMessageBox`: the client host wires a
   Windows `user32!MessageBoxW` provider, CLI exposes `show-message --text <message>
   [--caption <title>] [--button <button>] [--icon <icon>]`, and response formatting prints the
@@ -539,7 +543,7 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Remote desktop image compression and streaming.
+- Remote desktop image compression and streaming beyond monitor count.
 - Registry mutation manual verification.
 - Process and shell execution behavior.
 - File-system access behavior beyond DTO contracts.
@@ -732,6 +736,17 @@ dispatch first shell-execute --shell-command whoami
 
 Use harmless commands only. The modern shell provider keeps session state across dispatches; send
 `dispatch first shell-execute --shell-command exit` to close the shell session.
+
+Current manual monitor-count check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47863 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47863 --handle-commands
+dispatch first get-monitors
+```
+
+This returns `GetMonitorsResponse.Number` through the CLI as `Monitors: <count>.`. It does not
+start desktop image capture.
 
 Current manual file-download check:
 

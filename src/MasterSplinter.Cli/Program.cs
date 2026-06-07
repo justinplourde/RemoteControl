@@ -368,6 +368,8 @@ namespace MasterSplinter.Cli
                 return new GetStartupItems();
             if (string.Equals(dispatchCommand, "get-connections", StringComparison.OrdinalIgnoreCase))
                 return new GetConnections();
+            if (string.Equals(dispatchCommand, "get-monitors", StringComparison.OrdinalIgnoreCase))
+                return new GetMonitors();
 
             throw new ArgumentException($"Unknown dispatch command '{dispatchCommand}'.");
         }
@@ -1050,6 +1052,9 @@ namespace MasterSplinter.Cli
                                 $"- {ValueOrDash(connection.ProcessName)} {ValueOrDash(connection.LocalAddress)}:{connection.LocalPort} -> {ValueOrDash(connection.RemoteAddress)}:{connection.RemotePort} {connection.State}");
                         }
                     }
+                    break;
+                case GetMonitorsResponse response:
+                    lines.Add($"Monitors: {response.Number}.");
                     break;
                 case GetRegistryKeysResponse response:
                     lines.Add($"Registry key: {ValueOrDash(response.RootKey)}; Matches={Count(response.Matches)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
