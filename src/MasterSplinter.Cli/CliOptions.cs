@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|visit-website|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -14,6 +14,8 @@ namespace MasterSplinter.Cli
             string path,
             string newPath,
             string pathType,
+            string name,
+            string startupType,
             int? pid,
             string action,
             string caption,
@@ -41,6 +43,8 @@ namespace MasterSplinter.Cli
             Path = path;
             NewPath = newPath;
             PathType = pathType;
+            Name = name;
+            StartupType = startupType;
             Pid = pid;
             Action = action;
             Caption = caption;
@@ -69,6 +73,8 @@ namespace MasterSplinter.Cli
         public string Path { get; }
         public string NewPath { get; }
         public string PathType { get; }
+        public string Name { get; }
+        public string StartupType { get; }
         public int? Pid { get; }
         public string Action { get; }
         public string Caption { get; }
@@ -97,7 +103,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -105,6 +111,8 @@ namespace MasterSplinter.Cli
             string path = null;
             string newPath = null;
             string pathType = null;
+            string name = null;
+            string startupType = null;
             int? pid = null;
             string action = null;
             string caption = null;
@@ -137,6 +145,10 @@ namespace MasterSplinter.Cli
                     newPath = ReadValue(args, ref index, "--new-path");
                 else if (string.Equals(arg, "--type", StringComparison.OrdinalIgnoreCase))
                     pathType = ReadValue(args, ref index, "--type");
+                else if (string.Equals(arg, "--name", StringComparison.OrdinalIgnoreCase))
+                    name = ReadValue(args, ref index, "--name");
+                else if (string.Equals(arg, "--startup-type", StringComparison.OrdinalIgnoreCase))
+                    startupType = ReadValue(args, ref index, "--startup-type");
                 else if (string.Equals(arg, "--pid", StringComparison.OrdinalIgnoreCase))
                     pid = int.Parse(ReadValue(args, ref index, "--pid"), CultureInfo.InvariantCulture);
                 else if (string.Equals(arg, "--action", StringComparison.OrdinalIgnoreCase))
@@ -240,6 +252,24 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("--url is required for visit-website.");
 
+            if (string.Equals(dispatchCommand, "startup-add", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for startup-add.");
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for startup-add.");
+                if (string.IsNullOrWhiteSpace(startupType))
+                    throw new ArgumentException("--startup-type is required for startup-add.");
+            }
+
+            if (string.Equals(dispatchCommand, "startup-remove", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for startup-remove.");
+                if (string.IsNullOrWhiteSpace(startupType))
+                    throw new ArgumentException("--startup-type is required for startup-remove.");
+            }
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -258,6 +288,8 @@ namespace MasterSplinter.Cli
                 path,
                 newPath,
                 pathType,
+                name,
+                startupType,
                 pid,
                 action,
                 caption,

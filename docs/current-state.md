@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add visit website CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add startup mutation CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 62 passed
+- `MasterSplinter.Client.Core.Tests`: 64 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 170 passed, 1 skipped, 0 failed
+- Total: 172 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -101,6 +101,8 @@ Current CLI dispatch command names:
 - `reconnect-client` (requires `--grant-permission`; closes the current client session so reconnect policy can re-establish it)
 - `show-message --text <message> [--caption <title>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>]` (requires `--grant-permission --grant-consent`; displays a visible client desktop message box)
 - `visit-website --url <http-url> [--hidden]` (requires `--grant-permission --grant-consent`; opens the client browser by default, or performs the legacy hidden GET path)
+- `startup-add --name <name> --path <client-file> --startup-type <type>` (requires `--grant-permission --grant-consent`; persistence-changing)
+- `startup-remove --name <name> --startup-type <type>` (requires `--grant-permission --grant-consent`; persistence-changing)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -117,7 +119,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -235,6 +237,10 @@ All modern projects target `net10.0`.
   the client default browser or performs the legacy hidden GET path, CLI `visit-website --url
   <http-url> [--hidden]`, and `UserInteraction` permission plus consent enforcement. Modern URL
   validation accepts only HTTP/HTTPS URLs after legacy-style `http://` prefixing.
+- Startup add/remove parity is now wired through `DoStartupItemAdd` and `DoStartupItemRemove`,
+  the existing startup provider, CLI `startup-add`/`startup-remove`, and `Persistence` permission
+  plus consent enforcement. The provider supports the legacy registry Run/RunOnce locations and
+  Startup folder `.url` shortcut behavior; machine-wide locations may require an elevated client.
 
 ## Current Limitations
 
@@ -252,7 +258,9 @@ All modern projects target `net10.0`.
   disconnects the active loopback command session; automatic retry/reconnect scheduling is still
   future host behavior. Message box dispatch is implemented, but visible desktop display still
   needs manual verification. Website visit dispatch is implemented, but visible browser launch
-  and hidden GET behavior still need manual verification from a prepared client session.
+  and hidden GET behavior still need manual verification from a prepared client session. Startup
+  add/remove dispatch is implemented, but manual verification should use a harmless test entry and
+  remove it afterward.
 
 ## Recommended Next Tasks
 

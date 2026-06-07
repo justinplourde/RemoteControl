@@ -112,6 +112,10 @@ namespace MasterSplinter.Client.Host
                             new DoLoadRegistryKeyHandler(new RegistryKeyProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(
                             new GetStartupItemsHandler(new StartupItemProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoStartupItemAdd>(
+                            new DoStartupItemAddHandler(new StartupItemProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoStartupItemRemove>(
+                            new DoStartupItemRemoveHandler(new StartupItemProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(
                             new GetSystemInfoHandler(new SystemInfoProvider())))
                         .Build();

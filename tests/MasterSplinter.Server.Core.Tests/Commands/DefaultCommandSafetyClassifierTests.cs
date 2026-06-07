@@ -51,6 +51,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoClientReconnect()] = CommandSafetyClass.ConnectionLifecycle,
                 [new DoShowMessageBox { Text = "Hello" }] = CommandSafetyClass.UserInteraction,
                 [new DoVisitWebsite { Url = "https://example.test" }] = CommandSafetyClass.UserInteraction,
+                [new DoStartupItemAdd { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Path = "C:\\Tools\\agent.exe", Type = StartupType.CurrentUserRun } }] = CommandSafetyClass.Persistence,
+                [new DoStartupItemRemove { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Type = StartupType.CurrentUserRun } }] = CommandSafetyClass.Persistence,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };
@@ -75,6 +77,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.IsFalse(classifier.Classify(new DoClientReconnect()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoShowMessageBox { Text = "Hello" }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoVisitWebsite { Url = "https://example.test" }).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoStartupItemAdd { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Path = "C:\\Tools\\agent.exe", Type = StartupType.CurrentUserRun } }).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoStartupItemRemove { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Type = StartupType.CurrentUserRun } }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetPasswords()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetKeyloggerLogsDirectory()).RequiresConsent);
         }

@@ -21,6 +21,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsNull(options.Path);
             Assert.IsNull(options.NewPath);
             Assert.IsNull(options.PathType);
+            Assert.IsNull(options.Name);
+            Assert.IsNull(options.StartupType);
             Assert.IsFalse(options.Pid.HasValue);
             Assert.IsNull(options.Action);
             Assert.IsNull(options.Caption);
@@ -69,6 +71,8 @@ namespace MasterSplinter.Cli.Tests
                 "--operator-id", "alice",
                 "--new-path", "C:\\Temp\\new.bin",
                 "--type", "file",
+                "--name", "Agent",
+                "--startup-type", "current-user-run",
                 "--pid", "1234",
                 "--action", "restart",
                 "--caption", "Notice",
@@ -93,6 +97,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("alice", options.OperatorId);
             Assert.AreEqual("C:\\Temp\\new.bin", options.NewPath);
             Assert.AreEqual("file", options.PathType);
+            Assert.AreEqual("Agent", options.Name);
+            Assert.AreEqual("current-user-run", options.StartupType);
             Assert.AreEqual(1234, options.Pid);
             Assert.AreEqual("restart", options.Action);
             Assert.AreEqual("Notice", options.Caption);
@@ -323,6 +329,28 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\old.txt", delete.Path);
             Assert.AreEqual(FileType.File, delete.PathType);
 
+            var startupAdd = (DoStartupItemAdd)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "startup-add",
+                "--name", "Agent",
+                "--path", "C:\\Tools\\agent.exe",
+                "--startup-type", "current-user-run"
+            }));
+            Assert.AreEqual("Agent", startupAdd.StartupItem.Name);
+            Assert.AreEqual("C:\\Tools\\agent.exe", startupAdd.StartupItem.Path);
+            Assert.AreEqual(StartupType.CurrentUserRun, startupAdd.StartupItem.Type);
+
+            var startupRemove = (DoStartupItemRemove)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "startup-remove",
+                "--name", "Agent",
+                "--startup-type", "current-user-run-once"
+            }));
+            Assert.AreEqual("Agent", startupRemove.StartupItem.Name);
+            Assert.AreEqual(StartupType.CurrentUserRunOnce, startupRemove.StartupItem.Type);
+
             var endProcess = (DoProcessEnd)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -413,6 +441,12 @@ namespace MasterSplinter.Cli.Tests
                 CliOptions.Parse(new[] { "dispatch", "--command", "visit-website" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "visit-website", "--url", "file:///C:/Temp/a.txt" })));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "startup-add", "--name", "Agent", "--startup-type", "current-user-run" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "startup-remove", "--startup-type", "current-user-run" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "startup-remove", "--name", "Agent", "--startup-type", "bogus" })));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -450,6 +484,17 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("delete-path", delete.DispatchCommand);
             Assert.AreEqual("C:\\Temp\\old.txt", delete.Path);
             Assert.AreEqual("file", delete.PathType);
+
+            ListenCommand startupAdd = ListenCommand.Parse("dispatch first startup-add --name Agent --path C:\\Tools\\agent.exe --startup-type current-user-run");
+            Assert.AreEqual("startup-add", startupAdd.DispatchCommand);
+            Assert.AreEqual("Agent", startupAdd.Name);
+            Assert.AreEqual("C:\\Tools\\agent.exe", startupAdd.Path);
+            Assert.AreEqual("current-user-run", startupAdd.StartupType);
+
+            ListenCommand startupRemove = ListenCommand.Parse("dispatch first startup-remove --name Agent --startup-type current-user-run-once");
+            Assert.AreEqual("startup-remove", startupRemove.DispatchCommand);
+            Assert.AreEqual("Agent", startupRemove.Name);
+            Assert.AreEqual("current-user-run-once", startupRemove.StartupType);
 
             ListenCommand endProcess = ListenCommand.Parse("dispatch first end-process --pid 4321");
             Assert.AreEqual("end-process", endProcess.DispatchCommand);
@@ -500,6 +545,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first rename-path --path C:\\Temp\\old.txt --type file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first startup-add --name Agent --startup-type current-user-run"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first startup-remove --startup-type current-user-run"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shutdown-action"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first show-message"));

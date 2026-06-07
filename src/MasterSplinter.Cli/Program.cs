@@ -200,6 +200,8 @@ namespace MasterSplinter.Cli
                 options.Path,
                 options.NewPath,
                 options.PathType,
+                options.Name,
+                options.StartupType,
                 options.Pid,
                 options.Action,
                 options.Caption,
@@ -216,7 +218,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -224,6 +226,8 @@ namespace MasterSplinter.Cli
             string path,
             string newPath,
             string pathType,
+            string name,
+            string startupType,
             int? pid,
             string action,
             string caption,
@@ -261,6 +265,25 @@ namespace MasterSplinter.Cli
                 {
                     Path = path,
                     PathType = ParsePathType(pathType)
+                };
+            if (string.Equals(dispatchCommand, "startup-add", StringComparison.OrdinalIgnoreCase))
+                return new DoStartupItemAdd
+                {
+                    StartupItem = new MasterSplinter.Common.Models.StartupItem
+                    {
+                        Name = name,
+                        Path = path,
+                        Type = ParseStartupType(startupType)
+                    }
+                };
+            if (string.Equals(dispatchCommand, "startup-remove", StringComparison.OrdinalIgnoreCase))
+                return new DoStartupItemRemove
+                {
+                    StartupItem = new MasterSplinter.Common.Models.StartupItem
+                    {
+                        Name = name,
+                        Type = ParseStartupType(startupType)
+                    }
                 };
             if (string.Equals(dispatchCommand, "start-process", StringComparison.OrdinalIgnoreCase))
                 return new DoProcessStart { FilePath = path };
@@ -333,6 +356,8 @@ namespace MasterSplinter.Cli
                 listenCommand.Path,
                 listenCommand.NewPath,
                 listenCommand.PathType,
+                listenCommand.Name,
+                listenCommand.StartupType,
                 listenCommand.Pid,
                 listenCommand.Action,
                 listenCommand.Caption,
@@ -539,6 +564,26 @@ namespace MasterSplinter.Cli
             throw new ArgumentException("--type must be file or directory.");
         }
 
+        private static StartupType ParseStartupType(string startupType)
+        {
+            if (string.Equals(startupType, "local-machine-run", StringComparison.OrdinalIgnoreCase))
+                return StartupType.LocalMachineRun;
+            if (string.Equals(startupType, "local-machine-run-once", StringComparison.OrdinalIgnoreCase))
+                return StartupType.LocalMachineRunOnce;
+            if (string.Equals(startupType, "current-user-run", StringComparison.OrdinalIgnoreCase))
+                return StartupType.CurrentUserRun;
+            if (string.Equals(startupType, "current-user-run-once", StringComparison.OrdinalIgnoreCase))
+                return StartupType.CurrentUserRunOnce;
+            if (string.Equals(startupType, "start-menu", StringComparison.OrdinalIgnoreCase))
+                return StartupType.StartMenu;
+            if (string.Equals(startupType, "local-machine-run-x86", StringComparison.OrdinalIgnoreCase))
+                return StartupType.LocalMachineRunX86;
+            if (string.Equals(startupType, "local-machine-run-once-x86", StringComparison.OrdinalIgnoreCase))
+                return StartupType.LocalMachineRunOnceX86;
+
+            throw new ArgumentException("--startup-type must be local-machine-run, local-machine-run-once, current-user-run, current-user-run-once, start-menu, local-machine-run-x86, or local-machine-run-once-x86.");
+        }
+
         private static ShutdownAction ParseShutdownAction(string action)
         {
             if (string.Equals(action, "shutdown", StringComparison.OrdinalIgnoreCase))
@@ -650,7 +695,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(

@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 62 passed.
+- `MasterSplinter.Client.Core.Tests`: 64 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -153,6 +153,8 @@ Done:
   parsing, and `UserInteraction` permission plus consent classification.
 - Added tests for `DoVisitWebsite` provider mapping/failure status, CLI URL normalization and
   hidden-mode parsing, and `UserInteraction` permission plus consent classification.
+- Added tests for `DoStartupItemAdd` and `DoStartupItemRemove` status mapping, CLI startup item
+  parsing, and `Persistence` permission plus consent classification.
 
 Left to do:
 
@@ -347,6 +349,10 @@ Done:
   provider that opens HTTP/HTTPS URLs through the default browser or performs the legacy hidden
   GET path, CLI exposes `visit-website --url <http-url> [--hidden]`, and URL validation rejects
   non-HTTP schemes.
+- Added consent-gated startup add/remove parity through `DoStartupItemAdd` and
+  `DoStartupItemRemove`: the client host wires the startup mutation provider, CLI exposes
+  `startup-add` and `startup-remove`, and the provider supports legacy registry Run/RunOnce
+  locations plus Startup folder `.url` entries.
 
 Left to do:
 
@@ -631,6 +637,19 @@ dispatch first visit-website --url https://example.com
 
 Run from a prepared Windows desktop session. Visible mode should open the client default browser;
 `--hidden` performs the legacy GET path without opening a browser window.
+
+Current manual startup add/remove check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47858 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47858 --handle-commands
+dispatch first startup-add --name MasterSplinterTest --path C:\Windows\System32\notepad.exe --startup-type current-user-run
+dispatch first get-startup-items
+dispatch first startup-remove --name MasterSplinterTest --startup-type current-user-run
+```
+
+Use a harmless test entry and remove it afterward. Machine-wide startup types require an elevated
+client process.
 
 Current manual file-download check:
 

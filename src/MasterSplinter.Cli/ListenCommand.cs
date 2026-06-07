@@ -12,6 +12,8 @@ namespace MasterSplinter.Cli
             string path,
             string newPath,
             string pathType,
+            string name,
+            string startupType,
             int? pid,
             string action,
             string caption,
@@ -33,6 +35,8 @@ namespace MasterSplinter.Cli
             Path = path;
             NewPath = newPath;
             PathType = pathType;
+            Name = name;
+            StartupType = startupType;
             Pid = pid;
             Action = action;
             Caption = caption;
@@ -55,6 +59,8 @@ namespace MasterSplinter.Cli
         public string Path { get; }
         public string NewPath { get; }
         public string PathType { get; }
+        public string Name { get; }
+        public string StartupType { get; }
         public int? Pid { get; }
         public string Action { get; }
         public string Caption { get; }
@@ -74,16 +80,16 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -95,6 +101,8 @@ namespace MasterSplinter.Cli
             string path = null;
             string newPath = null;
             string pathType = null;
+            string name = null;
+            string startupType = null;
             int? pid = null;
             string action = null;
             string caption = null;
@@ -134,6 +142,22 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--type requires a value.");
 
                     pathType = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--name", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--name requires a value.");
+
+                    name = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--startup-type", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--startup-type requires a value.");
+
+                    startupType = tokens[index];
                 }
                 else if (string.Equals(tokens[index], "--pid", StringComparison.OrdinalIgnoreCase))
                 {
@@ -298,6 +322,24 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("--url is required for visit-website.");
 
+            if (string.Equals(dispatchCommand, "startup-add", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for startup-add.");
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for startup-add.");
+                if (string.IsNullOrWhiteSpace(startupType))
+                    throw new ArgumentException("--startup-type is required for startup-add.");
+            }
+
+            if (string.Equals(dispatchCommand, "startup-remove", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for startup-remove.");
+                if (string.IsNullOrWhiteSpace(startupType))
+                    throw new ArgumentException("--startup-type is required for startup-remove.");
+            }
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -317,6 +359,8 @@ namespace MasterSplinter.Cli
                 path,
                 newPath,
                 pathType,
+                name,
+                startupType,
                 pid,
                 action,
                 caption,
