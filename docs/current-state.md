@@ -1,6 +1,6 @@
 # RemoteControl / MasterSplinter Current State
 
-Last updated: June 2, 2026
+Last updated: June 6, 2026
 
 ## Fresh Chat Handoff
 
@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Report client elevation status`
+- Latest committed roadmap checkpoint before this handoff: `Add ask-elevate CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -35,14 +35,14 @@ Primary acceptance check:
 dotnet test .\MasterSplinter.sln
 ```
 
-Latest result from June 2, 2026:
+Latest result from June 6, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 51 passed
+- `MasterSplinter.Client.Core.Tests`: 54 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 159 passed, 1 skipped, 0 failed
+- Total: 162 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -95,6 +95,7 @@ Current CLI dispatch command names:
 - `delete-path --path <client-file> --type file` (requires `--grant-permission`; directory delete intentionally deferred)
 - `start-process --path <client-file>` (requires `--grant-permission --grant-consent`; local file path only)
 - `end-process --pid <pid>` (requires `--grant-permission --grant-consent`)
+- `ask-elevate` (requires `--grant-permission --grant-consent`; triggers Windows UAC in the client session)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -104,13 +105,14 @@ Current CLI listen commands:
 
 - `clients`
 - `dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>] [--pid <pid>]`
+- `dispatch <client-id|first> ask-elevate`
 - `help`
 - `exit`
 
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, and TCP-connection listing.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, TCP-connection listing/close, and elevation request handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -205,6 +207,10 @@ All modern projects target `net10.0`.
 - Client elevation/admin status is now detected through `ClientPrivilegeProvider`, carried in the
   existing `ClientIdentification.AccountType` field as `Admin` or `User`, and shown in CLI
   `clients` output as `AccountType=<value>`.
+- Elevation request parity is now wired through `DoAskElevate`, a Windows UAC `runas` provider,
+  a client handler returning legacy-style `SetStatus` messages, CLI `ask-elevate`, and
+  `SystemControl` permission plus consent enforcement. Interactive UAC acceptance still needs a
+  manual Windows desktop verification pass with a published client executable.
 
 ## Current Limitations
 
@@ -215,7 +221,8 @@ All modern projects target `net10.0`.
   remote-management behavior.
 - Recursive directory delete, process-start URL download/update behavior, registry writes, shell,
   desktop, service, and UI behavior are not fully extracted yet. TCP connection close requires
-  the Windows client host to run elevated.
+  the Windows client host to run elevated. Elevation request dispatch is implemented, but the
+  actual UAC acceptance path still needs manual desktop verification.
 
 ## Recommended Next Tasks
 

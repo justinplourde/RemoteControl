@@ -1,6 +1,6 @@
 # MasterSplinter Roadmap Status
 
-Last updated: June 2, 2026
+Last updated: June 6, 2026
 
 ## Current Goal
 
@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 51 passed.
+- `MasterSplinter.Client.Core.Tests`: 54 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -143,6 +143,8 @@ Done:
 - Added tests for `DoCloseConnection` handler routing, CLI four-tuple parsing/message creation,
   and `NetworkControl` permission classification.
 - Added tests for client privilege/account-type detection used by modern client identification.
+- Added tests for `DoAskElevate` status mapping and `SystemControl` permission plus consent
+  classification.
 
 Left to do:
 
@@ -316,6 +318,10 @@ Done:
 - Added modern client elevation/admin status reporting: `MasterSplinter.Client.Host` now populates
   `ClientIdentification.AccountType` from the current Windows principal through
   `ClientPrivilegeProvider`, and CLI `clients` output shows the connected client's account type.
+- Added consent-gated elevation request parity through `DoAskElevate`: the client host wires a
+  Windows UAC `runas` provider, CLI exposes `ask-elevate`, and response formatting prints the
+  legacy-style `SetStatus` result. Automated tests cover already-elevated, requested, and refused
+  outcomes; interactive UAC acceptance still needs a manual desktop verification pass.
 
 Left to do:
 
@@ -545,6 +551,17 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 Use a harmless loopback TCP test connection. Run the published client host executable elevated on
 Windows for actual close behavior; `dotnet run` itself does not trigger the application manifest.
+
+Current manual elevation-request check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47853 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47853 --handle-commands
+dispatch first ask-elevate
+```
+
+This command is expected to trigger a Windows UAC prompt when the client is not already elevated.
+Interactive prompt acceptance/cancellation must be verified from a visible Windows desktop session.
 
 Current manual file-download check:
 

@@ -46,6 +46,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoCloseConnection { LocalAddress = "127.0.0.1", LocalPort = 5000, RemoteAddress = "127.0.0.1", RemotePort = 5001 }] = CommandSafetyClass.NetworkControl,
                 [new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = FileType.File }] = CommandSafetyClass.FileWrite,
                 [new DoShutdownAction { Action = ShutdownAction.Restart }] = CommandSafetyClass.SystemControl,
+                [new DoAskElevate()] = CommandSafetyClass.SystemControl,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };
@@ -65,6 +66,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.IsFalse(classifier.Classify(new DoCloseConnection { LocalAddress = "127.0.0.1", LocalPort = 5000, RemoteAddress = "127.0.0.1", RemotePort = 5001 }).RequiresConsent);
             Assert.IsFalse(classifier.Classify(new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = FileType.File }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoShutdownAction { Action = ShutdownAction.Restart }).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoAskElevate()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetPasswords()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetKeyloggerLogsDirectory()).RequiresConsent);
         }

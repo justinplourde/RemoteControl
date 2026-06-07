@@ -310,6 +310,10 @@ namespace MasterSplinter.Cli.Tests
             }));
             Assert.AreEqual(4321, endProcess.Pid);
 
+            Assert.IsInstanceOfType(
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "ask-elevate" })),
+                typeof(DoAskElevate));
+
             var startProcess = (DoProcessStart)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -377,6 +381,9 @@ namespace MasterSplinter.Cli.Tests
             ListenCommand endProcess = ListenCommand.Parse("dispatch first end-process --pid 4321");
             Assert.AreEqual("end-process", endProcess.DispatchCommand);
             Assert.AreEqual(4321, endProcess.Pid);
+
+            ListenCommand askElevate = ListenCommand.Parse("dispatch first ask-elevate");
+            Assert.AreEqual("ask-elevate", askElevate.DispatchCommand);
 
             ListenCommand startProcess = ListenCommand.Parse("dispatch first start-process --path C:\\Temp\\run.cmd");
             Assert.AreEqual("start-process", startProcess.DispatchCommand);
@@ -526,6 +533,13 @@ namespace MasterSplinter.Cli.Tests
                 {
                     Message = "Renamed file",
                     SetLastDirectorySeen = false
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Status: Process already elevated." },
+                Program.FormatResponse(new SetStatus
+                {
+                    Message = "Process already elevated."
                 }));
 
             CollectionAssert.AreEqual(

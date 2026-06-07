@@ -1,6 +1,6 @@
 # MasterSplinter Capability Matrix
 
-Last updated: June 2, 2026
+Last updated: June 6, 2026
 
 ## Intent
 
@@ -55,7 +55,7 @@ Two kinds of parity are tracked:
 | Website visit | `DoVisitWebsite` | protocol only | portable concept | user interaction / browser launch | redesign | Consent or notification policy, audit, URL validation |
 | Shutdown/restart actions | `DoShutdownAction` | protocol only | platform-specific | disruptive system action | keep | Strong operator permission, confirmation policy, audit |
 | Client disconnect/reconnect | `DoClientDisconnect`, `DoClientReconnect` | protocol only | portable | connection lifecycle | keep | Operator permission, audit, reconnect policy |
-| Elevation request | `DoAskElevate` | protocol only | Windows-specific | privilege boundary | redesign | Transparent user prompt, audit, no silent elevation |
+| Elevation request | `DoAskElevate` | dispatch path done; interactive UAC verification pending | Windows-specific | privilege boundary | redesign | Requires operator permission plus client consent, triggers visible Windows UAC through `runas`, returns status to CLI, and still needs manual prompt acceptance/cancellation verification |
 | Client uninstall | `DoClientUninstall` | protocol only | platform-specific | installation lifecycle | keep | Local/client consent or admin policy, audit, service-mode design |
 | Service/install/update behavior | legacy client services/updater/build paths | not modernized | platform-specific | installation lifecycle / persistence | redesign | Transparent installer/service model, signed update plan, operator permissions |
 | Reverse proxy | `ReverseProxyConnect`, `ReverseProxyData`, `ReverseProxyDisconnect`, `ReverseProxyConnectResponse` | protocol only | portable transport, platform networking varies | sensitive network routing | defer | Explicit product decision, operator permission, audit, allowlist and session controls |

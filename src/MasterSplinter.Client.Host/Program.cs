@@ -4,6 +4,7 @@ using MasterSplinter.Client.Core.FileSystem;
 using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Core.Processes;
 using MasterSplinter.Client.Core.Registry;
+using MasterSplinter.Client.Core.Services;
 using MasterSplinter.Client.Core.Startup;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
@@ -53,6 +54,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
                 identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
+                identityOptions.Capabilities.SupportedFeatures.Add("system.elevation");
 
                 ClientIdentification identification = new ClientIdentificationFactory().Create(identityOptions);
 
@@ -90,6 +92,8 @@ namespace MasterSplinter.Client.Host
                             new DoProcessStartHandler(new ProcessStartProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoProcessEnd>(
                             new DoProcessEndHandler(new ProcessEndProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoAskElevate>(
+                            new DoAskElevateHandler(new ElevationRequestProvider(new ClientPrivilegeProvider()))))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoLoadRegistryKey>(

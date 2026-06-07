@@ -252,6 +252,8 @@ namespace MasterSplinter.Cli
                 return new DoProcessStart { FilePath = path };
             if (string.Equals(dispatchCommand, "end-process", StringComparison.OrdinalIgnoreCase))
                 return new DoProcessEnd { Pid = pid.GetValueOrDefault() };
+            if (string.Equals(dispatchCommand, "ask-elevate", StringComparison.OrdinalIgnoreCase))
+                return new DoAskElevate();
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
                 return new DoCloseConnection
                 {
@@ -770,6 +772,9 @@ namespace MasterSplinter.Cli
                     break;
                 case SetStatusFileManager response:
                     lines.Add($"File manager status: {ValueOrDash(response.Message)}; SetLastDirectorySeen={response.SetLastDirectorySeen}.");
+                    break;
+                case SetStatus response:
+                    lines.Add($"Status: {ValueOrDash(response.Message)}");
                     break;
                 case DoProcessResponse response:
                     lines.Add($"Process response: Action={response.Action}; Result={response.Result}.");

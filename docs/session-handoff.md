@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Report client elevation status`
-- Latest known full test result: 159 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add ask-elevate CLI parity`
+- Latest known full test result: 162 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -41,6 +41,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `delete-path --path <client-file> --type file`,
 `start-process --path <client-file>`,
 `end-process --pid <pid>`,
+`ask-elevate`,
 `close-connection --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
@@ -98,5 +99,11 @@ Windows executables.
 Client elevation/admin status is now first-class in the modern identity path. The client host
 sets `ClientIdentification.AccountType` to `Admin` or `User` using the current Windows principal,
 and CLI `clients` output includes `AccountType=<value>`.
+
+Elevation request parity is wired through `ask-elevate`. It requires `--grant-permission
+--grant-consent`, maps `DoAskElevate` to `SystemControl`, calls Windows UAC `runas` in the client
+host, and returns `SetStatus` messages for already elevated, requested, refused, or failed paths.
+Automated tests cover the handler/status behavior; accepting or canceling the UAC prompt still
+needs manual verification in an interactive Windows desktop session.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.
