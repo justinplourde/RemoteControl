@@ -201,6 +201,7 @@ namespace MasterSplinter.Cli
                 options.NewPath,
                 options.PathType,
                 options.Pid,
+                options.Action,
                 options.LocalAddress,
                 options.LocalPort,
                 options.RemoteAddress,
@@ -209,7 +210,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -218,6 +219,7 @@ namespace MasterSplinter.Cli
             string newPath,
             string pathType,
             int? pid,
+            string action,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -254,6 +256,8 @@ namespace MasterSplinter.Cli
                 return new DoProcessEnd { Pid = pid.GetValueOrDefault() };
             if (string.Equals(dispatchCommand, "ask-elevate", StringComparison.OrdinalIgnoreCase))
                 return new DoAskElevate();
+            if (string.Equals(dispatchCommand, "shutdown-action", StringComparison.OrdinalIgnoreCase))
+                return new DoShutdownAction { Action = ParseShutdownAction(action) };
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
                 return new DoCloseConnection
                 {
@@ -300,6 +304,7 @@ namespace MasterSplinter.Cli
                 listenCommand.NewPath,
                 listenCommand.PathType,
                 listenCommand.Pid,
+                listenCommand.Action,
                 listenCommand.LocalAddress,
                 listenCommand.LocalPort,
                 listenCommand.RemoteAddress,
@@ -498,6 +503,18 @@ namespace MasterSplinter.Cli
             throw new ArgumentException("--type must be file or directory.");
         }
 
+        private static ShutdownAction ParseShutdownAction(string action)
+        {
+            if (string.Equals(action, "shutdown", StringComparison.OrdinalIgnoreCase))
+                return ShutdownAction.Shutdown;
+            if (string.Equals(action, "restart", StringComparison.OrdinalIgnoreCase))
+                return ShutdownAction.Restart;
+            if (string.Equals(action, "standby", StringComparison.OrdinalIgnoreCase))
+                return ShutdownAction.Standby;
+
+            throw new ArgumentException("--action must be shutdown, restart, or standby.");
+        }
+
         private static string ResolveClientId(ClientSessionRegistry registry, string clientId)
         {
             IReadOnlyList<ClientSessionSnapshot> snapshots = registry.GetSnapshots();
@@ -528,7 +545,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(

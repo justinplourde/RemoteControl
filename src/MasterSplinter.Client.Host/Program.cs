@@ -55,6 +55,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
                 identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.elevation");
+                identityOptions.Capabilities.SupportedFeatures.Add("system.power");
 
                 ClientIdentification identification = new ClientIdentificationFactory().Create(identityOptions);
 
@@ -94,6 +95,8 @@ namespace MasterSplinter.Client.Host
                             new DoProcessEndHandler(new ProcessEndProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoAskElevate>(
                             new DoAskElevateHandler(new ElevationRequestProvider(new ClientPrivilegeProvider()))))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoShutdownAction>(
+                            new DoShutdownActionHandler(new ShutdownActionProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoLoadRegistryKey>(

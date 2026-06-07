@@ -1,6 +1,6 @@
 # MasterSplinter Roadmap Status
 
-Last updated: June 6, 2026
+Last updated: June 7, 2026
 
 ## Current Goal
 
@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 54 passed.
+- `MasterSplinter.Client.Core.Tests`: 56 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -145,6 +145,8 @@ Done:
 - Added tests for client privilege/account-type detection used by modern client identification.
 - Added tests for `DoAskElevate` status mapping and `SystemControl` permission plus consent
   classification.
+- Added tests for `DoShutdownAction` success/failure status mapping while keeping real
+  power-state changes behind `IShutdownActionProvider`.
 
 Left to do:
 
@@ -322,6 +324,11 @@ Done:
   Windows UAC `runas` provider, CLI exposes `ask-elevate`, and response formatting prints the
   legacy-style `SetStatus` result. Automated tests cover already-elevated, requested, and refused
   outcomes; interactive UAC acceptance still needs a manual desktop verification pass.
+- Added consent-gated shutdown/restart/standby parity through `DoShutdownAction`: the client host
+  wires a Windows power-action provider, CLI exposes `shutdown-action --action
+  <shutdown|restart|standby>`, and response formatting prints `SetStatus` acknowledgements or
+  legacy-style failure messages. Real power-state actions were not manually run on this
+  workstation.
 
 Left to do:
 
@@ -562,6 +569,17 @@ dispatch first ask-elevate
 
 This command is expected to trigger a Windows UAC prompt when the client is not already elevated.
 Interactive prompt acceptance/cancellation must be verified from a visible Windows desktop session.
+
+Current manual shutdown/restart/standby check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47854 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47854 --handle-commands
+dispatch first shutdown-action --action standby
+```
+
+Use only on a disposable or prepared Windows client. `shutdown` and `restart` immediately affect
+the client machine, and `standby` attempts to suspend it.
 
 Current manual file-download check:
 

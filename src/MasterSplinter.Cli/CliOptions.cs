@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -15,6 +15,7 @@ namespace MasterSplinter.Cli
             string newPath,
             string pathType,
             int? pid,
+            string action,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -35,6 +36,7 @@ namespace MasterSplinter.Cli
             NewPath = newPath;
             PathType = pathType;
             Pid = pid;
+            Action = action;
             LocalAddress = localAddress;
             LocalPort = localPort;
             RemoteAddress = remoteAddress;
@@ -56,6 +58,7 @@ namespace MasterSplinter.Cli
         public string NewPath { get; }
         public string PathType { get; }
         public int? Pid { get; }
+        public string Action { get; }
         public string LocalAddress { get; }
         public ushort? LocalPort { get; }
         public string RemoteAddress { get; }
@@ -76,7 +79,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -85,6 +88,7 @@ namespace MasterSplinter.Cli
             string newPath = null;
             string pathType = null;
             int? pid = null;
+            string action = null;
             string localAddress = null;
             ushort? localPort = null;
             string remoteAddress = null;
@@ -111,6 +115,8 @@ namespace MasterSplinter.Cli
                     pathType = ReadValue(args, ref index, "--type");
                 else if (string.Equals(arg, "--pid", StringComparison.OrdinalIgnoreCase))
                     pid = int.Parse(ReadValue(args, ref index, "--pid"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--action", StringComparison.OrdinalIgnoreCase))
+                    action = ReadValue(args, ref index, "--action");
                 else if (string.Equals(arg, "--local-address", StringComparison.OrdinalIgnoreCase))
                     localAddress = ReadValue(args, ref index, "--local-address");
                 else if (string.Equals(arg, "--local-port", StringComparison.OrdinalIgnoreCase))
@@ -184,6 +190,10 @@ namespace MasterSplinter.Cli
                 !pid.HasValue)
                 throw new ArgumentException("--pid is required for end-process.");
 
+            if (string.Equals(dispatchCommand, "shutdown-action", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrWhiteSpace(action))
+                throw new ArgumentException("--action is required for shutdown-action.");
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -203,6 +213,7 @@ namespace MasterSplinter.Cli
                 newPath,
                 pathType,
                 pid,
+                action,
                 localAddress,
                 localPort,
                 remoteAddress,

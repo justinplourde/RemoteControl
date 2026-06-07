@@ -13,6 +13,7 @@ namespace MasterSplinter.Cli
             string newPath,
             string pathType,
             int? pid,
+            string action,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -27,6 +28,7 @@ namespace MasterSplinter.Cli
             NewPath = newPath;
             PathType = pathType;
             Pid = pid;
+            Action = action;
             LocalAddress = localAddress;
             LocalPort = localPort;
             RemoteAddress = remoteAddress;
@@ -42,6 +44,7 @@ namespace MasterSplinter.Cli
         public string NewPath { get; }
         public string PathType { get; }
         public int? Pid { get; }
+        public string Action { get; }
         public string LocalAddress { get; }
         public ushort? LocalPort { get; }
         public string RemoteAddress { get; }
@@ -53,16 +56,16 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -75,6 +78,7 @@ namespace MasterSplinter.Cli
             string newPath = null;
             string pathType = null;
             int? pid = null;
+            string action = null;
             string localAddress = null;
             ushort? localPort = null;
             string remoteAddress = null;
@@ -114,6 +118,14 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--pid requires a value.");
 
                     pid = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--action", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--action requires a value.");
+
+                    action = tokens[index];
                 }
                 else if (string.Equals(tokens[index], "--local-address", StringComparison.OrdinalIgnoreCase))
                 {
@@ -206,6 +218,10 @@ namespace MasterSplinter.Cli
                 !pid.HasValue)
                 throw new ArgumentException("--pid is required for end-process.");
 
+            if (string.Equals(dispatchCommand, "shutdown-action", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrWhiteSpace(action))
+                throw new ArgumentException("--action is required for shutdown-action.");
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -226,6 +242,7 @@ namespace MasterSplinter.Cli
                 newPath,
                 pathType,
                 pid,
+                action,
                 localAddress,
                 localPort,
                 remoteAddress,

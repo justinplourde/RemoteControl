@@ -1,6 +1,6 @@
 # MasterSplinter Capability Matrix
 
-Last updated: June 6, 2026
+Last updated: June 7, 2026
 
 ## Intent
 
@@ -53,7 +53,7 @@ Two kinds of parity are tracked:
 | Webcam stop / capture-era controls | `DoWebcamStop` | protocol only | platform-specific | sensitive capture | defer | Product decision, consent model, visible active state |
 | Message box | `DoShowMessageBox` | protocol only | portable concept | user interaction | keep | Operator permission, audit, clear source labeling |
 | Website visit | `DoVisitWebsite` | protocol only | portable concept | user interaction / browser launch | redesign | Consent or notification policy, audit, URL validation |
-| Shutdown/restart actions | `DoShutdownAction` | protocol only | platform-specific | disruptive system action | keep | Strong operator permission, confirmation policy, audit |
+| Shutdown/restart/standby actions | `DoShutdownAction` | dispatch path done; real power-state verification pending | Windows-specific today | disruptive system action | keep | Requires operator permission plus client consent, returns status to CLI, and must only be manually verified on a disposable or prepared Windows client |
 | Client disconnect/reconnect | `DoClientDisconnect`, `DoClientReconnect` | protocol only | portable | connection lifecycle | keep | Operator permission, audit, reconnect policy |
 | Elevation request | `DoAskElevate` | dispatch path done; interactive UAC verification pending | Windows-specific | privilege boundary | redesign | Requires operator permission plus client consent, triggers visible Windows UAC through `runas`, returns status to CLI, and still needs manual prompt acceptance/cancellation verification |
 | Client uninstall | `DoClientUninstall` | protocol only | platform-specific | installation lifecycle | keep | Local/client consent or admin policy, audit, service-mode design |

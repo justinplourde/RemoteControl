@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add ask-elevate CLI parity`
-- Latest known full test result: 162 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add shutdown-action CLI parity`
+- Latest known full test result: 164 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -42,6 +42,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `start-process --path <client-file>`,
 `end-process --pid <pid>`,
 `ask-elevate`,
+`shutdown-action --action <shutdown|restart|standby>`,
 `close-connection --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
@@ -105,5 +106,11 @@ Elevation request parity is wired through `ask-elevate`. It requires `--grant-pe
 host, and returns `SetStatus` messages for already elevated, requested, refused, or failed paths.
 Automated tests cover the handler/status behavior; accepting or canceling the UAC prompt still
 needs manual verification in an interactive Windows desktop session.
+
+Shutdown/restart/standby parity is wired through `shutdown-action --action
+<shutdown|restart|standby>`. It requires `--grant-permission --grant-consent`, maps
+`DoShutdownAction` to `SystemControl`, and calls the Windows `shutdown`/suspend paths in the
+client host. Automated tests cover status mapping only; real power-state verification should be
+run only on a disposable or prepared Windows client.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

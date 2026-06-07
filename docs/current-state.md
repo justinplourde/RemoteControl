@@ -1,6 +1,6 @@
 # RemoteControl / MasterSplinter Current State
 
-Last updated: June 6, 2026
+Last updated: June 7, 2026
 
 ## Fresh Chat Handoff
 
@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add ask-elevate CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add shutdown-action CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 6, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 54 passed
+- `MasterSplinter.Client.Core.Tests`: 56 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 162 passed, 1 skipped, 0 failed
+- Total: 164 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -96,6 +96,7 @@ Current CLI dispatch command names:
 - `start-process --path <client-file>` (requires `--grant-permission --grant-consent`; local file path only)
 - `end-process --pid <pid>` (requires `--grant-permission --grant-consent`)
 - `ask-elevate` (requires `--grant-permission --grant-consent`; triggers Windows UAC in the client session)
+- `shutdown-action --action <shutdown|restart|standby>` (requires `--grant-permission --grant-consent`; real action affects the client machine)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -112,7 +113,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, TCP-connection listing/close, and elevation request handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, TCP-connection listing/close, elevation request handling, and shutdown/restart/standby request handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -211,6 +212,11 @@ All modern projects target `net10.0`.
   a client handler returning legacy-style `SetStatus` messages, CLI `ask-elevate`, and
   `SystemControl` permission plus consent enforcement. Interactive UAC acceptance still needs a
   manual Windows desktop verification pass with a published client executable.
+- Shutdown/restart/standby parity is now wired through `DoShutdownAction`, a Windows provider
+  matching the legacy `shutdown /s`, `shutdown /r`, and suspend paths, CLI `shutdown-action
+  --action <shutdown|restart|standby>`, and `SystemControl` permission plus consent enforcement.
+  Automated tests cover provider result mapping; real power-state actions were not manually run
+  because they would affect this workstation.
 
 ## Current Limitations
 
@@ -222,7 +228,9 @@ All modern projects target `net10.0`.
 - Recursive directory delete, process-start URL download/update behavior, registry writes, shell,
   desktop, service, and UI behavior are not fully extracted yet. TCP connection close requires
   the Windows client host to run elevated. Elevation request dispatch is implemented, but the
-  actual UAC acceptance path still needs manual desktop verification.
+  actual UAC acceptance path still needs manual desktop verification. Shutdown/restart/standby
+  dispatch is implemented, but manual verification should only be run on a disposable or prepared
+  Windows client because it will change the client machine power state.
 
 ## Recommended Next Tasks
 

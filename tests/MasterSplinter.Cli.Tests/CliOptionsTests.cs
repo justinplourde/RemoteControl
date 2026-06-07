@@ -22,6 +22,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsNull(options.NewPath);
             Assert.IsNull(options.PathType);
             Assert.IsFalse(options.Pid.HasValue);
+            Assert.IsNull(options.Action);
             Assert.IsNull(options.LocalAddress);
             Assert.IsFalse(options.LocalPort.HasValue);
             Assert.IsNull(options.RemoteAddress);
@@ -63,6 +64,7 @@ namespace MasterSplinter.Cli.Tests
                 "--new-path", "C:\\Temp\\new.bin",
                 "--type", "file",
                 "--pid", "1234",
+                "--action", "restart",
                 "--local-address", "127.0.0.1",
                 "--local-port", "5000",
                 "--remote-address", "127.0.0.1",
@@ -80,6 +82,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\new.bin", options.NewPath);
             Assert.AreEqual("file", options.PathType);
             Assert.AreEqual(1234, options.Pid);
+            Assert.AreEqual("restart", options.Action);
             Assert.AreEqual("127.0.0.1", options.LocalAddress);
             Assert.AreEqual((ushort)5000, options.LocalPort);
             Assert.AreEqual("127.0.0.1", options.RemoteAddress);
@@ -314,6 +317,14 @@ namespace MasterSplinter.Cli.Tests
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "ask-elevate" })),
                 typeof(DoAskElevate));
 
+            var shutdownAction = (DoShutdownAction)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "shutdown-action",
+                "--action", "restart"
+            }));
+            Assert.AreEqual(ShutdownAction.Restart, shutdownAction.Action);
+
             var startProcess = (DoProcessStart)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -340,6 +351,10 @@ namespace MasterSplinter.Cli.Tests
                     "--path", "C:\\Temp\\local.txt",
                     "--remote-path", "C:\\Temp\\remote.txt"
                 })));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "shutdown-action" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "shutdown-action", "--action", "bogus" })));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -385,6 +400,10 @@ namespace MasterSplinter.Cli.Tests
             ListenCommand askElevate = ListenCommand.Parse("dispatch first ask-elevate");
             Assert.AreEqual("ask-elevate", askElevate.DispatchCommand);
 
+            ListenCommand shutdownAction = ListenCommand.Parse("dispatch first shutdown-action --action standby");
+            Assert.AreEqual("shutdown-action", shutdownAction.DispatchCommand);
+            Assert.AreEqual("standby", shutdownAction.Action);
+
             ListenCommand startProcess = ListenCommand.Parse("dispatch first start-process --path C:\\Temp\\run.cmd");
             Assert.AreEqual("start-process", startProcess.DispatchCommand);
             Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
@@ -406,6 +425,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first rename-path --path C:\\Temp\\old.txt --type file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shutdown-action"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first start-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-registry-key"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));
