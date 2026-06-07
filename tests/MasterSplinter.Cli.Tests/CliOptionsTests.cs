@@ -27,6 +27,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsNull(options.Text);
             Assert.IsNull(options.Button);
             Assert.IsNull(options.Icon);
+            Assert.IsNull(options.Url);
+            Assert.IsFalse(options.Hidden);
             Assert.IsNull(options.LocalAddress);
             Assert.IsFalse(options.LocalPort.HasValue);
             Assert.IsNull(options.RemoteAddress);
@@ -73,6 +75,8 @@ namespace MasterSplinter.Cli.Tests
                 "--text", "Hello",
                 "--button", "OKCancel",
                 "--icon", "Information",
+                "--url", "https://example.test",
+                "--hidden",
                 "--local-address", "127.0.0.1",
                 "--local-port", "5000",
                 "--remote-address", "127.0.0.1",
@@ -95,6 +99,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("Hello", options.Text);
             Assert.AreEqual("OKCancel", options.Button);
             Assert.AreEqual("Information", options.Icon);
+            Assert.AreEqual("https://example.test", options.Url);
+            Assert.IsTrue(options.Hidden);
             Assert.AreEqual("127.0.0.1", options.LocalAddress);
             Assert.AreEqual((ushort)5000, options.LocalPort);
             Assert.AreEqual("127.0.0.1", options.RemoteAddress);
@@ -357,6 +363,16 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("OKCancel", messageBox.Button);
             Assert.AreEqual("Information", messageBox.Icon);
 
+            var visitWebsite = (DoVisitWebsite)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "visit-website",
+                "--url", "example.test",
+                "--hidden"
+            }));
+            Assert.AreEqual("http://example.test/", visitWebsite.Url);
+            Assert.IsTrue(visitWebsite.Hidden);
+
             var startProcess = (DoProcessStart)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -393,6 +409,10 @@ namespace MasterSplinter.Cli.Tests
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "show-message", "--text", "Hello", "--button", "Bogus" })));
             Assert.ThrowsException<ArgumentException>(() =>
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "show-message", "--text", "Hello", "--icon", "Bogus" })));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "visit-website" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "visit-website", "--url", "file:///C:/Temp/a.txt" })));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -455,6 +475,11 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("OK", messageBox.Button);
             Assert.AreEqual("Information", messageBox.Icon);
 
+            ListenCommand visitWebsite = ListenCommand.Parse("dispatch first visit-website --url example.test --hidden");
+            Assert.AreEqual("visit-website", visitWebsite.DispatchCommand);
+            Assert.AreEqual("example.test", visitWebsite.Url);
+            Assert.IsTrue(visitWebsite.Hidden);
+
             ListenCommand startProcess = ListenCommand.Parse("dispatch first start-process --path C:\\Temp\\run.cmd");
             Assert.AreEqual("start-process", startProcess.DispatchCommand);
             Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
@@ -478,6 +503,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shutdown-action"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first show-message"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first visit-website"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first start-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-registry-key"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));

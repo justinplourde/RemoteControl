@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 60 passed.
+- `MasterSplinter.Client.Core.Tests`: 62 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -151,6 +151,8 @@ Done:
   `DoClientReconnect` status-and-lifecycle request behavior.
 - Added tests for `DoShowMessageBox` provider mapping/failure status, CLI caption/text/button/icon
   parsing, and `UserInteraction` permission plus consent classification.
+- Added tests for `DoVisitWebsite` provider mapping/failure status, CLI URL normalization and
+  hidden-mode parsing, and `UserInteraction` permission plus consent classification.
 
 Left to do:
 
@@ -341,6 +343,10 @@ Done:
   Windows `user32!MessageBoxW` provider, CLI exposes `show-message --text <message>
   [--caption <title>] [--button <button>] [--icon <icon>]`, and response formatting prints the
   legacy-style `SetStatus` acknowledgement.
+- Added consent-gated website visit parity through `DoVisitWebsite`: the client host wires a
+  provider that opens HTTP/HTTPS URLs through the default browser or performs the legacy hidden
+  GET path, CLI exposes `visit-website --url <http-url> [--hidden]`, and URL validation rejects
+  non-HTTP schemes.
 
 Left to do:
 
@@ -614,6 +620,17 @@ dispatch first show-message --caption Notice --text Hello --button OK --icon Inf
 
 Run from a visible Windows desktop session. The client should return `Successfully displayed
 MessageBox` and show the dialog on the client desktop.
+
+Current manual website-visit check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47857 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47857 --handle-commands
+dispatch first visit-website --url https://example.com
+```
+
+Run from a prepared Windows desktop session. Visible mode should open the client default browser;
+`--hidden` performs the legacy GET path without opening a browser window.
 
 Current manual file-download check:
 

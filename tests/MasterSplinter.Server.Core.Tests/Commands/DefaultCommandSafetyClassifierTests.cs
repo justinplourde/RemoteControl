@@ -50,6 +50,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoClientDisconnect()] = CommandSafetyClass.ConnectionLifecycle,
                 [new DoClientReconnect()] = CommandSafetyClass.ConnectionLifecycle,
                 [new DoShowMessageBox { Text = "Hello" }] = CommandSafetyClass.UserInteraction,
+                [new DoVisitWebsite { Url = "https://example.test" }] = CommandSafetyClass.UserInteraction,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };
@@ -73,6 +74,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.IsFalse(classifier.Classify(new DoClientDisconnect()).RequiresConsent);
             Assert.IsFalse(classifier.Classify(new DoClientReconnect()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoShowMessageBox { Text = "Hello" }).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoVisitWebsite { Url = "https://example.test" }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetPasswords()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetKeyloggerLogsDirectory()).RequiresConsent);
         }

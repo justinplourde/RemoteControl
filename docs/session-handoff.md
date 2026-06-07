@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add message box CLI parity`
-- Latest known full test result: 168 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add visit website CLI parity`
+- Latest known full test result: 170 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -46,6 +46,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `disconnect-client`,
 `reconnect-client`,
 `show-message --text <message> [--caption <title>] [--button <button>] [--icon <icon>]`,
+`visit-website --url <http-url> [--hidden]`,
 `close-connection --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
@@ -124,5 +125,10 @@ Message box parity is wired through `show-message`. It requires `--grant-permiss
 --grant-consent`, maps to `UserInteraction`, supports legacy caption/text/button/icon fields, and
 returns `Successfully displayed MessageBox`. Visible desktop display still needs manual
 verification from an interactive Windows session.
+
+Website visit parity is wired through `visit-website`. It requires `--grant-permission
+--grant-consent`, maps to `UserInteraction`, supports visible browser launch and the legacy
+`--hidden` GET path, and accepts only HTTP/HTTPS URLs after legacy-style `http://` prefixing.
+Manual browser/hidden GET verification is still pending.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

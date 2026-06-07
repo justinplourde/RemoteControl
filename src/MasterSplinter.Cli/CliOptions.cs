@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|visit-website|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -20,6 +20,8 @@ namespace MasterSplinter.Cli
             string text,
             string button,
             string icon,
+            string url,
+            bool hidden,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -45,6 +47,8 @@ namespace MasterSplinter.Cli
             Text = text;
             Button = button;
             Icon = icon;
+            Url = url;
+            Hidden = hidden;
             LocalAddress = localAddress;
             LocalPort = localPort;
             RemoteAddress = remoteAddress;
@@ -71,6 +75,8 @@ namespace MasterSplinter.Cli
         public string Text { get; }
         public string Button { get; }
         public string Icon { get; }
+        public string Url { get; }
+        public bool Hidden { get; }
         public string LocalAddress { get; }
         public ushort? LocalPort { get; }
         public string RemoteAddress { get; }
@@ -91,7 +97,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -105,6 +111,8 @@ namespace MasterSplinter.Cli
             string text = null;
             string button = null;
             string icon = null;
+            string url = null;
+            bool hidden = false;
             string localAddress = null;
             ushort? localPort = null;
             string remoteAddress = null;
@@ -141,6 +149,10 @@ namespace MasterSplinter.Cli
                     button = ReadValue(args, ref index, "--button");
                 else if (string.Equals(arg, "--icon", StringComparison.OrdinalIgnoreCase))
                     icon = ReadValue(args, ref index, "--icon");
+                else if (string.Equals(arg, "--url", StringComparison.OrdinalIgnoreCase))
+                    url = ReadValue(args, ref index, "--url");
+                else if (string.Equals(arg, "--hidden", StringComparison.OrdinalIgnoreCase))
+                    hidden = true;
                 else if (string.Equals(arg, "--local-address", StringComparison.OrdinalIgnoreCase))
                     localAddress = ReadValue(args, ref index, "--local-address");
                 else if (string.Equals(arg, "--local-port", StringComparison.OrdinalIgnoreCase))
@@ -224,6 +236,10 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--text is required for show-message.");
             }
 
+            if (string.Equals(dispatchCommand, "visit-website", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("--url is required for visit-website.");
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -248,6 +264,8 @@ namespace MasterSplinter.Cli
                 text,
                 button,
                 icon,
+                url,
+                hidden,
                 localAddress,
                 localPort,
                 remoteAddress,

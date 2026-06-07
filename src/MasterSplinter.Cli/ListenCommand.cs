@@ -18,6 +18,8 @@ namespace MasterSplinter.Cli
             string text,
             string button,
             string icon,
+            string url,
+            bool hidden,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -37,6 +39,8 @@ namespace MasterSplinter.Cli
             Text = text;
             Button = button;
             Icon = icon;
+            Url = url;
+            Hidden = hidden;
             LocalAddress = localAddress;
             LocalPort = localPort;
             RemoteAddress = remoteAddress;
@@ -57,6 +61,8 @@ namespace MasterSplinter.Cli
         public string Text { get; }
         public string Button { get; }
         public string Icon { get; }
+        public string Url { get; }
+        public bool Hidden { get; }
         public string LocalAddress { get; }
         public ushort? LocalPort { get; }
         public string RemoteAddress { get; }
@@ -68,16 +74,16 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -95,6 +101,8 @@ namespace MasterSplinter.Cli
             string text = null;
             string button = null;
             string icon = null;
+            string url = null;
+            bool hidden = false;
             string localAddress = null;
             ushort? localPort = null;
             string remoteAddress = null;
@@ -174,6 +182,18 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--icon requires a value.");
 
                     icon = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--url", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--url requires a value.");
+
+                    url = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--hidden", StringComparison.OrdinalIgnoreCase))
+                {
+                    hidden = true;
                 }
                 else if (string.Equals(tokens[index], "--local-address", StringComparison.OrdinalIgnoreCase))
                 {
@@ -274,6 +294,10 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("--text is required for show-message.");
 
+            if (string.Equals(dispatchCommand, "visit-website", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("--url is required for visit-website.");
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -299,6 +323,8 @@ namespace MasterSplinter.Cli
                 text,
                 button,
                 icon,
+                url,
+                hidden,
                 localAddress,
                 localPort,
                 remoteAddress,
