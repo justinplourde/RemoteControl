@@ -399,6 +399,9 @@ Done:
   <command>`, and execution remains permission plus consent gated.
 - Upgraded shell execute to keep a persistent shell process across dispatches; commands share
   session state, stderr marks the response as an error, and `exit` closes the shell session.
+- Added client status row parity through `SetStatus` and `SetUserStatus`: the listener stores
+  latest status text and active/idle user state per client, filters unsolicited user-status events
+  out of command response waiting, and CLI `clients` now shows both fields.
 
 Left to do:
 

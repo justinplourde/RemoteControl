@@ -29,7 +29,7 @@ This file is the parity ledger. Nothing should silently fall out of scope.
 | Legacy area | Primary legacy messages/forms | Modern status | Gap to 1:1 parity |
 | --- | --- | --- | --- |
 | Client handshake and identification | `ClientIdentification`, `ClientIdentificationResult` | done | Non-loopback certificate/config story still belongs to product hardening, not protocol parity. |
-| Client status updates | `SetStatus`, `SetUserStatus`, `ClientStatusHandler`, `FrmMain` status rows | partial | `SetStatus` is used broadly; `SetUserStatus` is protocol-compatible but not fully surfaced in modern CLI/UI. |
+| Client status updates | `SetStatus`, `SetUserStatus`, `ClientStatusHandler`, `FrmMain` status rows | done | Modern listener tracks both status text and active/idle user status by client id; CLI `clients` surfaces both values. GUI parity pending. |
 | System information | `GetSystemInfo`, `FrmSystemInformation` | done | GUI parity pending; CLI/manual parity complete. |
 | File manager browse/drives | `GetDrives`, `GetDirectory`, `FrmFileManager` | done | GUI parity pending; broader access-denied/path edge manual checks remain. |
 | File transfer download/upload/cancel | `FileTransferRequest`, `FileTransferChunk`, `FileTransferComplete`, `FileTransferCancel` | done | GUI transfer queue/progress parity pending. |

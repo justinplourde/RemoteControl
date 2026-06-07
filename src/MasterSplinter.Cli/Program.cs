@@ -53,15 +53,17 @@ namespace MasterSplinter.Cli
         private static async Task<int> RunListenAsync(CliOptions options, CancellationToken cancellationToken)
         {
             var registry = new ClientSessionRegistry();
+            var statusRegistry = new ClientStatusRegistry();
             var lifecycle = new ClientConnectionLifecycleCoordinator(registry, new CompletionLifecycleSink(null));
             var handshake = new ClientHandshakeCoordinator(lifecycle);
             var listener = new LoopbackTcpRemoteClientListener();
             var responseSink = new AwaitableMessageSink();
+            var messageSink = new ClientStatusMessageSink(statusRegistry, responseSink);
             var orchestrator = new RemoteClientListenerOrchestrator(
                 listener,
                 lifecycle,
                 handshake,
-                responseSink);
+                messageSink);
             var dispatcher = new ServerCommandDispatcher(registry);
 
             await orchestrator.StartAsync(
@@ -102,7 +104,7 @@ namespace MasterSplinter.Cli
                     }
                     if (string.Equals(command.Verb, "clients", StringComparison.OrdinalIgnoreCase))
                     {
-                        PrintClients(registry);
+                        PrintClients(registry, statusRegistry);
                         continue;
                     }
 
@@ -126,8 +128,10 @@ namespace MasterSplinter.Cli
         private static async Task<int> RunDispatchAsync(CliOptions options, CancellationToken cancellationToken)
         {
             var registry = new ClientSessionRegistry();
+            var statusRegistry = new ClientStatusRegistry();
             var identified = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             var responseSink = new AwaitableMessageSink();
+            var messageSink = new ClientStatusMessageSink(statusRegistry, responseSink);
             var lifecycle = new ClientConnectionLifecycleCoordinator(registry, new CompletionLifecycleSink(identified));
             var handshake = new ClientHandshakeCoordinator(lifecycle);
             var listener = new LoopbackTcpRemoteClientListener();
@@ -135,7 +139,7 @@ namespace MasterSplinter.Cli
                 listener,
                 lifecycle,
                 handshake,
-                responseSink);
+                messageSink);
 
             await orchestrator.StartAsync(
                 new ServerListenOptions(options.Host, options.Port),
@@ -919,7 +923,7 @@ namespace MasterSplinter.Cli
             throw new InvalidOperationException($"Client '{clientId}' is not connected.");
         }
 
-        private static void PrintClients(ClientSessionRegistry registry)
+        private static void PrintClients(ClientSessionRegistry registry, IClientStatusRegistry statusRegistry)
         {
             IReadOnlyList<ClientSessionSnapshot> snapshots = registry.GetSnapshots();
             Console.WriteLine($"Clients: {snapshots.Count}.");
@@ -928,7 +932,17 @@ namespace MasterSplinter.Cli
                 string user = snapshot.Identification == null ? "-" : ValueOrDash(snapshot.Identification.Username);
                 string machine = snapshot.Identification == null ? "-" : ValueOrDash(snapshot.Identification.PcName);
                 string accountType = snapshot.Identification == null ? "-" : ValueOrDash(snapshot.Identification.AccountType);
-                Console.WriteLine($"- {snapshot.ClientId} Connected={snapshot.IsConnected} User={user} Machine={machine} AccountType={accountType}");
+                string status = "-";
+                string userStatus = "-";
+                if (statusRegistry != null && statusRegistry.TryGet(snapshot.ClientId, out ClientStatusSnapshot statusSnapshot))
+                {
+                    status = ValueOrDash(statusSnapshot.StatusMessage);
+                    userStatus = statusSnapshot.UserStatus.HasValue
+                        ? statusSnapshot.UserStatus.Value.ToString()
+                        : "-";
+                }
+
+                Console.WriteLine($"- {snapshot.ClientId} Connected={snapshot.IsConnected} User={user} Machine={machine} AccountType={accountType} Status={status} UserStatus={userStatus}");
             }
         }
 
@@ -1272,6 +1286,9 @@ namespace MasterSplinter.Cli
                     break;
                 case SetStatus response:
                     lines.Add($"Status: {ValueOrDash(response.Message)}");
+                    break;
+                case SetUserStatus response:
+                    lines.Add($"User status: {response.Message}");
                     break;
                 case DoProcessResponse response:
                     lines.Add($"Process response: Action={response.Action}; Result={response.Result}.");

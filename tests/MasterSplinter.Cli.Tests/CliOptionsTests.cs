@@ -1022,6 +1022,13 @@ namespace MasterSplinter.Cli.Tests
                 }));
 
             CollectionAssert.AreEqual(
+                new[] { "User status: Idle" },
+                Program.FormatResponse(new SetUserStatus
+                {
+                    Message = UserStatus.Idle
+                }));
+
+            CollectionAssert.AreEqual(
                 new[] { "Process response: Action=End; Result=True." },
                 Program.FormatResponse(new DoProcessResponse
                 {

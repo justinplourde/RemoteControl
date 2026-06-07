@@ -259,6 +259,10 @@ All modern projects target `net10.0`.
 - Client elevation/admin status is now detected through `ClientPrivilegeProvider`, carried in the
   existing `ClientIdentification.AccountType` field as `Admin` or `User`, and shown in CLI
   `clients` output as `AccountType=<value>`.
+- Client status row parity is now wired through a server-side `ClientStatusRegistry` and
+  `ClientStatusMessageSink`: `SetStatus` updates the latest status text while still flowing as a
+  command acknowledgement, `SetUserStatus` updates active/idle state without poisoning the next
+  command response, and CLI `clients` prints `Status=<value>` plus `UserStatus=<value>`.
 - Elevation request parity is now wired through `DoAskElevate`, a Windows UAC `runas` provider,
   a client handler returning legacy-style `SetStatus` messages, CLI `ask-elevate`, and
   `SystemControl` permission plus consent enforcement. Interactive UAC acceptance still needs a

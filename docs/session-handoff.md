@@ -17,8 +17,9 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add single-frame desktop capture CLI parity`
-- Latest known full test result: 186 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: client status row parity through `SetStatus` and
+  `SetUserStatus`
+- Latest known full test result: 192 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -147,6 +148,11 @@ Windows executables.
 Client elevation/admin status is now first-class in the modern identity path. The client host
 sets `ClientIdentification.AccountType` to `Admin` or `User` using the current Windows principal,
 and CLI `clients` output includes `AccountType=<value>`.
+
+Client status row parity is wired through `SetStatus` and `SetUserStatus`. The server listener
+stores latest status text plus active/idle user state per client id, CLI `clients` prints
+`Status=<value>` and `UserStatus=<value>`, and unsolicited `SetUserStatus` messages do not satisfy
+the next command-response wait.
 
 Elevation request parity is wired through `ask-elevate`. It requires `--grant-permission
 --grant-consent`, maps `DoAskElevate` to `SystemControl`, calls Windows UAC `runas` in the client
