@@ -22,6 +22,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsNull(options.NewPath);
             Assert.IsNull(options.PathType);
             Assert.IsFalse(options.Pid.HasValue);
+            Assert.IsNull(options.LocalAddress);
+            Assert.IsFalse(options.LocalPort.HasValue);
+            Assert.IsNull(options.RemoteAddress);
+            Assert.IsFalse(options.RemotePort.HasValue);
             Assert.IsNull(options.RemotePath);
             Assert.IsNull(options.OutputPath);
             Assert.AreEqual("127.0.0.1", options.Host);
@@ -59,6 +63,10 @@ namespace MasterSplinter.Cli.Tests
                 "--new-path", "C:\\Temp\\new.bin",
                 "--type", "file",
                 "--pid", "1234",
+                "--local-address", "127.0.0.1",
+                "--local-port", "5000",
+                "--remote-address", "127.0.0.1",
+                "--remote-port", "5001",
                 "--remote-path", "C:\\Temp\\remote.bin",
                 "--output", "C:\\Temp\\out.bin",
                 "--grant-permission",
@@ -72,6 +80,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("C:\\Temp\\new.bin", options.NewPath);
             Assert.AreEqual("file", options.PathType);
             Assert.AreEqual(1234, options.Pid);
+            Assert.AreEqual("127.0.0.1", options.LocalAddress);
+            Assert.AreEqual((ushort)5000, options.LocalPort);
+            Assert.AreEqual("127.0.0.1", options.RemoteAddress);
+            Assert.AreEqual((ushort)5001, options.RemotePort);
             Assert.AreEqual("C:\\Temp\\remote.bin", options.RemotePath);
             Assert.AreEqual("C:\\Temp\\out.bin", options.OutputPath);
             Assert.IsTrue(options.GrantPermission);
@@ -190,6 +202,24 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("HKCU\\Software", registryKey.Path);
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "get-registry-key" }));
+
+            CliOptions closeConnection = CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "close-connection",
+                "--local-address", "127.0.0.1",
+                "--local-port", "5000",
+                "--remote-address", "127.0.0.1",
+                "--remote-port", "5001"
+            });
+
+            Assert.AreEqual("close-connection", closeConnection.DispatchCommand);
+            Assert.AreEqual("127.0.0.1", closeConnection.LocalAddress);
+            Assert.AreEqual((ushort)5000, closeConnection.LocalPort);
+            Assert.AreEqual("127.0.0.1", closeConnection.RemoteAddress);
+            Assert.AreEqual((ushort)5001, closeConnection.RemotePort);
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "close-connection" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -235,6 +265,20 @@ namespace MasterSplinter.Cli.Tests
                 "--path", "HKCU\\Software"
             }));
             Assert.AreEqual("HKCU\\Software", registryKey.RootKeyName);
+
+            var closeConnection = (DoCloseConnection)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "close-connection",
+                "--local-address", "127.0.0.1",
+                "--local-port", "5000",
+                "--remote-address", "127.0.0.1",
+                "--remote-port", "5001"
+            }));
+            Assert.AreEqual("127.0.0.1", closeConnection.LocalAddress);
+            Assert.AreEqual((ushort)5000, closeConnection.LocalPort);
+            Assert.AreEqual("127.0.0.1", closeConnection.RemoteAddress);
+            Assert.AreEqual((ushort)5001, closeConnection.RemotePort);
 
             var rename = (DoPathRename)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -342,6 +386,13 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("get-registry-key", registryKey.DispatchCommand);
             Assert.AreEqual("HKCU\\Software", registryKey.Path);
 
+            ListenCommand closeConnection = ListenCommand.Parse("dispatch first close-connection --local-address 127.0.0.1 --local-port 5000 --remote-address 127.0.0.1 --remote-port 5001");
+            Assert.AreEqual("close-connection", closeConnection.DispatchCommand);
+            Assert.AreEqual("127.0.0.1", closeConnection.LocalAddress);
+            Assert.AreEqual((ushort)5000, closeConnection.LocalPort);
+            Assert.AreEqual("127.0.0.1", closeConnection.RemoteAddress);
+            Assert.AreEqual((ushort)5001, closeConnection.RemotePort);
+
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-directory"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first download-file"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first upload-file --path C:\\Temp\\local.txt"));
@@ -350,6 +401,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first start-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-registry-key"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
 

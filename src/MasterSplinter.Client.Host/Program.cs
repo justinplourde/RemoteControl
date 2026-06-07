@@ -72,6 +72,8 @@ namespace MasterSplinter.Client.Host
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
                         .AddHandler(new ResponseMessageHandlerAdapter<GetConnections>(
                             new GetConnectionsHandler(new TcpConnectionProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoCloseConnection>(
+                            new DoCloseConnectionHandler(new TcpConnectionProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDirectory>(
                             new GetDirectoryHandler(new DirectoryProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDrives>(

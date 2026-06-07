@@ -8,8 +8,10 @@ using System.Runtime.InteropServices;
 
 namespace MasterSplinter.Client.Core.Connections
 {
-    public sealed class TcpConnectionProvider : IConnectionProvider
+    public sealed class TcpConnectionProvider : IConnectionProvider, IConnectionCloseProvider
     {
+        private const uint TcpStateDeleteTcb = 12;
+
         public TcpConnection[] GetConnections()
         {
             if (!OperatingSystem.IsWindows())
@@ -33,6 +35,31 @@ namespace MasterSplinter.Client.Core.Connections
             }
 
             return connections;
+        }
+
+        public TcpConnectionCloseResult CloseConnection(string localAddress, ushort localPort, string remoteAddress, ushort remotePort)
+        {
+            if (!OperatingSystem.IsWindows())
+                return new TcpConnectionCloseResult(false, new TcpConnection[0]);
+
+            MibTcpRowOwnerPid[] table = GetTable();
+            bool isSuccess = false;
+
+            for (int index = 0; index < table.Length; index++)
+            {
+                MibTcpRowOwnerPid row = table[index];
+                if (string.Equals(localAddress, row.LocalAddress.ToString(), StringComparison.OrdinalIgnoreCase) &&
+                    localPort == row.LocalPort &&
+                    string.Equals(remoteAddress, row.RemoteAddress.ToString(), StringComparison.OrdinalIgnoreCase) &&
+                    remotePort == row.RemotePort)
+                {
+                    row.State = TcpStateDeleteTcb;
+                    isSuccess = SetTcpEntry(row) == 0;
+                    break;
+                }
+            }
+
+            return new TcpConnectionCloseResult(isSuccess, GetConnections());
         }
 
         private static string GetProcessName(uint processId)
@@ -90,6 +117,23 @@ namespace MasterSplinter.Client.Core.Connections
             int ipVersion,
             TcpTableClass tblClass,
             uint reserved = 0);
+
+        private static uint SetTcpEntry(MibTcpRowOwnerPid tcpRow)
+        {
+            IntPtr pointer = Marshal.AllocCoTaskMem(Marshal.SizeOf<MibTcpRowOwnerPid>());
+            try
+            {
+                Marshal.StructureToPtr(tcpRow, pointer, false);
+                return SetTcpEntry(pointer);
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(pointer);
+            }
+        }
+
+        [DllImport("iphlpapi.dll", SetLastError = true)]
+        private static extern uint SetTcpEntry(IntPtr tcpRow);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct MibTcpRowOwnerPid

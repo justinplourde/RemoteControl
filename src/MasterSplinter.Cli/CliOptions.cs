@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -15,6 +15,10 @@ namespace MasterSplinter.Cli
             string newPath,
             string pathType,
             int? pid,
+            string localAddress,
+            ushort? localPort,
+            string remoteAddress,
+            ushort? remotePort,
             string remotePath,
             string outputPath,
             string host,
@@ -31,6 +35,10 @@ namespace MasterSplinter.Cli
             NewPath = newPath;
             PathType = pathType;
             Pid = pid;
+            LocalAddress = localAddress;
+            LocalPort = localPort;
+            RemoteAddress = remoteAddress;
+            RemotePort = remotePort;
             RemotePath = remotePath;
             OutputPath = outputPath;
             Host = host;
@@ -48,6 +56,10 @@ namespace MasterSplinter.Cli
         public string NewPath { get; }
         public string PathType { get; }
         public int? Pid { get; }
+        public string LocalAddress { get; }
+        public ushort? LocalPort { get; }
+        public string RemoteAddress { get; }
+        public ushort? RemotePort { get; }
         public string RemotePath { get; }
         public string OutputPath { get; }
         public string Host { get; }
@@ -64,7 +76,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -73,6 +85,10 @@ namespace MasterSplinter.Cli
             string newPath = null;
             string pathType = null;
             int? pid = null;
+            string localAddress = null;
+            ushort? localPort = null;
+            string remoteAddress = null;
+            ushort? remotePort = null;
             string remotePath = null;
             string outputPath = null;
             string host = "127.0.0.1";
@@ -95,6 +111,14 @@ namespace MasterSplinter.Cli
                     pathType = ReadValue(args, ref index, "--type");
                 else if (string.Equals(arg, "--pid", StringComparison.OrdinalIgnoreCase))
                     pid = int.Parse(ReadValue(args, ref index, "--pid"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--local-address", StringComparison.OrdinalIgnoreCase))
+                    localAddress = ReadValue(args, ref index, "--local-address");
+                else if (string.Equals(arg, "--local-port", StringComparison.OrdinalIgnoreCase))
+                    localPort = ushort.Parse(ReadValue(args, ref index, "--local-port"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--remote-address", StringComparison.OrdinalIgnoreCase))
+                    remoteAddress = ReadValue(args, ref index, "--remote-address");
+                else if (string.Equals(arg, "--remote-port", StringComparison.OrdinalIgnoreCase))
+                    remotePort = ushort.Parse(ReadValue(args, ref index, "--remote-port"), CultureInfo.InvariantCulture);
                 else if (string.Equals(arg, "--remote-path", StringComparison.OrdinalIgnoreCase))
                     remotePath = ReadValue(args, ref index, "--remote-path");
                 else if (string.Equals(arg, "--output", StringComparison.OrdinalIgnoreCase))
@@ -160,6 +184,18 @@ namespace MasterSplinter.Cli
                 !pid.HasValue)
                 throw new ArgumentException("--pid is required for end-process.");
 
+            if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(localAddress))
+                    throw new ArgumentException("--local-address is required for close-connection.");
+                if (!localPort.HasValue)
+                    throw new ArgumentException("--local-port is required for close-connection.");
+                if (string.IsNullOrWhiteSpace(remoteAddress))
+                    throw new ArgumentException("--remote-address is required for close-connection.");
+                if (!remotePort.HasValue)
+                    throw new ArgumentException("--remote-port is required for close-connection.");
+            }
+
             return new CliOptions(
                 command,
                 dispatchCommand,
@@ -167,6 +203,10 @@ namespace MasterSplinter.Cli
                 newPath,
                 pathType,
                 pid,
+                localAddress,
+                localPort,
+                remoteAddress,
+                remotePort,
                 remotePath,
                 outputPath,
                 host,

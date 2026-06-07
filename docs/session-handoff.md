@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Rename modern namespaces to MasterSplinter`
-- Latest known full test result: 156 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add TCP connection close CLI parity`
+- Latest known full test result: 157 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -41,6 +41,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `delete-path --path <client-file> --type file`,
 `start-process --path <client-file>`,
 `end-process --pid <pid>`,
+`close-connection --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
@@ -86,5 +87,11 @@ defined.
 Modern `src` and `tests` namespaces now use `MasterSplinter.Common.*` instead of
 `Quasar.Common.*`. Any remaining `Quasar` references should be documentation about the preserved
 legacy source under `legacy/Quasar`, not active modern code.
+
+TCP connection close parity is now implemented as a permissioned dispatch path. Manual loopback
+check: `close-connection` required `--grant-permission`, returned `Safety=NetworkControl`,
+`RequiresPermission=True`, `RequiresConsent=False`, and produced a refreshed connection list. The
+non-elevated manual run did not close the target loopback row, so elevated Windows verification
+is still needed before marking actual close behavior fully proven.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

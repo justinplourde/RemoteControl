@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 48 passed.
+- `MasterSplinter.Client.Core.Tests`: 49 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -140,6 +140,8 @@ Done:
   and explicit rejection of URL-download/update start requests.
 - Added tests for `DoLoadRegistryKey` success/error response mapping and read-only command
   safety classification.
+- Added tests for `DoCloseConnection` handler routing, CLI four-tuple parsing/message creation,
+  and `NetworkControl` permission classification.
 
 Left to do:
 
@@ -301,6 +303,14 @@ Done:
 - Renamed the modern `src` and `tests` namespace surface from `Quasar.Common.*` to
   `MasterSplinter.Common.*` while keeping protocol DTO names, protobuf fields, and wire
   compatibility tests intact.
+- Added permissioned TCP connection close through `DoCloseConnection`: the client provider looks
+  up the exact local/remote address and port tuple, requests `Delete_TCB` via `SetTcpEntry`, and
+  returns a refreshed `GetConnectionsResponse`; CLI parsing requires the full four-tuple.
+- Verified loopback `close-connection` dispatch manually on June 6, 2026 with
+  `--grant-permission`; dispatch metadata returned `Safety=NetworkControl`,
+  `RequiresPermission=True`, and `RequiresConsent=False`, and the client returned a refreshed TCP
+  list. The non-elevated manual run did not actually close the test loopback row, so elevated
+  Windows verification remains pending.
 
 Left to do:
 
@@ -520,6 +530,16 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47849 --handle-commands
 dispatch first get-registry-key --path HKCU\Software
 ```
+
+Current manual TCP connection-close check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- dispatch --command close-connection --port 47852 --grant-permission --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47852 --handle-one-command
+```
+
+Use a harmless loopback TCP test connection. Actual close may require the client host to run
+elevated on Windows.
 
 Current manual file-download check:
 

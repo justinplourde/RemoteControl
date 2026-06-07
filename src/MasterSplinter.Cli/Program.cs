@@ -195,15 +195,33 @@ namespace MasterSplinter.Cli
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            return CreateMessage(options.DispatchCommand, options.Path, options.NewPath, options.PathType, options.Pid);
+            return CreateMessage(
+                options.DispatchCommand,
+                options.Path,
+                options.NewPath,
+                options.PathType,
+                options.Pid,
+                options.LocalAddress,
+                options.LocalPort,
+                options.RemoteAddress,
+                options.RemotePort);
         }
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null);
         }
 
-        public static IMessage CreateMessage(string dispatchCommand, string path, string newPath, string pathType, int? pid)
+        public static IMessage CreateMessage(
+            string dispatchCommand,
+            string path,
+            string newPath,
+            string pathType,
+            int? pid,
+            string localAddress,
+            ushort? localPort,
+            string remoteAddress,
+            ushort? remotePort)
         {
             if (IsUploadFileCommand(dispatchCommand))
                 throw new ArgumentException("upload-file is a multi-message command and cannot be created as a single message.");
@@ -234,6 +252,14 @@ namespace MasterSplinter.Cli
                 return new DoProcessStart { FilePath = path };
             if (string.Equals(dispatchCommand, "end-process", StringComparison.OrdinalIgnoreCase))
                 return new DoProcessEnd { Pid = pid.GetValueOrDefault() };
+            if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
+                return new DoCloseConnection
+                {
+                    LocalAddress = localAddress,
+                    LocalPort = localPort.GetValueOrDefault(),
+                    RemoteAddress = remoteAddress,
+                    RemotePort = remotePort.GetValueOrDefault()
+                };
             if (string.Equals(dispatchCommand, "get-processes", StringComparison.OrdinalIgnoreCase))
                 return new GetProcesses();
             if (string.Equals(dispatchCommand, "get-startup-items", StringComparison.OrdinalIgnoreCase))
@@ -271,7 +297,11 @@ namespace MasterSplinter.Cli
                 listenCommand.Path,
                 listenCommand.NewPath,
                 listenCommand.PathType,
-                listenCommand.Pid);
+                listenCommand.Pid,
+                listenCommand.LocalAddress,
+                listenCommand.LocalPort,
+                listenCommand.RemoteAddress,
+                listenCommand.RemotePort);
             CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
                 options,
                 clientId,
@@ -495,7 +525,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
