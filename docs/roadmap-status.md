@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 49 passed.
+- `MasterSplinter.Client.Core.Tests`: 51 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -142,6 +142,7 @@ Done:
   safety classification.
 - Added tests for `DoCloseConnection` handler routing, CLI four-tuple parsing/message creation,
   and `NetworkControl` permission classification.
+- Added tests for client privilege/account-type detection used by modern client identification.
 
 Left to do:
 
@@ -312,6 +313,9 @@ Done:
   list. Windows requires the client process to be elevated for `SetTcpEntry` deletion; the client
   host now embeds a `requireAdministrator` manifest for published Windows executables to match
   legacy parity expectations.
+- Added modern client elevation/admin status reporting: `MasterSplinter.Client.Host` now populates
+  `ClientIdentification.AccountType` from the current Windows principal through
+  `ClientPrivilegeProvider`, and CLI `clients` output shows the connected client's account type.
 
 Left to do:
 

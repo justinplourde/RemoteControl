@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Require elevated client host for TCP close parity`
-- Latest known full test result: 157 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Report client elevation status`
+- Latest known full test result: 159 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -94,5 +94,9 @@ check: `close-connection` required `--grant-permission`, returned `Safety=Networ
 Windows requires the client process to be elevated for actual TCP row deletion, matching legacy
 behavior; `MasterSplinter.Client.Host` now has a `requireAdministrator` manifest for published
 Windows executables.
+
+Client elevation/admin status is now first-class in the modern identity path. The client host
+sets `ClientIdentification.AccountType` to `Admin` or `User` using the current Windows principal,
+and CLI `clients` output includes `AccountType=<value>`.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

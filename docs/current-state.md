@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Require elevated client host for TCP close parity`
+- Latest committed roadmap checkpoint before this handoff: `Report client elevation status`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 2, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 49 passed
+- `MasterSplinter.Client.Core.Tests`: 51 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 157 passed, 1 skipped, 0 failed
+- Total: 159 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -202,6 +202,9 @@ All modern projects target `net10.0`.
   Windows TCP row deletion requires an elevated client process, matching the legacy behavior.
   `MasterSplinter.Client.Host` now embeds a Windows manifest requesting administrator rights when
   run as a published executable.
+- Client elevation/admin status is now detected through `ClientPrivilegeProvider`, carried in the
+  existing `ClientIdentification.AccountType` field as `Admin` or `User`, and shown in CLI
+  `clients` output as `AccountType=<value>`.
 
 ## Current Limitations
 

@@ -21,10 +21,11 @@ namespace MasterSplinter.Client.Host
             try
             {
                 HostOptions options = HostOptions.Parse(args);
+                string accountType = new ClientPrivilegeProvider().GetAccountType();
                 var identityOptions = new ClientIdentityOptions(
                     "modern-dev",
                     Environment.OSVersion.VersionString,
-                    Environment.UserInteractive ? "User" : "Service",
+                    accountType,
                     "Unknown",
                     "XX",
                     0,

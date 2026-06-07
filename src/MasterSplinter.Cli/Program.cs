@@ -519,7 +519,8 @@ namespace MasterSplinter.Cli
             {
                 string user = snapshot.Identification == null ? "-" : ValueOrDash(snapshot.Identification.Username);
                 string machine = snapshot.Identification == null ? "-" : ValueOrDash(snapshot.Identification.PcName);
-                Console.WriteLine($"- {snapshot.ClientId} Connected={snapshot.IsConnected} User={user} Machine={machine}");
+                string accountType = snapshot.Identification == null ? "-" : ValueOrDash(snapshot.Identification.AccountType);
+                Console.WriteLine($"- {snapshot.ClientId} Connected={snapshot.IsConnected} User={user} Machine={machine} AccountType={accountType}");
             }
         }
 
