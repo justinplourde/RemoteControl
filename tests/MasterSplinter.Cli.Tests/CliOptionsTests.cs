@@ -466,6 +466,9 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsInstanceOfType(
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "reconnect-client" })),
                 typeof(DoClientReconnect));
+            Assert.IsInstanceOfType(
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "uninstall-client" })),
+                typeof(DoClientUninstall));
 
             var shutdownAction = (DoShutdownAction)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -624,6 +627,9 @@ namespace MasterSplinter.Cli.Tests
 
             ListenCommand reconnectClient = ListenCommand.Parse("dispatch first reconnect-client");
             Assert.AreEqual("reconnect-client", reconnectClient.DispatchCommand);
+
+            ListenCommand uninstallClient = ListenCommand.Parse("dispatch first uninstall-client");
+            Assert.AreEqual("uninstall-client", uninstallClient.DispatchCommand);
 
             ListenCommand shutdownAction = ListenCommand.Parse("dispatch first shutdown-action --action standby");
             Assert.AreEqual("shutdown-action", shutdownAction.DispatchCommand);

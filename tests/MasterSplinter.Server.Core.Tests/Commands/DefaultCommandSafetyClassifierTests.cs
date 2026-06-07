@@ -51,6 +51,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoAskElevate()] = CommandSafetyClass.SystemControl,
                 [new DoClientDisconnect()] = CommandSafetyClass.ConnectionLifecycle,
                 [new DoClientReconnect()] = CommandSafetyClass.ConnectionLifecycle,
+                [new DoClientUninstall()] = CommandSafetyClass.Persistence,
                 [new DoShowMessageBox { Text = "Hello" }] = CommandSafetyClass.UserInteraction,
                 [new DoVisitWebsite { Url = "https://example.test" }] = CommandSafetyClass.UserInteraction,
                 [new DoStartupItemAdd { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Path = "C:\\Tools\\agent.exe", Type = StartupType.CurrentUserRun } }] = CommandSafetyClass.Persistence,
@@ -84,6 +85,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.IsTrue(classifier.Classify(new DoAskElevate()).RequiresConsent);
             Assert.IsFalse(classifier.Classify(new DoClientDisconnect()).RequiresConsent);
             Assert.IsFalse(classifier.Classify(new DoClientReconnect()).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoClientUninstall()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoShowMessageBox { Text = "Hello" }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoVisitWebsite { Url = "https://example.test" }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoStartupItemAdd { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Path = "C:\\Tools\\agent.exe", Type = StartupType.CurrentUserRun } }).RequiresConsent);

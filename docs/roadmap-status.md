@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 74 passed.
+- `MasterSplinter.Client.Core.Tests`: 76 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -149,6 +149,7 @@ Done:
   power-state changes behind `IShutdownActionProvider`.
 - Added lifecycle-capable client contexts plus tests for `DoClientDisconnect` and
   `DoClientReconnect` status-and-lifecycle request behavior.
+- Added tests for `DoClientUninstall` status/failure/lifecycle behavior.
 - Added tests for `DoShowMessageBox` provider mapping/failure status, CLI caption/text/button/icon
   parsing, and `UserInteraction` permission plus consent classification.
 - Added tests for `DoVisitWebsite` provider mapping/failure status, CLI URL normalization and
@@ -350,6 +351,10 @@ Done:
   `DoClientReconnect`: the client host wires lifecycle-capable command contexts, CLI exposes
   `disconnect-client` and `reconnect-client`, and the loopback host closes the active command
   session after sending a `SetStatus` acknowledgement.
+- Added consent-gated client uninstall parity through `DoClientUninstall`: the client host wires
+  a Windows self-delete batch provider, CLI exposes `uninstall-client`, and `Persistence`
+  permission plus consent enforcement is covered. The provider refuses `dotnet run` self-delete
+  paths; manual verification requires a published client executable.
 - Added consent-gated message box parity through `DoShowMessageBox`: the client host wires a
   Windows `user32!MessageBoxW` provider, CLI exposes `show-message --text <message>
   [--caption <title>] [--button <button>] [--icon <icon>]`, and response formatting prints the
@@ -638,6 +643,19 @@ dispatch first reconnect-client
 
 `disconnect-client` and `reconnect-client` both close the current loopback client session after
 sending a status response. Automatic reconnect scheduling is not implemented yet.
+
+Current manual client uninstall check:
+
+```powershell
+dotnet publish .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -c Release -r win-x64 --self-contained false
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47862 --grant-permission --grant-consent
+.\src\MasterSplinter.Client.Host\bin\Release\net10.0\win-x64\publish\MasterSplinter.Client.Host.exe --port 47862 --handle-commands
+dispatch first uninstall-client
+```
+
+Use only with a disposable published client executable. `dotnet run` is intentionally refused
+because its process path is `dotnet.exe`; the self-delete batch is meant for the published client
+host executable.
 
 Current manual message-box check:
 

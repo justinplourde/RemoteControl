@@ -51,6 +51,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("messagebox.show");
                 identityOptions.Capabilities.SupportedFeatures.Add("website.visit");
                 identityOptions.Capabilities.SupportedFeatures.Add("client.lifecycle");
+                identityOptions.Capabilities.SupportedFeatures.Add("client.uninstall");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.end");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.start");
@@ -87,6 +88,7 @@ namespace MasterSplinter.Client.Host
                             new GetConnectionsHandler(new TcpConnectionProvider())))
                         .AddHandler(new DoClientDisconnectHandler())
                         .AddHandler(new DoClientReconnectHandler())
+                        .AddHandler(new DoClientUninstallHandler(new ClientUninstallProvider()))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoShowMessageBox>(
                             new DoShowMessageBoxHandler(new MessageBoxProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoVisitWebsite>(

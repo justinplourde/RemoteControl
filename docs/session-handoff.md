@@ -53,6 +53,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `shutdown-action --action <shutdown|restart|standby>`,
 `disconnect-client`,
 `reconnect-client`,
+`uninstall-client`,
 `show-message --text <message> [--caption <title>] [--button <button>] [--icon <icon>]`,
 `visit-website --url <http-url> [--hidden]`,
 `startup-add --name <name> --path <client-file> --startup-type <type>`,
@@ -131,6 +132,12 @@ run only on a disposable or prepared Windows client.
 Client lifecycle parity is wired through `disconnect-client` and `reconnect-client`. Both require
 `--grant-permission`, map to `ConnectionLifecycle`, send a `SetStatus` acknowledgement, and close
 the active loopback command session. Automatic reconnect scheduling remains future host behavior.
+
+Client uninstall parity is wired through `uninstall-client`. It requires `--grant-permission
+--grant-consent`, maps to `Persistence`, sends the legacy `Uninstalling... good bye :-(` status,
+and launches a Windows self-delete batch before disconnecting. The provider intentionally refuses
+`dotnet run` because that would target `dotnet.exe`; manual verification requires a disposable
+published client executable.
 
 Message box parity is wired through `show-message`. It requires `--grant-permission
 --grant-consent`, maps to `UserInteraction`, supports legacy caption/text/button/icon fields, and

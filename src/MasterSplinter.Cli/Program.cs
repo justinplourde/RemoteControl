@@ -338,6 +338,8 @@ namespace MasterSplinter.Cli
                 return new DoClientDisconnect();
             if (string.Equals(dispatchCommand, "reconnect-client", StringComparison.OrdinalIgnoreCase))
                 return new DoClientReconnect();
+            if (string.Equals(dispatchCommand, "uninstall-client", StringComparison.OrdinalIgnoreCase))
+                return new DoClientUninstall();
             if (string.Equals(dispatchCommand, "show-message", StringComparison.OrdinalIgnoreCase))
                 return new DoShowMessageBox
                 {

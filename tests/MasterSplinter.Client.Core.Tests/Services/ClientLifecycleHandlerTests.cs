@@ -37,6 +37,47 @@ namespace MasterSplinter.Client.Core.Tests.Services
             Assert.AreEqual("Client reconnect requested.", ((SetStatus)context.Sent[0]).Message);
         }
 
+        [TestMethod, TestCategory("ClientCore")]
+        public async Task UninstallHandlerSendsStatusAndRequestsDisconnectOnSuccess()
+        {
+            var context = new RecordingLifecycleContext("client-1");
+            var handler = new DoClientUninstallHandler(new TestUninstallProvider(ClientUninstallResult.Success()));
+
+            await handler.HandleAsync(context, new DoClientUninstall(), CancellationToken.None);
+
+            Assert.IsTrue(context.DisconnectRequested);
+            Assert.IsFalse(context.ReconnectRequested);
+            Assert.AreEqual("Uninstalling... good bye :-(", ((SetStatus)context.Sent[0]).Message);
+        }
+
+        [TestMethod, TestCategory("ClientCore")]
+        public async Task UninstallHandlerSendsFailureStatusWithoutDisconnecting()
+        {
+            var context = new RecordingLifecycleContext("client-1");
+            var handler = new DoClientUninstallHandler(new TestUninstallProvider(ClientUninstallResult.Error("Denied")));
+
+            await handler.HandleAsync(context, new DoClientUninstall(), CancellationToken.None);
+
+            Assert.IsFalse(context.DisconnectRequested);
+            Assert.AreEqual("Uninstalling... good bye :-(", ((SetStatus)context.Sent[0]).Message);
+            Assert.AreEqual("Uninstall failed: Denied", ((SetStatus)context.Sent[1]).Message);
+        }
+
+        private sealed class TestUninstallProvider : IClientUninstallProvider
+        {
+            private readonly ClientUninstallResult _result;
+
+            public TestUninstallProvider(ClientUninstallResult result)
+            {
+                _result = result;
+            }
+
+            public ClientUninstallResult Uninstall()
+            {
+                return _result;
+            }
+        }
+
         private sealed class RecordingLifecycleContext : IClientLifecycleContext
         {
             public RecordingLifecycleContext(string clientId)

@@ -107,6 +107,7 @@ Current CLI dispatch command names:
 - `shutdown-action --action <shutdown|restart|standby>` (requires `--grant-permission --grant-consent`; real action affects the client machine)
 - `disconnect-client` (requires `--grant-permission`; closes the client session)
 - `reconnect-client` (requires `--grant-permission`; closes the current client session so reconnect policy can re-establish it)
+- `uninstall-client` (requires `--grant-permission --grant-consent`; published Windows client executable only)
 - `show-message --text <message> [--caption <title>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>]` (requires `--grant-permission --grant-consent`; displays a visible client desktop message box)
 - `visit-website --url <http-url> [--hidden]` (requires `--grant-permission --grant-consent`; opens the client browser by default, or performs the legacy hidden GET path)
 - `startup-add --name <name> --path <client-file> --startup-type <type>` (requires `--grant-permission --grant-consent`; persistence-changing)
@@ -127,7 +128,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -264,6 +265,10 @@ All modern projects target `net10.0`.
   consent enforcement. The modern provider keeps a shell process alive across dispatches so session
   state such as current directory can persist, returns stdout/stderr, marks stderr output as errors,
   and closes the shell session when `exit` is dispatched.
+- Client uninstall parity is now wired through `DoClientUninstall`, a Windows self-delete batch
+  provider, CLI `uninstall-client`, and `Persistence` permission plus consent enforcement. The
+  provider intentionally refuses `dotnet run` because the process path is `dotnet.exe`; manual
+  verification requires a published client executable.
 
 ## Current Limitations
 
