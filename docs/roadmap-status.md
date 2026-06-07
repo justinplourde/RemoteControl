@@ -371,9 +371,10 @@ Done:
   saved a valid 39,634-byte JPEG at `1280x720`.
 - Added consent-gated remote desktop request-loop streaming through `get-desktop-stream`: the
   first frame sends legacy `GetDesktop.CreateNew=true`, later frames continue the session with
-  `CreateNew=false`, and the CLI saves numbered JPEG frames to an output directory. GUI/live
-  viewer rendering remains pending. A June 7, 2026 loopback smoke test saved two `1280x720`
-  JPEG frames at quality 45, each 36,110 bytes.
+  `CreateNew=false`, and the CLI saves numbered JPEG frames to an output directory.
+  `RemoteDesktopStreamSession` now owns that sequencing in server core for future GUI/Web API
+  reuse. GUI/live viewer rendering remains pending. A June 7, 2026 loopback smoke test saved two
+  `1280x720` JPEG frames at quality 45, each 36,110 bytes.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle

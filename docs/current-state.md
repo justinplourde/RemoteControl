@@ -320,8 +320,10 @@ All modern projects target `net10.0`.
 - Continuous remote desktop request-loop parity is now wired through CLI `get-desktop-stream`.
   The first request sets `GetDesktop.CreateNew=true`, later frames continue with
   `CreateNew=false`, and numbered JPEG frames are written to a local output directory for manual
-  inspection. A June 7, 2026 loopback smoke test saved two `1280x720` JPEG frames at quality 45,
-  each 36,110 bytes. GUI/live viewer rendering and richer session controls remain pending.
+  inspection. The loop sequencing now lives in reusable server core through
+  `RemoteDesktopStreamSession`, so a future GUI/Web API can consume the same behavior. A June 7,
+  2026 loopback smoke test saved two `1280x720` JPEG frames at quality 45, each 36,110 bytes.
+  GUI/live viewer rendering and richer session controls remain pending.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message

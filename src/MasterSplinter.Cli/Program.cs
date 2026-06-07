@@ -3,6 +3,7 @@ using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Handshake;
 using MasterSplinter.Server.Core.Lifecycle;
 using MasterSplinter.Server.Core.Listeners;
+using MasterSplinter.Server.Core.RemoteDesktop;
 using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using MasterSplinter.Common.Enums;
@@ -737,56 +738,36 @@ namespace MasterSplinter.Cli
             Console.WriteLine(
                 $"Desktop stream started: Frames={frames}; Quality={quality}; DisplayIndex={displayIndex}; Output={outputDirectory}.");
 
-            for (int frameNumber = 1; frameNumber <= frames; frameNumber++)
+            var streamOptions = new RemoteDesktopStreamOptions(
+                clientId,
+                quality,
+                displayIndex,
+                frames,
+                frameDelayMilliseconds,
+                TimeSpan.FromSeconds(options.TimeoutSeconds));
+            var session = new RemoteDesktopStreamSession(
+                dispatcher,
+                responseSink,
+                (message, token) => CreateAuthorizedRequestAsync(options, clientId, message, token));
+
+            RemoteDesktopStreamResult result = await session.RunAsync(
+                streamOptions,
+                (frame, token) =>
+                {
+                    GetDesktopResponse desktopResponse = frame.Response;
+                    string savedPath = SaveDesktopStreamFrame(desktopResponse, outputDirectory, frame.FrameNumber);
+                    Console.WriteLine(
+                        $"Desktop stream frame {frame.FrameNumber}/{frames}: Monitor={desktopResponse.Monitor}; Quality={desktopResponse.Quality}; Resolution={(desktopResponse.Resolution == null ? "-" : desktopResponse.Resolution.ToString())}; Saved={ValueOrDash(savedPath)}.");
+
+                    return Task.CompletedTask;
+                },
+                cancellationToken).ConfigureAwait(false);
+
+            if (result.LastDispatchResult != null && result.LastDispatchResult.Status != CommandDispatchStatus.Sent)
             {
-                var message = new GetDesktop
-                {
-                    CreateNew = frameNumber == 1,
-                    Quality = quality,
-                    DisplayIndex = displayIndex
-                };
-                Task<IMessage> responseTask = responseSink.WaitForNextAsync(clientId);
-                CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
-                    options,
-                    clientId,
-                    message,
-                    cancellationToken).ConfigureAwait(false);
-
-                CommandDispatchResult result = await dispatcher.DispatchAsync(request, cancellationToken)
-                    .ConfigureAwait(false);
+                CommandDispatchResult dispatchResult = result.LastDispatchResult;
                 Console.WriteLine(
-                    $"Desktop stream dispatch {frameNumber}/{frames}: {result.Status}. Safety={result.SafetyMetadata.SafetyClass}; RequiresPermission={result.SafetyMetadata.RequiresPermission}; RequiresConsent={result.SafetyMetadata.RequiresConsent}.");
-
-                if (result.Status != CommandDispatchStatus.Sent)
-                {
-                    responseSink.CancelWait(clientId);
-                    return;
-                }
-
-                IMessage response;
-                try
-                {
-                    response = await responseTask.WaitAsync(TimeSpan.FromSeconds(options.TimeoutSeconds), cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                catch
-                {
-                    responseSink.CancelWait(clientId);
-                    throw;
-                }
-
-                if (!(response is GetDesktopResponse desktopResponse))
-                    throw new InvalidOperationException($"Expected GetDesktopResponse but received {response.GetType().Name}.");
-
-                string savedPath = SaveDesktopStreamFrame(desktopResponse, outputDirectory, frameNumber);
-                Console.WriteLine(
-                    $"Desktop stream frame {frameNumber}/{frames}: Monitor={desktopResponse.Monitor}; Quality={desktopResponse.Quality}; Resolution={(desktopResponse.Resolution == null ? "-" : desktopResponse.Resolution.ToString())}; Saved={ValueOrDash(savedPath)}.");
-
-                if (desktopResponse.Image == null || desktopResponse.Image.Length == 0)
-                    break;
-
-                if (frameDelayMilliseconds > 0 && frameNumber < frames)
-                    await Task.Delay(frameDelayMilliseconds, cancellationToken).ConfigureAwait(false);
+                    $"Desktop stream dispatch stopped: {dispatchResult.Status}. Safety={dispatchResult.SafetyMetadata.SafetyClass}; RequiresPermission={dispatchResult.SafetyMetadata.RequiresPermission}; RequiresConsent={dispatchResult.SafetyMetadata.RequiresConsent}.");
             }
 
             Console.WriteLine("Desktop stream stopped.");
@@ -1520,7 +1501,7 @@ namespace MasterSplinter.Cli
             }
         }
 
-        private sealed class AwaitableMessageSink : IRemoteClientMessageSink
+        private sealed class AwaitableMessageSink : IRemoteClientMessageSink, IRemoteClientResponseSource
         {
             private readonly object _gate = new object();
             private readonly Dictionary<string, TaskCompletionSource<IMessage>> _pending =
@@ -1546,6 +1527,16 @@ namespace MasterSplinter.Cli
                     _pending.Add(clientId, pending);
                     return pending.Task;
                 }
+            }
+
+            public async Task<IMessage> WaitForNextAsync(
+                string clientId,
+                TimeSpan timeout,
+                CancellationToken cancellationToken)
+            {
+                return await WaitForNextAsync(clientId)
+                    .WaitAsync(timeout, cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             public void CancelWait(string clientId)
