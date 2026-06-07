@@ -1,7 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MasterSplinter.Common.Helpers;
 
-namespace Quasar.Common.Tests.Helpers
+namespace MasterSplinter.Common.Tests.Helpers
 {
     [TestClass]
     public class FileHelperTests

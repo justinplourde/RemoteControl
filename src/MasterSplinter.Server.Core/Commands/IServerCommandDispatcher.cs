@@ -1,4 +1,4 @@
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System.Threading;
 using System.Threading.Tasks;
 

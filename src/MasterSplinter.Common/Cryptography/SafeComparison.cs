@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace Quasar.Common.Cryptography
+namespace MasterSplinter.Common.Cryptography
 {
     public class SafeComparison
     {

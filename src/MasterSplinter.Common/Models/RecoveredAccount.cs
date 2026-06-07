@@ -1,6 +1,6 @@
-﻿using ProtoBuf;
+using ProtoBuf;
 
-namespace Quasar.Common.Models
+namespace MasterSplinter.Common.Models
 {
     [ProtoContract]
     public class RecoveredAccount

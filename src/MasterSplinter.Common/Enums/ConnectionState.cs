@@ -1,4 +1,4 @@
-﻿namespace Quasar.Common.Enums
+namespace MasterSplinter.Common.Enums
 {
     public enum ConnectionState : byte
     {

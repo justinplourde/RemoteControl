@@ -101,7 +101,7 @@ namespace MasterSplinter.Server.Core.Lifecycle
             ClientConnectionLifecycleEventKind kind,
             string connectionId,
             string clientId,
-            Quasar.Common.Messages.ClientIdentification identification,
+            MasterSplinter.Common.Messages.ClientIdentification identification,
             string reason,
             Exception exception,
             CancellationToken cancellationToken)

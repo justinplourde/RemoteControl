@@ -1,6 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Quasar.Common.Tests.Compression
+namespace MasterSplinter.Common.Tests.Compression
 {
     [TestClass]
     public class JpgCompressionTests

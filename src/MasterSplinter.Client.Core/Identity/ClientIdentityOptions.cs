@@ -1,4 +1,4 @@
-using Quasar.Common.Protocol;
+using MasterSplinter.Common.Protocol;
 using System;
 
 namespace MasterSplinter.Client.Core.Identity

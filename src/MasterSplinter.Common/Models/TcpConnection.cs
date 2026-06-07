@@ -1,7 +1,7 @@
-﻿using ProtoBuf;
-using Quasar.Common.Enums;
+using ProtoBuf;
+using MasterSplinter.Common.Enums;
 
-namespace Quasar.Common.Models
+namespace MasterSplinter.Common.Models
 {
     [ProtoContract]
     public class TcpConnection

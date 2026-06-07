@@ -1,8 +1,8 @@
-using Quasar.Common.Utilities;
+using MasterSplinter.Common.Utilities;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Quasar.Common.Helpers
+namespace MasterSplinter.Common.Helpers
 {
     public static class StringHelper
     {

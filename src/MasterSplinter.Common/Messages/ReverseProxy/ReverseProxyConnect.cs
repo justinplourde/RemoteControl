@@ -1,6 +1,6 @@
-﻿using ProtoBuf;
+using ProtoBuf;
 
-namespace Quasar.Common.Messages.ReverseProxy
+namespace MasterSplinter.Common.Messages.ReverseProxy
 {
     [ProtoContract]
     public class ReverseProxyConnect : IMessage

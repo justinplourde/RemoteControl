@@ -1,7 +1,7 @@
-﻿using ProtoBuf;
-using Quasar.Common.Video;
+using ProtoBuf;
+using MasterSplinter.Common.Video;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     [ProtoContract]
     public class GetDesktopResponse : IMessage

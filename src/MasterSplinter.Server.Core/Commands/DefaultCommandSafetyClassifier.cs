@@ -1,5 +1,5 @@
-using Quasar.Common.Messages;
-using Quasar.Common.Messages.ReverseProxy;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Messages.ReverseProxy;
 using System;
 
 namespace MasterSplinter.Server.Core.Commands

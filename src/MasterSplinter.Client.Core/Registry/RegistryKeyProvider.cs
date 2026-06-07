@@ -1,5 +1,5 @@
 using Microsoft.Win32;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

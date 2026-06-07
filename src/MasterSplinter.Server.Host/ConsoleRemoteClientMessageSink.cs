@@ -1,5 +1,5 @@
 using MasterSplinter.Server.Core.Listeners;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

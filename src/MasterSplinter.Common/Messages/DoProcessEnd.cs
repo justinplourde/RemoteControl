@@ -1,6 +1,6 @@
-﻿using ProtoBuf;
+using ProtoBuf;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     [ProtoContract]
     public class DoProcessEnd : IMessage

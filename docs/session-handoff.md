@@ -17,7 +17,7 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add registry read CLI parity`
+- Latest committed work before this handoff: `Rename modern namespaces to MasterSplinter`
 - Latest known full test result: 156 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -82,5 +82,9 @@ Registry read parity is now implemented. Manual loopback check: `get-registry-ke
 HKCU\Software` required no permission or consent, returned `Safety=ReadOnlyInventory`, and loaded
 17 child-key matches. Registry writes remain deferred until the permission/audit boundary is
 defined.
+
+Modern `src` and `tests` namespaces now use `MasterSplinter.Common.*` instead of
+`Quasar.Common.*`. Any remaining `Quasar` references should be documentation about the preserved
+legacy source under `legacy/Quasar`, not active modern code.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

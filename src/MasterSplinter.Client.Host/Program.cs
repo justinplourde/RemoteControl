@@ -7,8 +7,8 @@ using MasterSplinter.Client.Core.Registry;
 using MasterSplinter.Client.Core.Startup;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
-using Quasar.Common.Messages;
-using Quasar.Common.Protocol;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Protocol;
 using System;
 using System.Threading;
 

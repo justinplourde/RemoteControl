@@ -2,7 +2,7 @@ using MasterSplinter.Server.Core.Auditing;
 using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Sessions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -102,7 +102,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
 
             CommandDispatchResult result = await dispatcher.DispatchAsync(
                 "client-1",
-                new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = Quasar.Common.Enums.FileType.File },
+                new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = MasterSplinter.Common.Enums.FileType.File },
                 CancellationToken.None);
 
             Assert.AreEqual(CommandDispatchStatus.PermissionDenied, result.Status);

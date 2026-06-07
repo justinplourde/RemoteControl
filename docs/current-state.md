@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add registry read CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Rename modern namespaces to MasterSplinter`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -193,6 +193,9 @@ All modern projects target `net10.0`.
 - Registry key read added through `DoLoadRegistryKey` and `GetRegistryKeysResponse`, deterministic
   tests, read-only safety classification, CLI formatting, and a manual loopback `HKCU\Software`
   check that returned 17 child-key matches without requiring permission or consent.
+- Modern `src` and `tests` namespaces were renamed from `Quasar.Common.*` to
+  `MasterSplinter.Common.*`; remaining `Quasar` references should be limited to legacy-reference
+  documentation and the preserved `legacy/Quasar` source tree.
 
 ## Current Limitations
 

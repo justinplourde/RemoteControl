@@ -1,9 +1,9 @@
 using MasterSplinter.Client.Core.Connections;
 using MasterSplinter.Client.Core.Dispatch;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
 using System.Threading;
 using System.Threading.Tasks;
 

@@ -1,8 +1,8 @@
 using ProtoBuf;
-using Quasar.Common.Enums;
+using MasterSplinter.Common.Enums;
 using System;
 
-namespace Quasar.Common.Models
+namespace MasterSplinter.Common.Models
 {
     [ProtoContract]
     public class FileSystemEntry

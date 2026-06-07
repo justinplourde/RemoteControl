@@ -1,9 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Cryptography;
-using Quasar.Common.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MasterSplinter.Common.Cryptography;
+using MasterSplinter.Common.Helpers;
 using System.Text;
 
-namespace Quasar.Common.Tests.Cryptography
+namespace MasterSplinter.Common.Tests.Cryptography
 {
     [TestClass]
     public class Aes128Tests

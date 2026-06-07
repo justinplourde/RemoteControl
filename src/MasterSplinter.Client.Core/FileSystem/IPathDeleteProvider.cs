@@ -1,4 +1,4 @@
-using Quasar.Common.Enums;
+using MasterSplinter.Common.Enums;
 
 namespace MasterSplinter.Client.Core.FileSystem
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace Quasar.Common.Utilities
+namespace MasterSplinter.Common.Utilities
 {
     public class SafeRandom
     {

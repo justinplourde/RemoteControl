@@ -1,9 +1,9 @@
 using ProtoBuf;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System;
 using System.IO;
 
-namespace Quasar.Common.Networking
+namespace MasterSplinter.Common.Networking
 {
     public class PayloadReader : MemoryStream
     {

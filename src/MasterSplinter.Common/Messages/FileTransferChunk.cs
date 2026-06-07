@@ -1,7 +1,7 @@
 using ProtoBuf;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Models;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     [ProtoContract]
     public class FileTransferChunk : IMessage

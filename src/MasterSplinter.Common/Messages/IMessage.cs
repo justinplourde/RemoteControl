@@ -1,4 +1,4 @@
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     public interface IMessage
     {

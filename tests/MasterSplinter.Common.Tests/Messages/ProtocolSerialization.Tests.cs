@@ -1,16 +1,16 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
-using Quasar.Common.Networking;
-using Quasar.Common.Protocol;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
+using MasterSplinter.Common.Networking;
+using MasterSplinter.Common.Protocol;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Quasar.Common.Tests.Messages
+namespace MasterSplinter.Common.Tests.Messages
 {
     [TestClass]
     public class ProtocolSerializationTests

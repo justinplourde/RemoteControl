@@ -1,7 +1,7 @@
 using ProtoBuf;
 using System.Collections.Generic;
 
-namespace Quasar.Common.Protocol
+namespace MasterSplinter.Common.Protocol
 {
     [ProtoContract]
     public class ClientCapabilities

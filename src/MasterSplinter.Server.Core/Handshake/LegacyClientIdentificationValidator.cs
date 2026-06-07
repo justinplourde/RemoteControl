@@ -1,4 +1,4 @@
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 
 namespace MasterSplinter.Server.Core.Handshake
 {

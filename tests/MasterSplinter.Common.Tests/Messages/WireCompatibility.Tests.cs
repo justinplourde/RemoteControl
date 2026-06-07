@@ -1,12 +1,12 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf.Meta;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
 using System;
 using System.IO;
 
-namespace Quasar.Common.Tests.Messages
+namespace MasterSplinter.Common.Tests.Messages
 {
     [TestClass]
     public class WireCompatibilityTests

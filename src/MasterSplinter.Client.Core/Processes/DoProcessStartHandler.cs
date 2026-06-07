@@ -1,6 +1,6 @@
 using MasterSplinter.Client.Core.Dispatch;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

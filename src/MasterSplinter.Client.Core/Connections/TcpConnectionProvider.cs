@@ -1,5 +1,5 @@
-using Quasar.Common.Enums;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

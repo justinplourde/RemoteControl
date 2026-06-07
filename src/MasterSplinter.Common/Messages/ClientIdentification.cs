@@ -1,7 +1,7 @@
 using ProtoBuf;
-using Quasar.Common.Protocol;
+using MasterSplinter.Common.Protocol;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     [ProtoContract]
     public class ClientIdentification : IMessage

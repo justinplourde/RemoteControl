@@ -1,9 +1,9 @@
-using Quasar.Common.Cryptography;
+using MasterSplinter.Common.Cryptography;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Quasar.Common.Helpers
+namespace MasterSplinter.Common.Helpers
 {
     public static class FileHelper
     {

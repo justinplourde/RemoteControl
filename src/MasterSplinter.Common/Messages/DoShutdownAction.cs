@@ -1,7 +1,7 @@
-﻿using ProtoBuf;
-using Quasar.Common.Enums;
+using ProtoBuf;
+using MasterSplinter.Common.Enums;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     [ProtoContract]
     public class DoShutdownAction : IMessage

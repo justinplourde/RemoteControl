@@ -1,4 +1,4 @@
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System;
 
 namespace MasterSplinter.Server.Core.Commands

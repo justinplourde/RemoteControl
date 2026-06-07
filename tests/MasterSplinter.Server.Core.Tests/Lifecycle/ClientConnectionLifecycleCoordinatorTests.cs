@@ -1,7 +1,7 @@
 using MasterSplinter.Server.Core.Lifecycle;
 using MasterSplinter.Server.Core.Sessions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System;
 using System.Collections.Generic;
 using System.Threading;

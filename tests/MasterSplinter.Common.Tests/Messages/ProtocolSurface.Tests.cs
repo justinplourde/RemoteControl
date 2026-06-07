@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf.Meta;
-using Quasar.Common.Messages;
-using Quasar.Common.Networking;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Networking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Quasar.Common.Tests.Messages
+namespace MasterSplinter.Common.Tests.Messages
 {
     [TestClass]
     public class ProtocolSurfaceTests

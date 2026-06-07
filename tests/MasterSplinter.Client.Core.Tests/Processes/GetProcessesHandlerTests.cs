@@ -1,10 +1,10 @@
 using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.Processes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 using System.Threading;
 using System.Threading.Tasks;
-using RemoteProcess = Quasar.Common.Models.Process;
+using RemoteProcess = MasterSplinter.Common.Models.Process;
 
 namespace MasterSplinter.Client.Core.Tests.Processes
 {

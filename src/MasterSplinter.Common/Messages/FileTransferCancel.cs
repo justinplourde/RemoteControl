@@ -1,6 +1,6 @@
 using ProtoBuf;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     [ProtoContract]
     public class FileTransferCancel : IMessage

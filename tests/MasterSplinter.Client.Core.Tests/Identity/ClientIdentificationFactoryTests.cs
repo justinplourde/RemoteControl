@@ -1,7 +1,7 @@
 using MasterSplinter.Client.Core.Identity;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Messages;
-using Quasar.Common.Protocol;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Protocol;
 
 namespace MasterSplinter.Client.Core.Tests.Identity
 {

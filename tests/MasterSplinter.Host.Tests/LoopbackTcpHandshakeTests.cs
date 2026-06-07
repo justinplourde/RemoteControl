@@ -13,10 +13,10 @@ using MasterSplinter.Server.Core.Listeners;
 using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
-using Quasar.Common.Networking;
-using Quasar.Common.Protocol;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
+using MasterSplinter.Common.Networking;
+using MasterSplinter.Common.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -693,17 +693,17 @@ namespace MasterSplinter.Host.Tests
                     {
                         new FileSystemEntry
                         {
-                            EntryType = Quasar.Common.Enums.FileType.Directory,
+                            EntryType = MasterSplinter.Common.Enums.FileType.Directory,
                             Name = "reports",
                             Size = 0,
                             LastAccessTimeUtc = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc)
                         },
                         new FileSystemEntry
                         {
-                            EntryType = Quasar.Common.Enums.FileType.File,
+                            EntryType = MasterSplinter.Common.Enums.FileType.File,
                             Name = "notes.txt",
                             Size = 128,
-                            ContentType = Quasar.Common.Enums.ContentType.Text,
+                            ContentType = MasterSplinter.Common.Enums.ContentType.Text,
                             LastAccessTimeUtc = new DateTime(2026, 6, 1, 12, 1, 0, DateTimeKind.Utc)
                         }
                     });
@@ -712,11 +712,11 @@ namespace MasterSplinter.Host.Tests
 
         private sealed class TestProcessProvider : IProcessProvider
         {
-            public Quasar.Common.Models.Process[] GetProcesses()
+            public MasterSplinter.Common.Models.Process[] GetProcesses()
             {
                 return new[]
                 {
-                    new Quasar.Common.Models.Process
+                    new MasterSplinter.Common.Models.Process
                     {
                         Name = "notepad.exe",
                         Id = 42,
@@ -736,7 +736,7 @@ namespace MasterSplinter.Host.Tests
                     {
                         Name = "Agent",
                         Path = "C:\\Tools\\agent.exe",
-                        Type = Quasar.Common.Enums.StartupType.CurrentUserRun
+                        Type = MasterSplinter.Common.Enums.StartupType.CurrentUserRun
                     }
                 });
             }
@@ -755,7 +755,7 @@ namespace MasterSplinter.Host.Tests
                         LocalPort = 5000,
                         RemoteAddress = "127.0.0.1",
                         RemotePort = 5001,
-                        State = Quasar.Common.Enums.ConnectionState.Established
+                        State = MasterSplinter.Common.Enums.ConnectionState.Established
                     }
                 };
             }

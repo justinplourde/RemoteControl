@@ -1,5 +1,5 @@
-using Quasar.Common.Messages;
-using Quasar.Common.Networking;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Networking;
 using System;
 using System.IO;
 using System.Net;

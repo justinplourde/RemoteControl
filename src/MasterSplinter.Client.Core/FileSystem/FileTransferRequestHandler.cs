@@ -1,6 +1,6 @@
 using MasterSplinter.Client.Core.Dispatch;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
 using System;
 using System.IO;
 using System.Threading;

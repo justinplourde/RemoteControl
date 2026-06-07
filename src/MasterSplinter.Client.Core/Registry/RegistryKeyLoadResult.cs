@@ -1,4 +1,4 @@
-using Quasar.Common.Models;
+using MasterSplinter.Common.Models;
 
 namespace MasterSplinter.Client.Core.Registry
 {

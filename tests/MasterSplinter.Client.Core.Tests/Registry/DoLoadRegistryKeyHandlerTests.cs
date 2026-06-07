@@ -2,8 +2,8 @@ using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.Registry;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
 using System.Threading;
 using System.Threading.Tasks;
 

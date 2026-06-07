@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using RemoteProcess = Quasar.Common.Models.Process;
+using RemoteProcess = MasterSplinter.Common.Models.Process;
 
 namespace MasterSplinter.Client.Core.Processes
 {

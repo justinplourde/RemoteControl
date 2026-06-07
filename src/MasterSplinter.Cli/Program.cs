@@ -5,8 +5,8 @@ using MasterSplinter.Server.Core.Lifecycle;
 using MasterSplinter.Server.Core.Listeners;
 using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -372,7 +372,7 @@ namespace MasterSplinter.Cli
                         Id = FileTransferId,
                         FilePath = remotePath,
                         FileSize = fileInfo.Length,
-                        Chunk = new Quasar.Common.Models.FileChunk
+                        Chunk = new MasterSplinter.Common.Models.FileChunk
                         {
                             Offset = offset,
                             Data = data
@@ -690,7 +690,7 @@ namespace MasterSplinter.Cli
                     lines.Add($"Drives: {Count(response.Drives)}.");
                     if (response.Drives != null)
                     {
-                        foreach (Quasar.Common.Models.Drive drive in response.Drives)
+                        foreach (MasterSplinter.Common.Models.Drive drive in response.Drives)
                             lines.Add($"- {ValueOrDash(drive.DisplayName)} => {ValueOrDash(drive.RootDirectory)}");
                     }
                     break;
@@ -698,7 +698,7 @@ namespace MasterSplinter.Cli
                     lines.Add($"Directory path: {ValueOrDash(response.RemotePath)}; Items: {Count(response.Items)}.");
                     if (response.Items != null)
                     {
-                        foreach (Quasar.Common.Models.FileSystemEntry item in response.Items)
+                        foreach (MasterSplinter.Common.Models.FileSystemEntry item in response.Items)
                             lines.Add($"- {item.EntryType} {ValueOrDash(item.Name)} Size={item.Size}");
                     }
                     break;
@@ -706,7 +706,7 @@ namespace MasterSplinter.Cli
                     lines.Add($"Processes: {Count(response.Processes)}.");
                     if (response.Processes != null)
                     {
-                        foreach (Quasar.Common.Models.Process process in response.Processes)
+                        foreach (MasterSplinter.Common.Models.Process process in response.Processes)
                             lines.Add($"- PID={process.Id} {ValueOrDash(process.Name)} Title={ValueOrDash(process.MainWindowTitle)}");
                     }
                     break;
@@ -714,7 +714,7 @@ namespace MasterSplinter.Cli
                     lines.Add($"Startup items: {Count(response.StartupItems)}.");
                     if (response.StartupItems != null)
                     {
-                        foreach (Quasar.Common.Models.StartupItem item in response.StartupItems)
+                        foreach (MasterSplinter.Common.Models.StartupItem item in response.StartupItems)
                             lines.Add($"- {item.Type} {ValueOrDash(item.Name)} => {ValueOrDash(item.Path)}");
                     }
                     break;
@@ -722,7 +722,7 @@ namespace MasterSplinter.Cli
                     lines.Add($"TCP connections: {Count(response.Connections)}.");
                     if (response.Connections != null)
                     {
-                        foreach (Quasar.Common.Models.TcpConnection connection in response.Connections)
+                        foreach (MasterSplinter.Common.Models.TcpConnection connection in response.Connections)
                         {
                             lines.Add(
                                 $"- {ValueOrDash(connection.ProcessName)} {ValueOrDash(connection.LocalAddress)}:{connection.LocalPort} -> {ValueOrDash(connection.RemoteAddress)}:{connection.RemotePort} {connection.State}");
@@ -733,7 +733,7 @@ namespace MasterSplinter.Cli
                     lines.Add($"Registry key: {ValueOrDash(response.RootKey)}; Matches={Count(response.Matches)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
                     if (response.Matches != null)
                     {
-                        foreach (Quasar.Common.Models.RegSeekerMatch match in response.Matches)
+                        foreach (MasterSplinter.Common.Models.RegSeekerMatch match in response.Matches)
                             lines.Add($"- {ValueOrDash(match.Key)} Values={Count(match.Data)} HasSubKeys={match.HasSubKeys}");
                     }
                     break;

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using MasterSplinter.Cli;
 using Microsoft.Win32;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
 
 namespace MasterSplinter.Cli.Tests
 {
@@ -392,7 +392,7 @@ namespace MasterSplinter.Cli.Tests
                 {
                     Processes = new[]
                     {
-                        new Quasar.Common.Models.Process
+                        new MasterSplinter.Common.Models.Process
                         {
                             Id = 123,
                             Name = "notepad",

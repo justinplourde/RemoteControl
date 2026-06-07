@@ -1,7 +1,7 @@
 using MasterSplinter.Server.Core.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
 using System.Collections.Generic;
 
 namespace MasterSplinter.Server.Core.Tests.Commands
@@ -88,7 +88,7 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                     Id = 1,
                     FilePath = "C:\\Temp\\remote.txt",
                     FileSize = 3,
-                    Chunk = new Quasar.Common.Models.FileChunk
+                    Chunk = new MasterSplinter.Common.Models.FileChunk
                     {
                         Offset = 0,
                         Data = new byte[] { 1, 2, 3 }

@@ -1,11 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ProtoBuf;
-using Quasar.Common.Enums;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Models;
 using System;
 using System.IO;
 
-namespace Quasar.Common.Tests.Models
+namespace MasterSplinter.Common.Tests.Models
 {
     [TestClass]
     public class ModelSerializationTests

@@ -1,8 +1,8 @@
 using MasterSplinter.Server.Core.Authorization;
 using MasterSplinter.Server.Core.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Enums;
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Enums;
+using MasterSplinter.Common.Messages;
 using System;
 using System.Collections.Generic;
 using System.Threading;

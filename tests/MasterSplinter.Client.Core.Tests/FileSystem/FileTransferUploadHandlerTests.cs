@@ -1,8 +1,8 @@
 using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.FileSystem;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Quasar.Common.Messages;
-using Quasar.Common.Models;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

@@ -1,4 +1,4 @@
-using Quasar.Common.Messages;
+using MasterSplinter.Common.Messages;
 
 namespace MasterSplinter.Client.Core.FileSystem
 {

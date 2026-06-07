@@ -1,6 +1,6 @@
 using ProtoBuf;
 
-namespace Quasar.Common.Protocol
+namespace MasterSplinter.Common.Protocol
 {
     [ProtoContract]
     public class ProtocolVersion

@@ -1,6 +1,6 @@
 using MasterSplinter.Server.Core.Listeners;
-using Quasar.Common.Messages;
-using Quasar.Common.Networking;
+using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Networking;
 using System;
 using System.Collections.Concurrent;
 using System.IO;

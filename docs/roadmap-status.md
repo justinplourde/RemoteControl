@@ -298,6 +298,9 @@ Done:
 - Verified loopback `get-registry-key` manually on June 2, 2026 without permission or consent
   grants; `HKCU\Software` returned `Safety=ReadOnlyInventory`, `RequiresPermission=False`,
   `RequiresConsent=False`, and 17 child-key matches.
+- Renamed the modern `src` and `tests` namespace surface from `Quasar.Common.*` to
+  `MasterSplinter.Common.*` while keeping protocol DTO names, protobuf fields, and wire
+  compatibility tests intact.
 
 Left to do:
 

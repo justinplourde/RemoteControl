@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Quasar.Common.Messages
+namespace MasterSplinter.Common.Messages
 {
     public static class TypeRegistry
     {
