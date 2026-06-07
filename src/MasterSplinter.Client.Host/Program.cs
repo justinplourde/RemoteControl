@@ -47,6 +47,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.rename");
                 identityOptions.Capabilities.SupportedFeatures.Add("filesystem.upload");
                 identityOptions.Capabilities.SupportedFeatures.Add("message.dispatch");
+                identityOptions.Capabilities.SupportedFeatures.Add("client.lifecycle");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.end");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.start");
@@ -76,6 +77,8 @@ namespace MasterSplinter.Client.Host
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
                         .AddHandler(new ResponseMessageHandlerAdapter<GetConnections>(
                             new GetConnectionsHandler(new TcpConnectionProvider())))
+                        .AddHandler(new DoClientDisconnectHandler())
+                        .AddHandler(new DoClientReconnectHandler())
                         .AddHandler(new ResponseMessageHandlerAdapter<DoCloseConnection>(
                             new DoCloseConnectionHandler(new TcpConnectionProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetDirectory>(

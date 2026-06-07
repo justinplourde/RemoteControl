@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 56 passed.
+- `MasterSplinter.Client.Core.Tests`: 58 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -147,6 +147,8 @@ Done:
   classification.
 - Added tests for `DoShutdownAction` success/failure status mapping while keeping real
   power-state changes behind `IShutdownActionProvider`.
+- Added lifecycle-capable client contexts plus tests for `DoClientDisconnect` and
+  `DoClientReconnect` status-and-lifecycle request behavior.
 
 Left to do:
 
@@ -329,6 +331,10 @@ Done:
   <shutdown|restart|standby>`, and response formatting prints `SetStatus` acknowledgements or
   legacy-style failure messages. Real power-state actions were not manually run on this
   workstation.
+- Added permissioned client lifecycle parity through `DoClientDisconnect` and
+  `DoClientReconnect`: the client host wires lifecycle-capable command contexts, CLI exposes
+  `disconnect-client` and `reconnect-client`, and the loopback host closes the active command
+  session after sending a `SetStatus` acknowledgement.
 
 Left to do:
 
@@ -580,6 +586,17 @@ dispatch first shutdown-action --action standby
 
 Use only on a disposable or prepared Windows client. `shutdown` and `restart` immediately affect
 the client machine, and `standby` attempts to suspend it.
+
+Current manual client lifecycle check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47855 --grant-permission
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47855 --handle-commands
+dispatch first reconnect-client
+```
+
+`disconnect-client` and `reconnect-client` both close the current loopback client session after
+sending a status response. Automatic reconnect scheduling is not implemented yet.
 
 Current manual file-download check:
 

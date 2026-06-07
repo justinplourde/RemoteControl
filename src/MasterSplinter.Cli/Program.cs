@@ -258,6 +258,10 @@ namespace MasterSplinter.Cli
                 return new DoAskElevate();
             if (string.Equals(dispatchCommand, "shutdown-action", StringComparison.OrdinalIgnoreCase))
                 return new DoShutdownAction { Action = ParseShutdownAction(action) };
+            if (string.Equals(dispatchCommand, "disconnect-client", StringComparison.OrdinalIgnoreCase))
+                return new DoClientDisconnect();
+            if (string.Equals(dispatchCommand, "reconnect-client", StringComparison.OrdinalIgnoreCase))
+                return new DoClientReconnect();
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
                 return new DoCloseConnection
                 {

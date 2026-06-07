@@ -151,6 +151,8 @@ namespace MasterSplinter.Client.Host
                         }
 
                         await dispatcher.DispatchAsync(context, command, cancellationToken).ConfigureAwait(false);
+                        if (context.LifecycleRequested)
+                            return result;
                     }
 
                     return result;
@@ -199,7 +201,7 @@ namespace MasterSplinter.Client.Host
             return address;
         }
 
-        private sealed class LoopbackClientCommandContext : IClientCommandContext
+        private sealed class LoopbackClientCommandContext : IClientLifecycleContext
         {
             private readonly object _sendLock = new object();
             private readonly Stream _stream;
@@ -212,6 +214,8 @@ namespace MasterSplinter.Client.Host
 
             public string ClientId { get; }
 
+            public bool LifecycleRequested { get; private set; }
+
             public Task SendAsync(IMessage message, CancellationToken cancellationToken)
             {
                 lock (_sendLock)
@@ -223,6 +227,31 @@ namespace MasterSplinter.Client.Host
                 }
 
                 return Task.CompletedTask;
+            }
+
+            public Task RequestDisconnectAsync(CancellationToken cancellationToken)
+            {
+                LifecycleRequested = true;
+                CloseStream();
+                return Task.CompletedTask;
+            }
+
+            public Task RequestReconnectAsync(CancellationToken cancellationToken)
+            {
+                LifecycleRequested = true;
+                CloseStream();
+                return Task.CompletedTask;
+            }
+
+            private void CloseStream()
+            {
+                try
+                {
+                    _stream.Dispose();
+                }
+                catch
+                {
+                }
             }
         }
     }

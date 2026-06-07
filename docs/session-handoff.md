@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add shutdown-action CLI parity`
-- Latest known full test result: 164 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add client lifecycle CLI parity`
+- Latest known full test result: 166 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -43,6 +43,8 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `end-process --pid <pid>`,
 `ask-elevate`,
 `shutdown-action --action <shutdown|restart|standby>`,
+`disconnect-client`,
+`reconnect-client`,
 `close-connection --local-address <ip> --local-port <port> --remote-address <ip> --remote-port <port>`,
 `get-processes`, `get-startup-items`, and `get-connections`.
 
@@ -112,5 +114,9 @@ Shutdown/restart/standby parity is wired through `shutdown-action --action
 `DoShutdownAction` to `SystemControl`, and calls the Windows `shutdown`/suspend paths in the
 client host. Automated tests cover status mapping only; real power-state verification should be
 run only on a disposable or prepared Windows client.
+
+Client lifecycle parity is wired through `disconnect-client` and `reconnect-client`. Both require
+`--grant-permission`, map to `ConnectionLifecycle`, send a `SetStatus` acknowledgement, and close
+the active loopback command session. Automatic reconnect scheduling remains future host behavior.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

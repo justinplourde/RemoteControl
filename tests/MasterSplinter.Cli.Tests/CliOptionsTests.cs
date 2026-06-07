@@ -316,6 +316,12 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsInstanceOfType(
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "ask-elevate" })),
                 typeof(DoAskElevate));
+            Assert.IsInstanceOfType(
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "disconnect-client" })),
+                typeof(DoClientDisconnect));
+            Assert.IsInstanceOfType(
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "reconnect-client" })),
+                typeof(DoClientReconnect));
 
             var shutdownAction = (DoShutdownAction)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -399,6 +405,12 @@ namespace MasterSplinter.Cli.Tests
 
             ListenCommand askElevate = ListenCommand.Parse("dispatch first ask-elevate");
             Assert.AreEqual("ask-elevate", askElevate.DispatchCommand);
+
+            ListenCommand disconnectClient = ListenCommand.Parse("dispatch first disconnect-client");
+            Assert.AreEqual("disconnect-client", disconnectClient.DispatchCommand);
+
+            ListenCommand reconnectClient = ListenCommand.Parse("dispatch first reconnect-client");
+            Assert.AreEqual("reconnect-client", reconnectClient.DispatchCommand);
 
             ListenCommand shutdownAction = ListenCommand.Parse("dispatch first shutdown-action --action standby");
             Assert.AreEqual("shutdown-action", shutdownAction.DispatchCommand);

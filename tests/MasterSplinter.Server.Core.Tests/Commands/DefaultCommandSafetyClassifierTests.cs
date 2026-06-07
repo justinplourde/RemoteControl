@@ -47,6 +47,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = FileType.File }] = CommandSafetyClass.FileWrite,
                 [new DoShutdownAction { Action = ShutdownAction.Restart }] = CommandSafetyClass.SystemControl,
                 [new DoAskElevate()] = CommandSafetyClass.SystemControl,
+                [new DoClientDisconnect()] = CommandSafetyClass.ConnectionLifecycle,
+                [new DoClientReconnect()] = CommandSafetyClass.ConnectionLifecycle,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };
@@ -67,6 +69,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.IsFalse(classifier.Classify(new DoPathDelete { Path = "C:\\Temp\\old.txt", PathType = FileType.File }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoShutdownAction { Action = ShutdownAction.Restart }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoAskElevate()).RequiresConsent);
+            Assert.IsFalse(classifier.Classify(new DoClientDisconnect()).RequiresConsent);
+            Assert.IsFalse(classifier.Classify(new DoClientReconnect()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetPasswords()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetKeyloggerLogsDirectory()).RequiresConsent);
         }
