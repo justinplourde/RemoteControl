@@ -209,6 +209,7 @@ namespace MasterSplinter.Cli
                 options.NewName,
                 options.Kind,
                 options.Data,
+                options.ShellCommand,
                 options.StartupType,
                 options.Pid,
                 options.Action,
@@ -226,7 +227,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -238,6 +239,7 @@ namespace MasterSplinter.Cli
             string newName,
             string kind,
             string data,
+            string shellCommand,
             string startupType,
             int? pid,
             string action,
@@ -288,6 +290,8 @@ namespace MasterSplinter.Cli
                     }
                 };
             }
+            if (string.Equals(dispatchCommand, "shell-execute", StringComparison.OrdinalIgnoreCase))
+                return new DoShellExecute { Command = shellCommand };
             if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
                 return new FileTransferRequest { Id = 1, RemotePath = path };
             if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
@@ -397,6 +401,7 @@ namespace MasterSplinter.Cli
                 listenCommand.NewName,
                 listenCommand.Kind,
                 listenCommand.Data,
+                listenCommand.ShellCommand,
                 listenCommand.StartupType,
                 listenCommand.Pid,
                 listenCommand.Action,
@@ -810,7 +815,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--shell-command <command>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
@@ -1072,6 +1077,9 @@ namespace MasterSplinter.Cli
                     break;
                 case GetChangeRegistryValueResponse response:
                     lines.Add($"Registry change value: Key={ValueOrDash(response.KeyPath)}; Value={ValueOrDash(response.Value == null ? null : response.Value.Name)}; Kind={(response.Value == null ? RegistryValueKind.Unknown : response.Value.Kind)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
+                case DoShellExecuteResponse response:
+                    lines.Add($"Shell response: IsError={response.IsError}; Output={ValueOrDash(response.Output)}");
                     break;
                 case SetStatusFileManager response:
                     lines.Add($"File manager status: {ValueOrDash(response.Message)}; SetLastDirectorySeen={response.SetLastDirectorySeen}.");

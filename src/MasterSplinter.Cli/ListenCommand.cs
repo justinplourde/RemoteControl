@@ -16,6 +16,7 @@ namespace MasterSplinter.Cli
             string newName,
             string kind,
             string data,
+            string shellCommand,
             string startupType,
             int? pid,
             string action,
@@ -42,6 +43,7 @@ namespace MasterSplinter.Cli
             NewName = newName;
             Kind = kind;
             Data = data;
+            ShellCommand = shellCommand;
             StartupType = startupType;
             Pid = pid;
             Action = action;
@@ -69,6 +71,7 @@ namespace MasterSplinter.Cli
         public string NewName { get; }
         public string Kind { get; }
         public string Data { get; }
+        public string ShellCommand { get; }
         public string StartupType { get; }
         public int? Pid { get; }
         public string Action { get; }
@@ -89,16 +92,16 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -114,6 +117,7 @@ namespace MasterSplinter.Cli
             string newName = null;
             string kind = null;
             string data = null;
+            string shellCommand = null;
             string startupType = null;
             int? pid = null;
             string action = null;
@@ -186,6 +190,14 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--data requires a value.");
 
                     data = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--shell-command", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--shell-command requires a value.");
+
+                    shellCommand = tokens[index];
                 }
                 else if (string.Equals(tokens[index], "--startup-type", StringComparison.OrdinalIgnoreCase))
                 {
@@ -373,6 +385,10 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--data is required for registry-change-value.");
             }
 
+            if (string.Equals(dispatchCommand, "shell-execute", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrWhiteSpace(shellCommand))
+                throw new ArgumentException("--shell-command is required for shell-execute.");
+
             if (string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(path))
@@ -456,6 +472,7 @@ namespace MasterSplinter.Cli
                 newName,
                 kind,
                 data,
+                shellCommand,
                 startupType,
                 pid,
                 action,

@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add registry value mutation CLI parity`
-- Latest known full test result: 179 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add shell execute CLI parity`
+- Latest known full test result: 181 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -42,6 +42,7 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `registry-delete-value --path <hive\key> --name <value-name>`,
 `registry-rename-value --path <hive\key> --name <old-value-name> --new-name <new-value-name>`,
 `registry-change-value --path <hive\key> --name <value-name> --kind <kind> --data <value>`,
+`shell-execute --shell-command <command>`,
 `download-file --path <remote-file> [--output <local-file>]`,
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
@@ -156,5 +157,11 @@ Registry value create/delete/rename/change parity is wired through `registry-cre
 `New Value #n` naming, and should be manually verified with a harmless `HKCU\Software` test
 key/value that is removed afterward. Supported CLI kinds are `string`, `expand-string`, `binary`,
 `dword`, `qword`, and `multi-string`; binary data is hex and multi-string data uses `|`.
+
+Shell execute parity is wired through `shell-execute --shell-command <command>`. It requires
+`--grant-permission --grant-consent`, maps to `Execution`, returns `DoShellExecuteResponse`, and
+should be manually verified with harmless commands only. The current modern CLI slice executes
+one command per dispatch and returns combined stdout/stderr; legacy-style persistent interactive
+shell sessions still need CLI receive/session work.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

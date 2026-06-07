@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 71 passed.
+- `MasterSplinter.Client.Core.Tests`: 73 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -161,6 +161,8 @@ Done:
 - Added tests for `DoCreateRegistryValue`, `DoDeleteRegistryValue`, `DoRenameRegistryValue`,
   and `DoChangeRegistryValue` response mapping, CLI value mutation parsing/formatting, and
   `Persistence` permission classification.
+- Added tests for `DoShellExecute` response mapping and CLI shell-execute parsing/formatting;
+  `Execution` permission plus consent classification was already covered.
 
 Left to do:
 
@@ -368,6 +370,9 @@ Done:
   wires registry value mutation handlers, CLI exposes `registry-create-value`,
   `registry-delete-value`, `registry-rename-value`, and `registry-change-value`, and create
   preserves the legacy `New Value #n` naming behavior.
+- Added one-command shell execute parity through `DoShellExecute` and `DoShellExecuteResponse`:
+  the client host wires a shell command provider, CLI exposes `shell-execute --shell-command
+  <command>`, and execution remains permission plus consent gated.
 
 Left to do:
 
@@ -695,6 +700,18 @@ dispatch first registry-delete-key --path HKCU\Software --name MasterSplinterTes
 
 Use only a harmless test key/value under `HKCU\Software` and remove both afterward. For binary
 value data, pass hex such as `01-02-ff`; for multi-string data, separate entries with `|`.
+
+Current manual shell-execute check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47861 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47861 --handle-commands
+dispatch first shell-execute --shell-command whoami
+```
+
+Use harmless commands only. The current modern CLI slice executes one command per dispatch and
+returns combined stdout/stderr; legacy-style persistent interactive shell sessions still need a
+broader CLI receive/session model.
 
 Current manual file-download check:
 

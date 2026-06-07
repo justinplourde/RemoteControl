@@ -373,6 +373,14 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual(RegistryValueKind.DWord, registryChangeValue.Value.Kind);
             CollectionAssert.AreEqual(BitConverter.GetBytes((uint)42), registryChangeValue.Value.Data);
 
+            var shellExecute = (DoShellExecute)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "shell-execute",
+                "--shell-command", "whoami"
+            }));
+            Assert.AreEqual("whoami", shellExecute.Command);
+
             var closeConnection = (DoCloseConnection)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -538,6 +546,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() =>
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "registry-change-value", "--path", "HKCU\\Software", "--name", "Answer", "--kind", "bogus", "--data", "42" })));
             Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "shell-execute" }));
+            Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "startup-add", "--name", "Agent", "--startup-type", "current-user-run" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "startup-remove", "--startup-type", "current-user-run" }));
@@ -655,6 +665,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("dword", registryChangeValue.Kind);
             Assert.AreEqual("42", registryChangeValue.Data);
 
+            ListenCommand shellExecute = ListenCommand.Parse("dispatch first shell-execute --shell-command whoami");
+            Assert.AreEqual("shell-execute", shellExecute.DispatchCommand);
+            Assert.AreEqual("whoami", shellExecute.ShellCommand);
+
             ListenCommand closeConnection = ListenCommand.Parse("dispatch first close-connection --local-address 127.0.0.1 --local-port 5000 --remote-address 127.0.0.1 --remote-port 5001");
             Assert.AreEqual("close-connection", closeConnection.DispatchCommand);
             Assert.AreEqual("127.0.0.1", closeConnection.LocalAddress);
@@ -682,6 +696,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-delete-value --path HKCU\\Software"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-rename-value --path HKCU\\Software --name Old"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-change-value --path HKCU\\Software --name Answer --kind dword"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shell-execute"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
@@ -862,6 +877,13 @@ namespace MasterSplinter.Cli.Tests
                 {
                     KeyPath = "HKCU\\Software",
                     Value = new RegValueData { Name = "Answer", Kind = RegistryValueKind.DWord }
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Shell response: IsError=False; Output=hello" },
+                Program.FormatResponse(new DoShellExecuteResponse
+                {
+                    Output = "hello"
                 }));
 
             CollectionAssert.AreEqual(

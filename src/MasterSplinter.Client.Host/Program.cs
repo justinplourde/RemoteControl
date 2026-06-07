@@ -5,6 +5,7 @@ using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Core.Processes;
 using MasterSplinter.Client.Core.Registry;
 using MasterSplinter.Client.Core.Services;
+using MasterSplinter.Client.Core.Shell;
 using MasterSplinter.Client.Core.Startup;
 using MasterSplinter.Client.Core.SystemInformation;
 using MasterSplinter.Client.Host;
@@ -63,6 +64,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.elevation");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.power");
+                identityOptions.Capabilities.SupportedFeatures.Add("shell.execute");
 
                 ClientIdentification identification = new ClientIdentificationFactory().Create(identityOptions);
 
@@ -110,6 +112,8 @@ namespace MasterSplinter.Client.Host
                             new DoAskElevateHandler(new ElevationRequestProvider(new ClientPrivilegeProvider()))))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoShutdownAction>(
                             new DoShutdownActionHandler(new ShutdownActionProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoShellExecute>(
+                            new DoShellExecuteHandler(new ShellCommandProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetProcesses>(
                             new GetProcessesHandler(new ProcessProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoLoadRegistryKey>(

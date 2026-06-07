@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add registry value mutation CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add shell execute CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 71 passed
+- `MasterSplinter.Client.Core.Tests`: 73 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 179 passed, 1 skipped, 0 failed
+- Total: 181 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -96,6 +96,7 @@ Current CLI dispatch command names:
 - `registry-delete-value --path <hive\key> --name <value-name>` (requires `--grant-permission`)
 - `registry-rename-value --path <hive\key> --name <old-value-name> --new-name <new-value-name>` (requires `--grant-permission`)
 - `registry-change-value --path <hive\key> --name <value-name> --kind <string|expand-string|binary|dword|qword|multi-string> --data <value>` (requires `--grant-permission`; binary data is hex and multi-string data uses `|` separators)
+- `shell-execute --shell-command <command>` (requires `--grant-permission --grant-consent`; executes one shell command and returns stdout/stderr)
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
@@ -126,7 +127,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -258,6 +259,11 @@ All modern projects target `net10.0`.
   `registry-change-value`, and `Persistence` permission enforcement. Create preserves the legacy
   auto-generated `New Value #n` behavior, and change supports string, expand-string, binary,
   dword, qword, and multi-string data.
+- Shell execute parity is now wired through `DoShellExecute` and `DoShellExecuteResponse`, a shell
+  command provider, CLI `shell-execute --shell-command <command>`, and `Execution` permission plus
+  consent enforcement. The current modern CLI slice executes one command per dispatch and returns
+  combined stdout/stderr; legacy-style persistent interactive shell sessions still need a broader
+  CLI receive/session model.
 
 ## Current Limitations
 
@@ -266,7 +272,7 @@ All modern projects target `net10.0`.
 - Modern hosts currently prove loopback handshake, read-only runtime parity, permissioned
   file download/upload slices, permissioned file rename, and permissioned file delete, not full
   remote-management behavior.
-- Recursive directory delete, process-start URL download/update behavior, shell,
+- Recursive directory delete, process-start URL download/update behavior,
   desktop, service, and UI behavior are not fully extracted yet. TCP connection close requires
   the Windows client host to run elevated. Elevation request dispatch is implemented, but the
   actual UAC acceptance path still needs manual desktop verification. Shutdown/restart/standby
@@ -278,7 +284,9 @@ All modern projects target `net10.0`.
   and hidden GET behavior still need manual verification from a prepared client session. Startup
   add/remove dispatch is implemented, but manual verification should use a harmless test entry and
   remove it afterward. Registry key and value mutations are implemented, but manual verification
-  should use a harmless `HKCU\Software` test key/value and remove them afterward.
+  should use a harmless `HKCU\Software` test key/value and remove them afterward. Shell execute is
+  implemented for one-command dispatch, but manual verification should use harmless commands only;
+  persistent interactive shell behavior is still pending.
 
 ## Recommended Next Tasks
 
