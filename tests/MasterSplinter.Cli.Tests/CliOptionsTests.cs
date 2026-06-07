@@ -83,6 +83,8 @@ namespace MasterSplinter.Cli.Tests
                 "--button", "OKCancel",
                 "--icon", "Information",
                 "--url", "https://example.test",
+                "--quality", "80",
+                "--display-index", "2",
                 "--mouse-action", "move",
                 "--x", "10",
                 "--y", "20",
@@ -116,6 +118,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("OKCancel", options.Button);
             Assert.AreEqual("Information", options.Icon);
             Assert.AreEqual("https://example.test", options.Url);
+            Assert.AreEqual(80, options.Quality);
+            Assert.AreEqual(2, options.DisplayIndex);
             Assert.AreEqual("move", options.MouseAction);
             Assert.AreEqual(10, options.X);
             Assert.AreEqual(20, options.Y);
@@ -264,6 +268,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "close-connection" }));
             Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "get-desktop", "--quality", "0" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "get-desktop", "--display-index", "-1" }));
+            Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "mouse-event", "--x", "10", "--y", "20", "--monitor-index", "0" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "keyboard-event", "--key", "65" }));
@@ -292,6 +300,17 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsInstanceOfType(
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "get-monitors" })),
                 typeof(GetMonitors));
+
+            var desktop = (GetDesktop)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "get-desktop",
+                "--quality", "80",
+                "--display-index", "1"
+            }));
+            Assert.IsTrue(desktop.CreateNew);
+            Assert.AreEqual(80, desktop.Quality);
+            Assert.AreEqual(1, desktop.DisplayIndex);
 
             var directory = (GetDirectory)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -680,6 +699,12 @@ namespace MasterSplinter.Cli.Tests
             ListenCommand monitors = ListenCommand.Parse("dispatch first get-monitors");
             Assert.AreEqual("get-monitors", monitors.DispatchCommand);
 
+            ListenCommand desktop = ListenCommand.Parse("dispatch first get-desktop --quality 80 --display-index 1 --output C:\\Temp\\desktop.jpg");
+            Assert.AreEqual("get-desktop", desktop.DispatchCommand);
+            Assert.AreEqual(80, desktop.Quality);
+            Assert.AreEqual(1, desktop.DisplayIndex);
+            Assert.AreEqual("C:\\Temp\\desktop.jpg", desktop.OutputPath);
+
             ListenCommand mouseEvent = ListenCommand.Parse("dispatch first mouse-event --mouse-action move --x 10 --y 20 --monitor-index 1");
             Assert.AreEqual("mouse-event", mouseEvent.DispatchCommand);
             Assert.AreEqual("move", mouseEvent.MouseAction);
@@ -774,6 +799,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-rename-value --path HKCU\\Software --name Old"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-change-value --path HKCU\\Software --name Answer --kind dword"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shell-execute"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-desktop --quality 101"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-desktop --display-index -1"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first mouse-event --x 10 --y 20 --monitor-index 0"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first keyboard-event --key 65"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));
@@ -864,6 +891,16 @@ namespace MasterSplinter.Cli.Tests
             CollectionAssert.AreEqual(
                 new[] { "Monitors: 2." },
                 Program.FormatResponse(new GetMonitorsResponse { Number = 2 }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Desktop frame: Monitor=1; Quality=80; Resolution=640x480; ImageBytes=4." },
+                Program.FormatResponse(new GetDesktopResponse
+                {
+                    Monitor = 1,
+                    Quality = 80,
+                    Resolution = new MasterSplinter.Common.Video.Resolution { Width = 640, Height = 480 },
+                    Image = new byte[] { 1, 2, 3, 4 }
+                }));
 
             CollectionAssert.AreEqual(
                 new[] { "System info entries: 1.", "- OS: Windows" },

@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 79 passed.
+- `MasterSplinter.Client.Core.Tests`: 80 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -151,6 +151,7 @@ Done:
   `DoClientReconnect` status-and-lifecycle request behavior.
 - Added tests for `DoClientUninstall` status/failure/lifecycle behavior.
 - Added tests for `GetMonitors` monitor-count response mapping.
+- Added tests for `GetDesktop` single-frame response mapping.
 - Added tests for `DoMouseEvent` and `DoKeyboardEvent` status mapping behind
   `IRemoteInputProvider`.
 - Added tests for `DoShowMessageBox` provider mapping/failure status, CLI caption/text/button/icon
@@ -361,6 +362,11 @@ Done:
 - Added consent-gated monitor count parity through `GetMonitors`: the client host wires a
   Windows monitor provider, CLI exposes `get-monitors`, and `RemoteCapture` permission plus
   consent enforcement is covered. Desktop image streaming remains deferred.
+- Added consent-gated single-frame desktop capture parity through `GetDesktop` and
+  `GetDesktopResponse`: the client host wires a Windows JPEG capture provider, CLI exposes
+  `get-desktop --quality <1-100> --display-index <index> --output <local-jpg>`, and
+  `RemoteCapture` permission plus consent enforcement is covered. A gentle local manual check
+  saved a valid 39,634-byte JPEG at `1280x720`; continuous delta streaming remains deferred.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -550,7 +556,7 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Remote desktop image compression and streaming beyond monitor count.
+- Continuous remote desktop image compression and streaming beyond single-frame capture.
 - Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
 - Process and shell execution broader behavior checks.
@@ -754,6 +760,20 @@ dispatch first get-monitors
 
 This returns `GetMonitorsResponse.Number` through the CLI as `Monitors: <count>.`. It does not
 start desktop image capture.
+
+Current manual single-frame desktop capture check:
+
+```powershell
+dotnet exec .\src\MasterSplinter.Cli\bin\Debug\net10.0\MasterSplinter.Cli.dll listen --port 47867 --grant-permission --grant-consent
+dotnet exec .\src\MasterSplinter.Client.Host\bin\Debug\net10.0\MasterSplinter.Client.Host.dll --port 47867 --handle-commands
+dispatch first get-desktop --quality 60 --display-index 0 --output <temp>\desktop.jpg
+```
+
+The latest gentle local manual check on June 7, 2026 returned
+`Safety=RemoteCapture; RequiresPermission=True; RequiresConsent=True`, received
+`GetDesktopResponse`, and saved a valid JPEG frame: 39,634 bytes, SHA-256
+`1656A0CD8F74247D19A4D78767F2271B4E61FC40CE7FCFB14B399FF71DDBFF4C`, header
+`FF-D8-FF-E0-00-10-4A-46`, resolution `1280x720`.
 
 Current manual remote-input check:
 

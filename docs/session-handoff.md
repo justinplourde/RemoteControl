@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add remote input CLI parity`
-- Latest known full test result: 185 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add single-frame desktop capture CLI parity`
+- Latest known full test result: 186 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -35,6 +35,7 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `get-monitors`,
+`get-desktop [--quality <1-100>] [--display-index <index>] [--output <local-jpg>]`,
 `mouse-event --mouse-action <action> --x <pixels> --y <pixels> --monitor-index <index>`,
 `keyboard-event --key <byte> (--key-down|--key-up)`,
 `get-registry-key --path <hive\subkey>`,
@@ -67,6 +68,13 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 Monitor count parity is wired through `get-monitors`. It requires `--grant-permission
 --grant-consent`, maps to `RemoteCapture`, returns `GetMonitorsResponse.Number`, and does not
 start desktop image capture.
+
+Single-frame desktop capture parity is wired through `get-desktop`. It requires
+`--grant-permission --grant-consent`, maps to `RemoteCapture`, requests `GetDesktop`, receives
+`GetDesktopResponse`, strips the legacy first-frame JPEG length prefix, and saves a viewable JPEG.
+The latest gentle local manual check on June 7, 2026 saved a valid 39,634-byte `1280x720` JPEG
+with SHA-256 `1656A0CD8F74247D19A4D78767F2271B4E61FC40CE7FCFB14B399FF71DDBFF4C`.
+Continuous remote desktop delta streaming remains deferred.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard

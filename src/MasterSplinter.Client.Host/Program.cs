@@ -61,6 +61,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("registry.value.create");
                 identityOptions.Capabilities.SupportedFeatures.Add("registry.value.delete");
                 identityOptions.Capabilities.SupportedFeatures.Add("registry.value.rename");
+                identityOptions.Capabilities.SupportedFeatures.Add("remote-desktop.capture");
                 identityOptions.Capabilities.SupportedFeatures.Add("remote-desktop.monitors");
                 identityOptions.Capabilities.SupportedFeatures.Add("remote-input.keyboard");
                 identityOptions.Capabilities.SupportedFeatures.Add("remote-input.mouse");
@@ -140,6 +141,8 @@ namespace MasterSplinter.Client.Host
                             new DoChangeRegistryValueHandler(new RegistryKeyProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetMonitors>(
                             new GetMonitorsHandler(new MonitorProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<GetDesktop>(
+                            new GetDesktopHandler(new DesktopCaptureProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoMouseEvent>(
                             new DoMouseEventHandler(new RemoteInputProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoKeyboardEvent>(

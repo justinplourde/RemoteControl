@@ -210,6 +210,8 @@ namespace MasterSplinter.Cli
                 options.Kind,
                 options.Data,
                 options.ShellCommand,
+                options.Quality,
+                options.DisplayIndex,
                 options.MouseAction,
                 options.X,
                 options.Y,
@@ -257,6 +259,8 @@ namespace MasterSplinter.Cli
                 null,
                 null,
                 null,
+                null,
+                null,
                 false,
                 null,
                 null,
@@ -274,6 +278,8 @@ namespace MasterSplinter.Cli
             string kind,
             string data,
             string shellCommand,
+            int? quality,
+            int? displayIndex,
             string mouseAction,
             int? x,
             int? y,
@@ -332,6 +338,13 @@ namespace MasterSplinter.Cli
             }
             if (string.Equals(dispatchCommand, "shell-execute", StringComparison.OrdinalIgnoreCase))
                 return new DoShellExecute { Command = shellCommand };
+            if (string.Equals(dispatchCommand, "get-desktop", StringComparison.OrdinalIgnoreCase))
+                return new GetDesktop
+                {
+                    CreateNew = true,
+                    Quality = quality.GetValueOrDefault(75),
+                    DisplayIndex = displayIndex.GetValueOrDefault()
+                };
             if (string.Equals(dispatchCommand, "mouse-event", StringComparison.OrdinalIgnoreCase))
             {
                 MouseAction parsedAction = ParseMouseAction(mouseAction);
@@ -464,6 +477,8 @@ namespace MasterSplinter.Cli
                 listenCommand.Kind,
                 listenCommand.Data,
                 listenCommand.ShellCommand,
+                listenCommand.Quality,
+                listenCommand.DisplayIndex,
                 listenCommand.MouseAction,
                 listenCommand.X,
                 listenCommand.Y,
@@ -919,7 +934,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--shell-command <command>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--shell-command <command>] [--quality <1-100>] [--display-index <index>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
@@ -975,7 +990,40 @@ namespace MasterSplinter.Cli
             }
 
             Console.WriteLine($"Dispatch response: {response.GetType().Name}.");
+            if (command is GetDesktop && response is GetDesktopResponse desktopResponse)
+                SaveDesktopFrame(desktopResponse, outputPath);
+
             PrintResponse(response);
+        }
+
+        private static void SaveDesktopFrame(GetDesktopResponse response, string outputPath)
+        {
+            if (response == null)
+                throw new ArgumentNullException(nameof(response));
+            if (response.Image == null || response.Image.Length == 0)
+            {
+                Console.WriteLine("Desktop frame was empty; no image was saved.");
+                return;
+            }
+
+            byte[] image = ExtractLegacyFirstFrameJpeg(response.Image);
+            string resolvedOutputPath = ResolveDesktopOutputPath(response.Monitor, outputPath);
+            File.WriteAllBytes(resolvedOutputPath, image);
+            Console.WriteLine($"Desktop frame saved: {image.Length} bytes to {resolvedOutputPath}.");
+        }
+
+        private static byte[] ExtractLegacyFirstFrameJpeg(byte[] image)
+        {
+            if (image.Length < 4)
+                return image;
+
+            int length = BitConverter.ToInt32(image, 0);
+            if (length <= 0 || length > image.Length - 4)
+                return image;
+
+            var jpeg = new byte[length];
+            Buffer.BlockCopy(image, 4, jpeg, 0, length);
+            return jpeg;
         }
 
         private static async Task ReceiveFileTransferAsync(
@@ -1094,6 +1142,33 @@ namespace MasterSplinter.Cli
             }
         }
 
+        private static string ResolveDesktopOutputPath(int monitor, string outputPath)
+        {
+            if (!string.IsNullOrWhiteSpace(outputPath))
+            {
+                string resolved = Path.GetFullPath(outputPath);
+                string directory = Path.GetDirectoryName(resolved);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+
+                return resolved;
+            }
+
+            string captureDirectory = Path.Combine(Environment.CurrentDirectory, "captures");
+            Directory.CreateDirectory(captureDirectory);
+
+            string candidate = Path.Combine(captureDirectory, $"desktop-monitor{monitor}.jpg");
+            if (!File.Exists(candidate))
+                return candidate;
+
+            for (int index = 1; ; index++)
+            {
+                candidate = Path.Combine(captureDirectory, $"desktop-monitor{monitor}-{index}.jpg");
+                if (!File.Exists(candidate))
+                    return candidate;
+            }
+        }
+
         public static string[] FormatResponse(IMessage reply)
         {
             if (reply == null)
@@ -1155,6 +1230,10 @@ namespace MasterSplinter.Cli
                     break;
                 case GetMonitorsResponse response:
                     lines.Add($"Monitors: {response.Number}.");
+                    break;
+                case GetDesktopResponse response:
+                    int imageBytes = response.Image == null ? 0 : response.Image.Length;
+                    lines.Add($"Desktop frame: Monitor={response.Monitor}; Quality={response.Quality}; Resolution={(response.Resolution == null ? "-" : response.Resolution.ToString())}; ImageBytes={imageBytes}.");
                     break;
                 case GetRegistryKeysResponse response:
                     lines.Add($"Registry key: {ValueOrDash(response.RootKey)}; Matches={Count(response.Matches)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");

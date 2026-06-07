@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add remote input CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add single-frame desktop capture CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 79 passed
+- `MasterSplinter.Client.Core.Tests`: 80 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 185 passed, 1 skipped, 0 failed
+- Total: 186 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -97,12 +97,27 @@ The latest manual check on June 7, 2026 connected one local client, classified a
 as `RemoteInput` with permission and consent required, returned `Status: Mouse event sent.` for
 the pointer move, and returned `Status: Keyboard event sent.` for Shift down/up.
 
+Current manual single-frame desktop capture check:
+
+```powershell
+dotnet exec .\src\MasterSplinter.Cli\bin\Debug\net10.0\MasterSplinter.Cli.dll listen --port 47867 --grant-permission --grant-consent
+dotnet exec .\src\MasterSplinter.Client.Host\bin\Debug\net10.0\MasterSplinter.Client.Host.dll --port 47867 --handle-commands
+dispatch first get-desktop --quality 60 --display-index 0 --output <temp>\desktop.jpg
+```
+
+The latest manual check on June 7, 2026 connected one local client, classified the command as
+`RemoteCapture` with permission and consent required, returned `GetDesktopResponse`, and saved a
+valid JPEG frame: 39,634 bytes, SHA-256
+`1656A0CD8F74247D19A4D78767F2271B4E61FC40CE7FCFB14B399FF71DDBFF4C`, header
+`FF-D8-FF-E0-00-10-4A-46`, resolution `1280x720`.
+
 Current CLI dispatch command names:
 
 - `get-system-info`
 - `get-drives`
 - `get-directory --path <path>`
 - `get-monitors` (requires `--grant-permission --grant-consent`; returns remote monitor count)
+- `get-desktop [--quality <1-100>] [--display-index <index>] [--output <local-jpg>]` (requires `--grant-permission --grant-consent`; requests one legacy first-frame desktop capture and saves a JPEG locally)
 - `mouse-event --mouse-action <left-down|left-up|right-down|right-up|move|scroll-up|scroll-down|none> --x <pixels> --y <pixels> --monitor-index <index>` (requires `--grant-permission --grant-consent`; sends mouse input to the client desktop)
 - `keyboard-event --key <byte> (--key-down|--key-up)` (requires `--grant-permission --grant-consent`; sends keyboard input to the client desktop)
 - `get-registry-key --path <hive\subkey>`
@@ -145,7 +160,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting/input, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting/desktop capture/input, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -288,7 +303,11 @@ All modern projects target `net10.0`.
   verification requires a published client executable.
 - Monitor count parity is now wired through `GetMonitors`, a Windows monitor provider, CLI
   `get-monitors`, and `RemoteCapture` permission plus consent enforcement. It returns the legacy
-  `GetMonitorsResponse.Number` count; actual remote desktop image streaming remains deferred.
+  `GetMonitorsResponse.Number` count.
+- Single-frame desktop capture parity is now wired through `GetDesktop` and `GetDesktopResponse`,
+  a Windows JPEG capture provider, CLI `get-desktop`, and `RemoteCapture` permission plus consent
+  enforcement. The provider returns a legacy first-frame length-prefixed JPEG payload, and the CLI
+  saves a viewable JPEG. Continuous delta streaming remains deferred.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
@@ -318,7 +337,8 @@ All modern projects target `net10.0`.
   implemented with a persistent session, but manual verification should use harmless commands only.
   Remote input dispatch has a gentle local manual verification, but broader manual verification
   should still use harmless pointer/key actions on a prepared visible Windows desktop session.
-  Remote desktop image streaming remains deferred beyond monitor count.
+  Single-frame desktop capture has a gentle local manual verification; continuous remote desktop
+  delta streaming remains deferred.
 
 ## Recommended Next Tasks
 
