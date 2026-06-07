@@ -83,6 +83,12 @@ namespace MasterSplinter.Cli.Tests
                 "--button", "OKCancel",
                 "--icon", "Information",
                 "--url", "https://example.test",
+                "--mouse-action", "move",
+                "--x", "10",
+                "--y", "20",
+                "--monitor-index", "1",
+                "--key", "65",
+                "--key-down",
                 "--hidden",
                 "--local-address", "127.0.0.1",
                 "--local-port", "5000",
@@ -110,6 +116,12 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("OKCancel", options.Button);
             Assert.AreEqual("Information", options.Icon);
             Assert.AreEqual("https://example.test", options.Url);
+            Assert.AreEqual("move", options.MouseAction);
+            Assert.AreEqual(10, options.X);
+            Assert.AreEqual(20, options.Y);
+            Assert.AreEqual(1, options.MonitorIndex);
+            Assert.AreEqual((byte)65, options.Key);
+            Assert.AreEqual(true, options.KeyDown);
             Assert.IsTrue(options.Hidden);
             Assert.AreEqual("127.0.0.1", options.LocalAddress);
             Assert.AreEqual((ushort)5000, options.LocalPort);
@@ -251,6 +263,12 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual((ushort)5001, closeConnection.RemotePort);
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "close-connection" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "mouse-event", "--x", "10", "--y", "20", "--monitor-index", "0" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "keyboard-event", "--key", "65" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "keyboard-event", "--key", "65", "--key-down", "--key-up" }));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -383,6 +401,31 @@ namespace MasterSplinter.Cli.Tests
                 "--shell-command", "whoami"
             }));
             Assert.AreEqual("whoami", shellExecute.Command);
+
+            var mouseEvent = (DoMouseEvent)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "mouse-event",
+                "--mouse-action", "left-down",
+                "--x", "10",
+                "--y", "20",
+                "--monitor-index", "1"
+            }));
+            Assert.AreEqual(MouseAction.LeftDown, mouseEvent.Action);
+            Assert.IsTrue(mouseEvent.IsMouseDown);
+            Assert.AreEqual(10, mouseEvent.X);
+            Assert.AreEqual(20, mouseEvent.Y);
+            Assert.AreEqual(1, mouseEvent.MonitorIndex);
+
+            var keyboardEvent = (DoKeyboardEvent)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "keyboard-event",
+                "--key", "65",
+                "--key-up"
+            }));
+            Assert.AreEqual((byte)65, keyboardEvent.Key);
+            Assert.IsFalse(keyboardEvent.KeyDown);
 
             var closeConnection = (DoCloseConnection)Program.CreateMessage(CliOptions.Parse(new[]
             {
@@ -637,6 +680,18 @@ namespace MasterSplinter.Cli.Tests
             ListenCommand monitors = ListenCommand.Parse("dispatch first get-monitors");
             Assert.AreEqual("get-monitors", monitors.DispatchCommand);
 
+            ListenCommand mouseEvent = ListenCommand.Parse("dispatch first mouse-event --mouse-action move --x 10 --y 20 --monitor-index 1");
+            Assert.AreEqual("mouse-event", mouseEvent.DispatchCommand);
+            Assert.AreEqual("move", mouseEvent.MouseAction);
+            Assert.AreEqual(10, mouseEvent.X);
+            Assert.AreEqual(20, mouseEvent.Y);
+            Assert.AreEqual(1, mouseEvent.MonitorIndex);
+
+            ListenCommand keyboardEvent = ListenCommand.Parse("dispatch first keyboard-event --key 65 --key-down");
+            Assert.AreEqual("keyboard-event", keyboardEvent.DispatchCommand);
+            Assert.AreEqual((byte)65, keyboardEvent.Key);
+            Assert.AreEqual(true, keyboardEvent.KeyDown);
+
             ListenCommand shutdownAction = ListenCommand.Parse("dispatch first shutdown-action --action standby");
             Assert.AreEqual("shutdown-action", shutdownAction.DispatchCommand);
             Assert.AreEqual("standby", shutdownAction.Action);
@@ -719,6 +774,8 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-rename-value --path HKCU\\Software --name Old"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-change-value --path HKCU\\Software --name Answer --kind dword"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shell-execute"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first mouse-event --x 10 --y 20 --monitor-index 0"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first keyboard-event --key 65"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }

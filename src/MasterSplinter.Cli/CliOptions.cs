@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|registry-create-key|registry-delete-key|registry-rename-key|registry-create-value|registry-delete-value|registry-rename-value|registry-change-value|shell-execute|get-monitors|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|uninstall-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <string|expand-string|binary|dword|qword|multi-string>] [--data <value>] [--shell-command <command>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|registry-create-key|registry-delete-key|registry-rename-key|registry-create-value|registry-delete-value|registry-rename-value|registry-change-value|shell-execute|get-monitors|mouse-event|keyboard-event|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|uninstall-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <string|expand-string|binary|dword|qword|multi-string>] [--data <value>] [--shell-command <command>] [--mouse-action <left-down|left-up|right-down|right-up|move|scroll-up|scroll-down|none>] [--x <pixels>] [--y <pixels>] [--monitor-index <index>] [--key <byte>] [--key-down|--key-up] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -19,6 +19,12 @@ namespace MasterSplinter.Cli
             string kind,
             string data,
             string shellCommand,
+            string mouseAction,
+            int? x,
+            int? y,
+            int? monitorIndex,
+            byte? key,
+            bool? keyDown,
             string startupType,
             int? pid,
             string action,
@@ -52,6 +58,12 @@ namespace MasterSplinter.Cli
             Kind = kind;
             Data = data;
             ShellCommand = shellCommand;
+            MouseAction = mouseAction;
+            X = x;
+            Y = y;
+            MonitorIndex = monitorIndex;
+            Key = key;
+            KeyDown = keyDown;
             StartupType = startupType;
             Pid = pid;
             Action = action;
@@ -86,6 +98,12 @@ namespace MasterSplinter.Cli
         public string Kind { get; }
         public string Data { get; }
         public string ShellCommand { get; }
+        public string MouseAction { get; }
+        public int? X { get; }
+        public int? Y { get; }
+        public int? MonitorIndex { get; }
+        public byte? Key { get; }
+        public bool? KeyDown { get; }
         public string StartupType { get; }
         public int? Pid { get; }
         public string Action { get; }
@@ -115,7 +133,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -128,6 +146,12 @@ namespace MasterSplinter.Cli
             string kind = null;
             string data = null;
             string shellCommand = null;
+            string mouseAction = null;
+            int? x = null;
+            int? y = null;
+            int? monitorIndex = null;
+            byte? key = null;
+            bool? keyDown = null;
             string startupType = null;
             int? pid = null;
             string action = null;
@@ -171,6 +195,20 @@ namespace MasterSplinter.Cli
                     data = ReadValue(args, ref index, "--data");
                 else if (string.Equals(arg, "--shell-command", StringComparison.OrdinalIgnoreCase))
                     shellCommand = ReadValue(args, ref index, "--shell-command");
+                else if (string.Equals(arg, "--mouse-action", StringComparison.OrdinalIgnoreCase))
+                    mouseAction = ReadValue(args, ref index, "--mouse-action");
+                else if (string.Equals(arg, "--x", StringComparison.OrdinalIgnoreCase))
+                    x = int.Parse(ReadValue(args, ref index, "--x"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--y", StringComparison.OrdinalIgnoreCase))
+                    y = int.Parse(ReadValue(args, ref index, "--y"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--monitor-index", StringComparison.OrdinalIgnoreCase))
+                    monitorIndex = int.Parse(ReadValue(args, ref index, "--monitor-index"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--key", StringComparison.OrdinalIgnoreCase))
+                    key = byte.Parse(ReadValue(args, ref index, "--key"), CultureInfo.InvariantCulture);
+                else if (string.Equals(arg, "--key-down", StringComparison.OrdinalIgnoreCase))
+                    keyDown = SetKeyDirection(keyDown, true);
+                else if (string.Equals(arg, "--key-up", StringComparison.OrdinalIgnoreCase))
+                    keyDown = SetKeyDirection(keyDown, false);
                 else if (string.Equals(arg, "--startup-type", StringComparison.OrdinalIgnoreCase))
                     startupType = ReadValue(args, ref index, "--startup-type");
                 else if (string.Equals(arg, "--pid", StringComparison.OrdinalIgnoreCase))
@@ -293,6 +331,26 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(shellCommand))
                 throw new ArgumentException("--shell-command is required for shell-execute.");
 
+            if (string.Equals(dispatchCommand, "mouse-event", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(mouseAction))
+                    throw new ArgumentException("--mouse-action is required for mouse-event.");
+                if (!x.HasValue)
+                    throw new ArgumentException("--x is required for mouse-event.");
+                if (!y.HasValue)
+                    throw new ArgumentException("--y is required for mouse-event.");
+                if (!monitorIndex.HasValue)
+                    throw new ArgumentException("--monitor-index is required for mouse-event.");
+            }
+
+            if (string.Equals(dispatchCommand, "keyboard-event", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!key.HasValue)
+                    throw new ArgumentException("--key is required for keyboard-event.");
+                if (!keyDown.HasValue)
+                    throw new ArgumentException("--key-down or --key-up is required for keyboard-event.");
+            }
+
             if (string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(path))
@@ -378,6 +436,12 @@ namespace MasterSplinter.Cli
                 kind,
                 data,
                 shellCommand,
+                mouseAction,
+                x,
+                y,
+                monitorIndex,
+                key,
+                keyDown,
                 startupType,
                 pid,
                 action,
@@ -400,6 +464,14 @@ namespace MasterSplinter.Cli
                 grantPermission,
                 grantConsent,
                 false);
+        }
+
+        private static bool SetKeyDirection(bool? existing, bool value)
+        {
+            if (existing.HasValue && existing.Value != value)
+                throw new ArgumentException("--key-down and --key-up cannot both be specified.");
+
+            return value;
         }
 
         private static string ReadValue(string[] args, ref int index, string optionName)

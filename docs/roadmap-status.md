@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 77 passed.
+- `MasterSplinter.Client.Core.Tests`: 79 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -151,6 +151,8 @@ Done:
   `DoClientReconnect` status-and-lifecycle request behavior.
 - Added tests for `DoClientUninstall` status/failure/lifecycle behavior.
 - Added tests for `GetMonitors` monitor-count response mapping.
+- Added tests for `DoMouseEvent` and `DoKeyboardEvent` status mapping behind
+  `IRemoteInputProvider`.
 - Added tests for `DoShowMessageBox` provider mapping/failure status, CLI caption/text/button/icon
   parsing, and `UserInteraction` permission plus consent classification.
 - Added tests for `DoVisitWebsite` provider mapping/failure status, CLI URL normalization and
@@ -359,6 +361,10 @@ Done:
 - Added consent-gated monitor count parity through `GetMonitors`: the client host wires a
   Windows monitor provider, CLI exposes `get-monitors`, and `RemoteCapture` permission plus
   consent enforcement is covered. Desktop image streaming remains deferred.
+- Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
+  client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
+  `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. Visible
+  desktop verification remains pending.
 - Added consent-gated message box parity through `DoShowMessageBox`: the client host wires a
   Windows `user32!MessageBoxW` provider, CLI exposes `show-message --text <message>
   [--caption <title>] [--button <button>] [--icon <icon>]`, and response formatting prints the
@@ -464,7 +470,8 @@ Status: Planned after modern runtime parity
 Status: Started
 
 - Added a root-level CLI project for manual loopback smoke testing.
-- Supports manual loopback dispatch for the current read-only command set.
+- Supports manual loopback dispatch for the current read-only and permission/consent-gated parity
+  command set.
 - Supports listing connected clients and dispatching safe commands to selected clients in
   `listen` mode.
 - Still needs inspecting capabilities and a less manual non-loopback operator experience.
@@ -544,10 +551,10 @@ Status: Planned as part of modern runtime parity
 Areas still deferred from the legacy app:
 
 - Remote desktop image compression and streaming beyond monitor count.
+- Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
-- Process and shell execution behavior.
-- File-system access behavior beyond DTO contracts.
-- Client command handlers.
+- Process and shell execution broader behavior checks.
+- File-system broader behavior checks.
 - Client installation, startup, updater, and uninstaller behavior.
 - Reverse proxy behavior.
 - Password recovery and keylogging-era legacy features need explicit product/security decisions
@@ -747,6 +754,19 @@ dispatch first get-monitors
 
 This returns `GetMonitorsResponse.Number` through the CLI as `Monitors: <count>.`. It does not
 start desktop image capture.
+
+Current manual remote-input check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47864 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47864 --handle-commands
+dispatch first mouse-event --mouse-action move --x 10 --y 10 --monitor-index 0
+dispatch first keyboard-event --key 16 --key-down
+dispatch first keyboard-event --key 16 --key-up
+```
+
+Run from a prepared visible Windows desktop session only. Use harmless pointer/key actions and
+confirm the CLI returns `Status: Mouse event sent.` or `Status: Keyboard event sent.`.
 
 Current manual file-download check:
 

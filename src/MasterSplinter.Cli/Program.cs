@@ -210,6 +210,12 @@ namespace MasterSplinter.Cli
                 options.Kind,
                 options.Data,
                 options.ShellCommand,
+                options.MouseAction,
+                options.X,
+                options.Y,
+                options.MonitorIndex,
+                options.Key,
+                options.KeyDown,
                 options.StartupType,
                 options.Pid,
                 options.Action,
@@ -227,7 +233,35 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
+            return CreateMessage(
+                dispatchCommand,
+                path,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null);
         }
 
         public static IMessage CreateMessage(
@@ -240,6 +274,12 @@ namespace MasterSplinter.Cli
             string kind,
             string data,
             string shellCommand,
+            string mouseAction,
+            int? x,
+            int? y,
+            int? monitorIndex,
+            byte? key,
+            bool? keyDown,
             string startupType,
             int? pid,
             string action,
@@ -292,6 +332,24 @@ namespace MasterSplinter.Cli
             }
             if (string.Equals(dispatchCommand, "shell-execute", StringComparison.OrdinalIgnoreCase))
                 return new DoShellExecute { Command = shellCommand };
+            if (string.Equals(dispatchCommand, "mouse-event", StringComparison.OrdinalIgnoreCase))
+            {
+                MouseAction parsedAction = ParseMouseAction(mouseAction);
+                return new DoMouseEvent
+                {
+                    Action = parsedAction,
+                    IsMouseDown = IsMouseDown(parsedAction),
+                    X = x.GetValueOrDefault(),
+                    Y = y.GetValueOrDefault(),
+                    MonitorIndex = monitorIndex.GetValueOrDefault()
+                };
+            }
+            if (string.Equals(dispatchCommand, "keyboard-event", StringComparison.OrdinalIgnoreCase))
+                return new DoKeyboardEvent
+                {
+                    Key = key.GetValueOrDefault(),
+                    KeyDown = keyDown.GetValueOrDefault()
+                };
             if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
                 return new FileTransferRequest { Id = 1, RemotePath = path };
             if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
@@ -406,6 +464,12 @@ namespace MasterSplinter.Cli
                 listenCommand.Kind,
                 listenCommand.Data,
                 listenCommand.ShellCommand,
+                listenCommand.MouseAction,
+                listenCommand.X,
+                listenCommand.Y,
+                listenCommand.MonitorIndex,
+                listenCommand.Key,
+                listenCommand.KeyDown,
                 listenCommand.StartupType,
                 listenCommand.Pid,
                 listenCommand.Action,
@@ -631,6 +695,42 @@ namespace MasterSplinter.Cli
                 return StartupType.LocalMachineRunOnceX86;
 
             throw new ArgumentException("--startup-type must be local-machine-run, local-machine-run-once, current-user-run, current-user-run-once, start-menu, local-machine-run-x86, or local-machine-run-once-x86.");
+        }
+
+        private static MouseAction ParseMouseAction(string mouseAction)
+        {
+            if (string.Equals(mouseAction, "left-down", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.LeftDown), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.LeftDown;
+            if (string.Equals(mouseAction, "left-up", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.LeftUp), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.LeftUp;
+            if (string.Equals(mouseAction, "right-down", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.RightDown), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.RightDown;
+            if (string.Equals(mouseAction, "right-up", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.RightUp), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.RightUp;
+            if (string.Equals(mouseAction, "move", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, "move-cursor", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.MoveCursor), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.MoveCursor;
+            if (string.Equals(mouseAction, "scroll-up", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.ScrollUp), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.ScrollUp;
+            if (string.Equals(mouseAction, "scroll-down", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.ScrollDown), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.ScrollDown;
+            if (string.Equals(mouseAction, "none", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mouseAction, nameof(MouseAction.None), StringComparison.OrdinalIgnoreCase))
+                return MouseAction.None;
+
+            throw new ArgumentException("--mouse-action must be left-down, left-up, right-down, right-up, move, scroll-up, scroll-down, or none.");
+        }
+
+        private static bool IsMouseDown(MouseAction action)
+        {
+            return action == MouseAction.LeftDown || action == MouseAction.RightDown;
         }
 
         private static RegistryValueKind ParseRegistryValueKind(string kind)

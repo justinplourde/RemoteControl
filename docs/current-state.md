@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add shell execute CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add remote input CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 74 passed
+- `MasterSplinter.Client.Core.Tests`: 79 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 183 passed, 1 skipped, 0 failed
+- Total: 185 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -89,6 +89,8 @@ Current CLI dispatch command names:
 - `get-drives`
 - `get-directory --path <path>`
 - `get-monitors` (requires `--grant-permission --grant-consent`; returns remote monitor count)
+- `mouse-event --mouse-action <left-down|left-up|right-down|right-up|move|scroll-up|scroll-down|none> --x <pixels> --y <pixels> --monitor-index <index>` (requires `--grant-permission --grant-consent`; sends mouse input to the client desktop)
+- `keyboard-event --key <byte> (--key-down|--key-up)` (requires `--grant-permission --grant-consent`; sends keyboard input to the client desktop)
 - `get-registry-key --path <hive\subkey>`
 - `registry-create-key --path <hive\parent-subkey>` (requires `--grant-permission`; creates legacy-style `New Key #n`)
 - `registry-delete-key --path <hive\parent-subkey> --name <child-key>` (requires `--grant-permission`)
@@ -121,7 +123,7 @@ Current CLI dispatch command names:
 Current CLI listen commands:
 
 - `clients`
-- `dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>] [--pid <pid>]`
+- `dispatch <client-id|first> <command> [--path <path>] [--remote-path <client-path>] [--output <local-path>] [--pid <pid>] [--mouse-action <action>] [--x <pixels>] [--y <pixels>] [--monitor-index <index>] [--key <byte>] [--key-down|--key-up]`
 - `dispatch <client-id|first> ask-elevate`
 - `help`
 - `exit`
@@ -129,7 +131,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting/input, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -273,6 +275,11 @@ All modern projects target `net10.0`.
 - Monitor count parity is now wired through `GetMonitors`, a Windows monitor provider, CLI
   `get-monitors`, and `RemoteCapture` permission plus consent enforcement. It returns the legacy
   `GetMonitorsResponse.Number` count; actual remote desktop image streaming remains deferred.
+- Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
+  `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
+  `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
+  creation, handler status mapping, and safety metadata; manual verification should be run from a
+  prepared visible Windows desktop session.
 
 ## Current Limitations
 
@@ -295,6 +302,9 @@ All modern projects target `net10.0`.
   remove it afterward. Registry key and value mutations are implemented, but manual verification
   should use a harmless `HKCU\Software` test key/value and remove them afterward. Shell execute is
   implemented with a persistent session, but manual verification should use harmless commands only.
+  Remote input dispatch is implemented, but manual verification should use harmless pointer/key
+  actions on a prepared visible Windows desktop session. Remote desktop image streaming remains
+  deferred beyond monitor count.
 
 ## Recommended Next Tasks
 

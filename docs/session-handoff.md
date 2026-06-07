@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add shell execute CLI parity`
-- Latest known full test result: 183 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add remote input CLI parity`
+- Latest known full test result: 185 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -35,6 +35,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 
 Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-directory --path <path>`,
 `get-monitors`,
+`mouse-event --mouse-action <action> --x <pixels> --y <pixels> --monitor-index <index>`,
+`keyboard-event --key <byte> (--key-down|--key-up)`,
 `get-registry-key --path <hive\subkey>`,
 `registry-create-key --path <hive\parent-subkey>`,
 `registry-delete-key --path <hive\parent-subkey> --name <child-key>`,
@@ -65,6 +67,19 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 Monitor count parity is wired through `get-monitors`. It requires `--grant-permission
 --grant-consent`, maps to `RemoteCapture`, returns `GetMonitorsResponse.Number`, and does not
 start desktop image capture.
+
+Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
+`--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard
+events through the client host. Manual verification should be done from a prepared visible
+Windows desktop session using harmless pointer/key actions, for example:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47864 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47864 --handle-commands
+dispatch first mouse-event --mouse-action move --x 10 --y 10 --monitor-index 0
+dispatch first keyboard-event --key 16 --key-down
+dispatch first keyboard-event --key 16 --key-up
+```
 
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
 `get-directory --path C:\`, `get-processes`, `get-startup-items`, and `get-connections` on one

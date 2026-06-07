@@ -64,6 +64,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoRenameRegistryValue { KeyPath = "HKCU\\Software", OldValueName = "Old", NewValueName = "New" }] = CommandSafetyClass.Persistence,
                 [new DoChangeRegistryValue { KeyPath = "HKCU\\Software", Value = new MasterSplinter.Common.Models.RegValueData { Name = "Answer", Kind = RegistryValueKind.DWord, Data = new byte[] { 42, 0, 0, 0 } } }] = CommandSafetyClass.Persistence,
                 [new GetMonitors()] = CommandSafetyClass.RemoteCapture,
+                [new DoMouseEvent { Action = MouseAction.MoveCursor, X = 10, Y = 20, MonitorIndex = 0 }] = CommandSafetyClass.RemoteInput,
+                [new DoKeyboardEvent { Key = 65, KeyDown = true }] = CommandSafetyClass.RemoteInput,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };
@@ -92,6 +94,8 @@ namespace MasterSplinter.Server.Core.Tests.Commands
             Assert.IsTrue(classifier.Classify(new DoStartupItemAdd { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Path = "C:\\Tools\\agent.exe", Type = StartupType.CurrentUserRun } }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new DoStartupItemRemove { StartupItem = new MasterSplinter.Common.Models.StartupItem { Name = "Agent", Type = StartupType.CurrentUserRun } }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetMonitors()).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoMouseEvent { Action = MouseAction.MoveCursor, X = 10, Y = 20, MonitorIndex = 0 }).RequiresConsent);
+            Assert.IsTrue(classifier.Classify(new DoKeyboardEvent { Key = 65, KeyDown = true }).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetPasswords()).RequiresConsent);
             Assert.IsTrue(classifier.Classify(new GetKeyloggerLogsDirectory()).RequiresConsent);
         }

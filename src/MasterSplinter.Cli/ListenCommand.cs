@@ -17,6 +17,12 @@ namespace MasterSplinter.Cli
             string kind,
             string data,
             string shellCommand,
+            string mouseAction,
+            int? x,
+            int? y,
+            int? monitorIndex,
+            byte? key,
+            bool? keyDown,
             string startupType,
             int? pid,
             string action,
@@ -44,6 +50,12 @@ namespace MasterSplinter.Cli
             Kind = kind;
             Data = data;
             ShellCommand = shellCommand;
+            MouseAction = mouseAction;
+            X = x;
+            Y = y;
+            MonitorIndex = monitorIndex;
+            Key = key;
+            KeyDown = keyDown;
             StartupType = startupType;
             Pid = pid;
             Action = action;
@@ -72,6 +84,12 @@ namespace MasterSplinter.Cli
         public string Kind { get; }
         public string Data { get; }
         public string ShellCommand { get; }
+        public string MouseAction { get; }
+        public int? X { get; }
+        public int? Y { get; }
+        public int? MonitorIndex { get; }
+        public byte? Key { get; }
+        public bool? KeyDown { get; }
         public string StartupType { get; }
         public int? Pid { get; }
         public string Action { get; }
@@ -92,16 +110,16 @@ namespace MasterSplinter.Cli
         {
             string[] tokens = Tokenize(line);
             if (tokens.Length == 0)
-                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("empty", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             string verb = tokens[0];
             if (string.Equals(verb, "exit", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(verb, "quit", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("exit", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "help", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("help", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
             if (string.Equals(verb, "clients", StringComparison.OrdinalIgnoreCase))
-                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
+                return new ListenCommand("clients", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null);
 
             if (!string.Equals(verb, "dispatch", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"Unknown listen command '{verb}'.");
@@ -118,6 +136,12 @@ namespace MasterSplinter.Cli
             string kind = null;
             string data = null;
             string shellCommand = null;
+            string mouseAction = null;
+            int? x = null;
+            int? y = null;
+            int? monitorIndex = null;
+            byte? key = null;
+            bool? keyDown = null;
             string startupType = null;
             int? pid = null;
             string action = null;
@@ -198,6 +222,54 @@ namespace MasterSplinter.Cli
                         throw new ArgumentException("--shell-command requires a value.");
 
                     shellCommand = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--mouse-action", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--mouse-action requires a value.");
+
+                    mouseAction = tokens[index];
+                }
+                else if (string.Equals(tokens[index], "--x", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--x requires a value.");
+
+                    x = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--y", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--y requires a value.");
+
+                    y = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--monitor-index", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--monitor-index requires a value.");
+
+                    monitorIndex = int.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--key", StringComparison.OrdinalIgnoreCase))
+                {
+                    index++;
+                    if (index >= tokens.Length || string.IsNullOrWhiteSpace(tokens[index]))
+                        throw new ArgumentException("--key requires a value.");
+
+                    key = byte.Parse(tokens[index], System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else if (string.Equals(tokens[index], "--key-down", StringComparison.OrdinalIgnoreCase))
+                {
+                    keyDown = SetKeyDirection(keyDown, true);
+                }
+                else if (string.Equals(tokens[index], "--key-up", StringComparison.OrdinalIgnoreCase))
+                {
+                    keyDown = SetKeyDirection(keyDown, false);
                 }
                 else if (string.Equals(tokens[index], "--startup-type", StringComparison.OrdinalIgnoreCase))
                 {
@@ -389,6 +461,26 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(shellCommand))
                 throw new ArgumentException("--shell-command is required for shell-execute.");
 
+            if (string.Equals(dispatchCommand, "mouse-event", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(mouseAction))
+                    throw new ArgumentException("--mouse-action is required for mouse-event.");
+                if (!x.HasValue)
+                    throw new ArgumentException("--x is required for mouse-event.");
+                if (!y.HasValue)
+                    throw new ArgumentException("--y is required for mouse-event.");
+                if (!monitorIndex.HasValue)
+                    throw new ArgumentException("--monitor-index is required for mouse-event.");
+            }
+
+            if (string.Equals(dispatchCommand, "keyboard-event", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!key.HasValue)
+                    throw new ArgumentException("--key is required for keyboard-event.");
+                if (!keyDown.HasValue)
+                    throw new ArgumentException("--key-down or --key-up is required for keyboard-event.");
+            }
+
             if (string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(path))
@@ -473,6 +565,12 @@ namespace MasterSplinter.Cli
                 kind,
                 data,
                 shellCommand,
+                mouseAction,
+                x,
+                y,
+                monitorIndex,
+                key,
+                keyDown,
                 startupType,
                 pid,
                 action,
@@ -488,6 +586,14 @@ namespace MasterSplinter.Cli
                 remotePort,
                 remotePath,
                 outputPath);
+        }
+
+        private static bool SetKeyDirection(bool? existing, bool value)
+        {
+            if (existing.HasValue && existing.Value != value)
+                throw new ArgumentException("--key-down and --key-up cannot both be specified.");
+
+            return value;
         }
 
         private static string[] Tokenize(string line)
