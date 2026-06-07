@@ -7,6 +7,7 @@
     <RootNamespace>MasterSplinter.Client.Host</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsPackable>false</IsPackable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MasterSplinter.Client.Core\MasterSplinter.Client.Core.csproj" />

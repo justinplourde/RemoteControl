@@ -17,7 +17,7 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add TCP connection close CLI parity`
+- Latest committed work before this handoff: `Require elevated client host for TCP close parity`
 - Latest known full test result: 157 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -90,8 +90,9 @@ legacy source under `legacy/Quasar`, not active modern code.
 
 TCP connection close parity is now implemented as a permissioned dispatch path. Manual loopback
 check: `close-connection` required `--grant-permission`, returned `Safety=NetworkControl`,
-`RequiresPermission=True`, `RequiresConsent=False`, and produced a refreshed connection list. The
-non-elevated manual run did not close the target loopback row, so elevated Windows verification
-is still needed before marking actual close behavior fully proven.
+`RequiresPermission=True`, `RequiresConsent=False`, and produced a refreshed connection list.
+Windows requires the client process to be elevated for actual TCP row deletion, matching legacy
+behavior; `MasterSplinter.Client.Host` now has a `requireAdministrator` manifest for published
+Windows executables.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

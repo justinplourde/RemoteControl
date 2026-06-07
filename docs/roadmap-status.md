@@ -309,8 +309,9 @@ Done:
 - Verified loopback `close-connection` dispatch manually on June 6, 2026 with
   `--grant-permission`; dispatch metadata returned `Safety=NetworkControl`,
   `RequiresPermission=True`, and `RequiresConsent=False`, and the client returned a refreshed TCP
-  list. The non-elevated manual run did not actually close the test loopback row, so elevated
-  Windows verification remains pending.
+  list. Windows requires the client process to be elevated for `SetTcpEntry` deletion; the client
+  host now embeds a `requireAdministrator` manifest for published Windows executables to match
+  legacy parity expectations.
 
 Left to do:
 
@@ -538,8 +539,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter
 dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47852 --handle-one-command
 ```
 
-Use a harmless loopback TCP test connection. Actual close may require the client host to run
-elevated on Windows.
+Use a harmless loopback TCP test connection. Run the published client host executable elevated on
+Windows for actual close behavior; `dotnet run` itself does not trigger the application manifest.
 
 Current manual file-download check:
 

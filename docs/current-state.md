@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add TCP connection close CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Require elevated client host for TCP close parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -199,9 +199,9 @@ All modern projects target `net10.0`.
   documentation and the preserved `legacy/Quasar` source tree.
 - TCP connection close added through `DoCloseConnection` with `NetworkControl` permission
   enforcement, deterministic tests, CLI four-tuple parsing, and a manual loopback dispatch check.
-  The manual non-elevated Windows run dispatched successfully and returned a refreshed connection
-  list, but the target loopback connection remained established, so actual close success still
-  needs an elevated-client verification pass.
+  Windows TCP row deletion requires an elevated client process, matching the legacy behavior.
+  `MasterSplinter.Client.Host` now embeds a Windows manifest requesting administrator rights when
+  run as a published executable.
 
 ## Current Limitations
 
@@ -210,9 +210,9 @@ All modern projects target `net10.0`.
 - Modern hosts currently prove loopback handshake, read-only runtime parity, permissioned
   file download/upload slices, permissioned file rename, and permissioned file delete, not full
   remote-management behavior.
-- Recursive directory delete, elevated verification for TCP connection close, process-start URL
-  download/update behavior, registry writes, shell, desktop, service, and UI behavior are not
-  fully extracted yet.
+- Recursive directory delete, process-start URL download/update behavior, registry writes, shell,
+  desktop, service, and UI behavior are not fully extracted yet. TCP connection close requires
+  the Windows client host to run elevated.
 
 ## Recommended Next Tasks
 
