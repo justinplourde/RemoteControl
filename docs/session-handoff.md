@@ -9,7 +9,7 @@ C:\Users\Jplou\develop\RemoteControl
 Then ask:
 
 ```text
-Read docs/current-state.md, docs/roadmap-status.md, and docs/repository-layout.md, then continue the modernization plan.
+Read docs/current-state.md, docs/roadmap-status.md, docs/legacy-parity-audit.md, and docs/repository-layout.md, then continue the modernization plan.
 ```
 
 Current checkpoint:
@@ -202,4 +202,6 @@ Shell execute parity is wired through `shell-execute --shell-command <command>`.
 should be manually verified with harmless commands only. The shell provider keeps a live shell
 process across dispatches, so current directory/session state persists; send `exit` to close it.
 
-Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.
+Do not start Web API work until full legacy Quasar parity accounting is confirmed.
+Use `docs/legacy-parity-audit.md` as the 1:1 parity source of truth: every legacy Quasar feature
+must be accounted for as `done`, `partial`, `not-started`, or `blocked-by-safety`.

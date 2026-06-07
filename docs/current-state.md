@@ -12,8 +12,8 @@ is missing, open a new chat from:
 C:\Users\Jplou\develop\RemoteControl
 ```
 
-Then ask the new chat to read this file, `docs/roadmap-status.md`, and
-`docs/repository-layout.md`.
+Then ask the new chat to read this file, `docs/roadmap-status.md`,
+`docs/legacy-parity-audit.md`, and `docs/repository-layout.md`.
 
 ## Repository
 
@@ -183,7 +183,10 @@ All modern projects target `net10.0`.
 - Protocol changes must be additive and covered by serialization/wire tests.
 - Cross-platform work starts only after portable behavior is covered by tests.
 - Web API, consentful clients, service mode, and GUI overhaul are post-parity roadmap work.
-- Do not start the Web API until full legacy admin-tool parity for kept features is confirmed.
+- Do not start the Web API until full legacy Quasar parity accounting is confirmed.
+- Legacy parity is now tracked as 100% 1:1 accounting in `docs/legacy-parity-audit.md`. There is
+  no untracked "not kept" bucket; every legacy feature is `done`, `partial`, `not-started`, or
+  `blocked-by-safety`.
 
 ## Completed
 
@@ -212,7 +215,8 @@ All modern projects target `net10.0`.
 - Loopback TCP `GetStartupItems` command-response path added and tested.
 - `GetConnections` client handler added with deterministic tests.
 - Loopback TCP `GetConnections` command-response path added and tested.
-- Capability matrix added at `docs/capability-matrix.md` with legacy admin-tool parity as the goal and with keep/redesign/defer/quarantine decisions.
+- Capability matrix added at `docs/capability-matrix.md`; `docs/legacy-parity-audit.md` is now
+  the 1:1 source of truth for all legacy parity accounting.
 - Server command safety classification added and attached to dispatch results and audit events.
 - Server command policy enforcement added so commands requiring permission or consent are denied unless dispatch authorization grants them.
 - Server authorization models and services added to derive dispatch authorization from operator permissions and client consent.
@@ -342,7 +346,7 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Continue confirming remaining legacy admin-tool parity gaps for kept features before Web API work.
+1. Work directly from `docs/legacy-parity-audit.md` and close each 1:1 parity row deliberately.
 2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
 3. Add parity tests against legacy behavior before moving each behavior slice.
-4. Once runtime parity is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
+4. Once runtime parity/accounting is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

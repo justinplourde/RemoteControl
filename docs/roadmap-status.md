@@ -16,8 +16,10 @@ Only after that parity gate should we start adding the new roadmap features: Web
 CLI, permissioned operators, consentful client UI, Windows service mode, cross-platform
 expansion, and the GUI overhaul.
 
-Current decision: do not start the Web API until full legacy admin-tool parity for kept
-features is confirmed.
+Current decision: do not start the Web API until full legacy Quasar parity accounting is
+confirmed. The source of truth is `docs/legacy-parity-audit.md`: every legacy feature must be
+listed as `done`, `partial`, `not-started`, or `blocked-by-safety`. There is no untracked
+"not kept" bucket.
 
 The guiding order is:
 
@@ -403,7 +405,7 @@ Left to do:
 - Extract server listener/orchestration behavior from `legacy/Quasar/Quasar.Server`.
 - Define operator identity and authorization inputs for server commands.
 - Add integration tests for broader client/server behavior once client handlers are extracted.
-- Continue confirming remaining kept-feature parity gaps before Web API work.
+- Continue closing remaining rows in `docs/legacy-parity-audit.md` before Web API work.
 
 ## Priority 5: Modern Runtime Parity
 
@@ -426,24 +428,29 @@ Planned work:
 - Build out behavior tests for file-system operations, system info, process metadata, shell behavior,
   remote desktop contracts, registry write behavior, startup/service behavior, and reverse proxy behavior
   before or while each area is extracted.
-- Classify each legacy feature as keep, redesign, defer, or remove before porting behavior.
+- Classify each legacy feature in `docs/legacy-parity-audit.md` as `done`, `partial`,
+  `not-started`, or `blocked-by-safety` before claiming parity.
 
 Parity acceptance should include:
 
 - Modern client/server handshake succeeds using the modern `net10.0` projects.
 - Existing wire fixtures remain compatible.
 - Modern command routing matches the tested legacy message behavior.
-- A documented capability matrix exists for supported, deferred, removed, and Windows-only features.
-- Completed kept capabilities can be manually verified through CLI `listen` mode without
+- A documented capability matrix exists for supported, partial, not-started, blocked-by-safety,
+  and Windows-only features.
+- Completed runtime capabilities can be manually verified through CLI `listen` mode without
   restarting the client for each command.
 - `dotnet test .\MasterSplinter.sln` remains green.
 
 Current capability matrix:
 
-- `docs/capability-matrix.md` documents the current keep/redesign/defer/quarantine decisions
-  and should be checked before porting state-changing or sensitive legacy behavior. The
-  matrix treats legacy admin-tool parity as the goal, with compatibility parity separated
-  from runtime parity for features that require additional consent, legal, or safety review.
+- `docs/capability-matrix.md` documents current parity handling and should be checked before
+  porting state-changing or sensitive legacy behavior. The
+  matrix treats legacy admin-tool parity as the goal, with compatibility parity and
+  blocked-by-safety parity separated from runtime parity for features that require additional
+  consent, legal, or safety review.
+- `docs/legacy-parity-audit.md` is the 1:1 legacy Quasar accounting checklist. Update it whenever
+  a parity slice is completed, manually verified, deferred, or safety-blocked.
 
 ## Priority 6: Permissioned Operators And Audit Logging
 
@@ -465,7 +472,7 @@ post-parity roadmap features.
 Status: Planned after modern runtime parity
 
 - Add a root-level Web API project after `MasterSplinter.Server.Core` owns orchestration contracts.
-- Blocked until full legacy admin-tool parity for kept features is confirmed.
+- Blocked until full legacy Quasar parity accounting is confirmed.
 - Expose client inventory, session status, command dispatch, audit query, and capability discovery.
 - Use the server core for all business logic.
 - Do not duplicate server orchestration inside controllers.
@@ -571,9 +578,10 @@ Areas still deferred from the legacy app:
 
 Recommended next sequence:
 
-1. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
-2. Confirm full legacy admin-tool parity for kept features before starting Web API work.
-3. Start original roadmap features: permissioned operators, Web API, consent UI,
+1. Work from `docs/legacy-parity-audit.md`, not from an implied kept/deferred feature list.
+2. Continue extracting tested read-only or permission-scoped legacy behavior until the modern runtime parity gate is met.
+3. Confirm full legacy admin-tool parity accounting before starting Web API work.
+4. Start original roadmap features: permissioned operators, Web API, consent UI,
    Windows service mode, cross-platform expansion, and GUI overhaul.
 
 ## Acceptance Checks
