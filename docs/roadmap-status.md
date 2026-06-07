@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 73 passed.
+- `MasterSplinter.Client.Core.Tests`: 74 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -163,6 +163,7 @@ Done:
   `Persistence` permission classification.
 - Added tests for `DoShellExecute` response mapping and CLI shell-execute parsing/formatting;
   `Execution` permission plus consent classification was already covered.
+- Added a shell provider test proving session state persists across commands.
 
 Left to do:
 
@@ -373,6 +374,8 @@ Done:
 - Added one-command shell execute parity through `DoShellExecute` and `DoShellExecuteResponse`:
   the client host wires a shell command provider, CLI exposes `shell-execute --shell-command
   <command>`, and execution remains permission plus consent gated.
+- Upgraded shell execute to keep a persistent shell process across dispatches; commands share
+  session state, stderr marks the response as an error, and `exit` closes the shell session.
 
 Left to do:
 
@@ -709,9 +712,8 @@ dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\Master
 dispatch first shell-execute --shell-command whoami
 ```
 
-Use harmless commands only. The current modern CLI slice executes one command per dispatch and
-returns combined stdout/stderr; legacy-style persistent interactive shell sessions still need a
-broader CLI receive/session model.
+Use harmless commands only. The modern shell provider keeps session state across dispatches; send
+`dispatch first shell-execute --shell-command exit` to close the shell session.
 
 Current manual file-download check:
 

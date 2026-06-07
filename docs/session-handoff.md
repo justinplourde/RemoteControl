@@ -18,7 +18,7 @@ Current checkpoint:
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
 - Latest committed work before this handoff: `Add shell execute CLI parity`
-- Latest known full test result: 181 passed, 1 skipped, 0 failed
+- Latest known full test result: 182 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -160,8 +160,7 @@ key/value that is removed afterward. Supported CLI kinds are `string`, `expand-s
 
 Shell execute parity is wired through `shell-execute --shell-command <command>`. It requires
 `--grant-permission --grant-consent`, maps to `Execution`, returns `DoShellExecuteResponse`, and
-should be manually verified with harmless commands only. The current modern CLI slice executes
-one command per dispatch and returns combined stdout/stderr; legacy-style persistent interactive
-shell sessions still need CLI receive/session work.
+should be manually verified with harmless commands only. The shell provider keeps a live shell
+process across dispatches, so current directory/session state persists; send `exit` to close it.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

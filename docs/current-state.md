@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 73 passed
+- `MasterSplinter.Client.Core.Tests`: 74 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 181 passed, 1 skipped, 0 failed
+- Total: 182 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -96,7 +96,7 @@ Current CLI dispatch command names:
 - `registry-delete-value --path <hive\key> --name <value-name>` (requires `--grant-permission`)
 - `registry-rename-value --path <hive\key> --name <old-value-name> --new-name <new-value-name>` (requires `--grant-permission`)
 - `registry-change-value --path <hive\key> --name <value-name> --kind <string|expand-string|binary|dword|qword|multi-string> --data <value>` (requires `--grant-permission`; binary data is hex and multi-string data uses `|` separators)
-- `shell-execute --shell-command <command>` (requires `--grant-permission --grant-consent`; executes one shell command and returns stdout/stderr)
+- `shell-execute --shell-command <command>` (requires `--grant-permission --grant-consent`; executes in a persistent shell session and returns stdout/stderr; use `exit` to close the session)
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
@@ -261,9 +261,9 @@ All modern projects target `net10.0`.
   dword, qword, and multi-string data.
 - Shell execute parity is now wired through `DoShellExecute` and `DoShellExecuteResponse`, a shell
   command provider, CLI `shell-execute --shell-command <command>`, and `Execution` permission plus
-  consent enforcement. The current modern CLI slice executes one command per dispatch and returns
-  combined stdout/stderr; legacy-style persistent interactive shell sessions still need a broader
-  CLI receive/session model.
+  consent enforcement. The modern provider keeps a shell process alive across dispatches so session
+  state such as current directory can persist, returns stdout/stderr, marks stderr output as errors,
+  and closes the shell session when `exit` is dispatched.
 
 ## Current Limitations
 
@@ -285,8 +285,7 @@ All modern projects target `net10.0`.
   add/remove dispatch is implemented, but manual verification should use a harmless test entry and
   remove it afterward. Registry key and value mutations are implemented, but manual verification
   should use a harmless `HKCU\Software` test key/value and remove them afterward. Shell execute is
-  implemented for one-command dispatch, but manual verification should use harmless commands only;
-  persistent interactive shell behavior is still pending.
+  implemented with a persistent session, but manual verification should use harmless commands only.
 
 ## Recommended Next Tasks
 

@@ -2,6 +2,8 @@ using MasterSplinter.Client.Core.Dispatch;
 using MasterSplinter.Client.Core.Shell;
 using MasterSplinter.Common.Messages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,6 +41,26 @@ namespace MasterSplinter.Client.Core.Tests.Shell
 
             Assert.AreEqual("failed", response.Output);
             Assert.IsTrue(response.IsError);
+        }
+
+        [TestMethod, TestCategory("ClientCore")]
+        public async Task ProviderKeepsShellSessionStateAcrossCommands()
+        {
+            string directory = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            using (var provider = new ShellCommandProvider())
+            {
+                string changeDirectoryCommand = OperatingSystem.IsWindows()
+                    ? $"cd /d \"{directory}\""
+                    : $"cd \"{directory}\"";
+                await provider.ExecuteAsync(changeDirectoryCommand, CancellationToken.None);
+
+                ShellCommandResult result = await provider.ExecuteAsync(
+                    OperatingSystem.IsWindows() ? "cd" : "pwd",
+                    CancellationToken.None);
+
+                Assert.IsTrue(result.IsSuccess, result.Output);
+                StringAssert.Contains(result.Output, directory);
+            }
         }
 
         private sealed class RecordingProvider : IShellCommandProvider
