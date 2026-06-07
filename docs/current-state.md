@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add registry key mutation CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add registry value mutation CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,11 +38,11 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 67 passed
+- `MasterSplinter.Client.Core.Tests`: 71 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 175 passed, 1 skipped, 0 failed
+- Total: 179 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -92,6 +92,10 @@ Current CLI dispatch command names:
 - `registry-create-key --path <hive\parent-subkey>` (requires `--grant-permission`; creates legacy-style `New Key #n`)
 - `registry-delete-key --path <hive\parent-subkey> --name <child-key>` (requires `--grant-permission`)
 - `registry-rename-key --path <hive\parent-subkey> --name <old-child-key> --new-name <new-child-key>` (requires `--grant-permission`)
+- `registry-create-value --path <hive\key> --kind <string|expand-string|binary|dword|qword|multi-string>` (requires `--grant-permission`; creates legacy-style `New Value #n`)
+- `registry-delete-value --path <hive\key> --name <value-name>` (requires `--grant-permission`)
+- `registry-rename-value --path <hive\key> --name <old-value-name> --new-name <new-value-name>` (requires `--grant-permission`)
+- `registry-change-value --path <hive\key> --name <value-name> --kind <string|expand-string|binary|dword|qword|multi-string> --data <value>` (requires `--grant-permission`; binary data is hex and multi-string data uses `|` separators)
 - `download-file --path <remote-file> [--output <local-file>]` (requires `--grant-permission`)
 - `upload-file --path <local-file> --remote-path <client-file>` (requires `--grant-permission`)
 - `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>` (requires `--grant-permission`)
@@ -122,7 +126,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -248,6 +252,12 @@ All modern projects target `net10.0`.
   `DoDeleteRegistryKey`, and `DoRenameRegistryKey`, the registry provider, CLI
   `registry-create-key`/`registry-delete-key`/`registry-rename-key`, and `Persistence`
   permission enforcement. Create preserves the legacy auto-generated `New Key #n` behavior.
+- Registry value create/delete/rename/change parity is now wired through `DoCreateRegistryValue`,
+  `DoDeleteRegistryValue`, `DoRenameRegistryValue`, and `DoChangeRegistryValue`, the registry
+  provider, CLI `registry-create-value`/`registry-delete-value`/`registry-rename-value`/
+  `registry-change-value`, and `Persistence` permission enforcement. Create preserves the legacy
+  auto-generated `New Value #n` behavior, and change supports string, expand-string, binary,
+  dword, qword, and multi-string data.
 
 ## Current Limitations
 
@@ -256,7 +266,7 @@ All modern projects target `net10.0`.
 - Modern hosts currently prove loopback handshake, read-only runtime parity, permissioned
   file download/upload slices, permissioned file rename, and permissioned file delete, not full
   remote-management behavior.
-- Recursive directory delete, process-start URL download/update behavior, registry writes, shell,
+- Recursive directory delete, process-start URL download/update behavior, shell,
   desktop, service, and UI behavior are not fully extracted yet. TCP connection close requires
   the Windows client host to run elevated. Elevation request dispatch is implemented, but the
   actual UAC acceptance path still needs manual desktop verification. Shutdown/restart/standby
@@ -267,8 +277,8 @@ All modern projects target `net10.0`.
   needs manual verification. Website visit dispatch is implemented, but visible browser launch
   and hidden GET behavior still need manual verification from a prepared client session. Startup
   add/remove dispatch is implemented, but manual verification should use a harmless test entry and
-  remove it afterward. Registry key create/delete/rename dispatch is implemented, but manual
-  verification should use a harmless `HKCU\Software` test key and remove it afterward.
+  remove it afterward. Registry key and value mutations are implemented, but manual verification
+  should use a harmless `HKCU\Software` test key/value and remove them afterward.
 
 ## Recommended Next Tasks
 

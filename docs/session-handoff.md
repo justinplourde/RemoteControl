@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: `Add registry key mutation CLI parity`
-- Latest known full test result: 175 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: `Add registry value mutation CLI parity`
+- Latest known full test result: 179 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -38,6 +38,10 @@ Supported CLI dispatch commands are `get-system-info`, `get-drives`, `get-direct
 `registry-create-key --path <hive\parent-subkey>`,
 `registry-delete-key --path <hive\parent-subkey> --name <child-key>`,
 `registry-rename-key --path <hive\parent-subkey> --name <old-child-key> --new-name <new-child-key>`,
+`registry-create-value --path <hive\key> --kind <kind>`,
+`registry-delete-value --path <hive\key> --name <value-name>`,
+`registry-rename-value --path <hive\key> --name <old-value-name> --new-name <new-value-name>`,
+`registry-change-value --path <hive\key> --name <value-name> --kind <kind> --data <value>`,
 `download-file --path <remote-file> [--output <local-file>]`,
 `upload-file --path <local-file> --remote-path <client-file>`,
 `rename-path --path <client-old-path> --new-path <client-new-path> --type <file|directory>`,
@@ -145,5 +149,12 @@ Registry key create/delete/rename parity is wired through `registry-create-key`,
 `registry-delete-key`, and `registry-rename-key`. They require `--grant-permission`, map to
 `Persistence`, preserve legacy response DTOs and generated `New Key #n` naming, and should be
 manually verified with a harmless `HKCU\Software` test key that is removed afterward.
+
+Registry value create/delete/rename/change parity is wired through `registry-create-value`,
+`registry-delete-value`, `registry-rename-value`, and `registry-change-value`. They require
+`--grant-permission`, map to `Persistence`, preserve legacy response DTOs and generated
+`New Value #n` naming, and should be manually verified with a harmless `HKCU\Software` test
+key/value that is removed afterward. Supported CLI kinds are `string`, `expand-string`, `binary`,
+`dword`, `qword`, and `multi-string`; binary data is hex and multi-string data uses `|`.
 
 Do not start Web API work until full legacy admin-tool parity for kept features is confirmed.

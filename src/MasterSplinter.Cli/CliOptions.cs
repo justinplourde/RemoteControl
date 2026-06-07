@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|registry-create-key|registry-delete-key|registry-rename-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|registry-create-key|registry-delete-key|registry-rename-key|registry-create-value|registry-delete-value|registry-rename-value|registry-change-value|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|visit-website|startup-add|startup-remove|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <string|expand-string|binary|dword|qword|multi-string>] [--data <value>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -16,6 +16,8 @@ namespace MasterSplinter.Cli
             string pathType,
             string name,
             string newName,
+            string kind,
+            string data,
             string startupType,
             int? pid,
             string action,
@@ -46,6 +48,8 @@ namespace MasterSplinter.Cli
             PathType = pathType;
             Name = name;
             NewName = newName;
+            Kind = kind;
+            Data = data;
             StartupType = startupType;
             Pid = pid;
             Action = action;
@@ -77,6 +81,8 @@ namespace MasterSplinter.Cli
         public string PathType { get; }
         public string Name { get; }
         public string NewName { get; }
+        public string Kind { get; }
+        public string Data { get; }
         public string StartupType { get; }
         public int? Pid { get; }
         public string Action { get; }
@@ -106,7 +112,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -116,6 +122,8 @@ namespace MasterSplinter.Cli
             string pathType = null;
             string name = null;
             string newName = null;
+            string kind = null;
+            string data = null;
             string startupType = null;
             int? pid = null;
             string action = null;
@@ -153,6 +161,10 @@ namespace MasterSplinter.Cli
                     name = ReadValue(args, ref index, "--name");
                 else if (string.Equals(arg, "--new-name", StringComparison.OrdinalIgnoreCase))
                     newName = ReadValue(args, ref index, "--new-name");
+                else if (string.Equals(arg, "--kind", StringComparison.OrdinalIgnoreCase))
+                    kind = ReadValue(args, ref index, "--kind");
+                else if (string.Equals(arg, "--data", StringComparison.OrdinalIgnoreCase))
+                    data = ReadValue(args, ref index, "--data");
                 else if (string.Equals(arg, "--startup-type", StringComparison.OrdinalIgnoreCase))
                     startupType = ReadValue(args, ref index, "--startup-type");
                 else if (string.Equals(arg, "--pid", StringComparison.OrdinalIgnoreCase))
@@ -231,6 +243,44 @@ namespace MasterSplinter.Cli
                     throw new ArgumentException("--name is required for registry-rename-key.");
                 if (string.IsNullOrWhiteSpace(newName))
                     throw new ArgumentException("--new-name is required for registry-rename-key.");
+            }
+
+            if (string.Equals(dispatchCommand, "registry-create-value", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for registry-create-value.");
+                if (string.IsNullOrWhiteSpace(kind))
+                    throw new ArgumentException("--kind is required for registry-create-value.");
+            }
+
+            if (string.Equals(dispatchCommand, "registry-delete-value", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for registry-delete-value.");
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for registry-delete-value.");
+            }
+
+            if (string.Equals(dispatchCommand, "registry-rename-value", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for registry-rename-value.");
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for registry-rename-value.");
+                if (string.IsNullOrWhiteSpace(newName))
+                    throw new ArgumentException("--new-name is required for registry-rename-value.");
+            }
+
+            if (string.Equals(dispatchCommand, "registry-change-value", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new ArgumentException("--path is required for registry-change-value.");
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("--name is required for registry-change-value.");
+                if (string.IsNullOrWhiteSpace(kind))
+                    throw new ArgumentException("--kind is required for registry-change-value.");
+                if (data == null)
+                    throw new ArgumentException("--data is required for registry-change-value.");
             }
 
             if (string.Equals(dispatchCommand, "upload-file", StringComparison.OrdinalIgnoreCase))
@@ -315,6 +365,8 @@ namespace MasterSplinter.Cli
                 pathType,
                 name,
                 newName,
+                kind,
+                data,
                 startupType,
                 pid,
                 action,

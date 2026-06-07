@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 67 passed.
+- `MasterSplinter.Client.Core.Tests`: 71 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -158,6 +158,9 @@ Done:
 - Added tests for `DoCreateRegistryKey`, `DoDeleteRegistryKey`, and `DoRenameRegistryKey`
   response mapping, CLI key mutation parsing/formatting, and `Persistence` permission
   classification.
+- Added tests for `DoCreateRegistryValue`, `DoDeleteRegistryValue`, `DoRenameRegistryValue`,
+  and `DoChangeRegistryValue` response mapping, CLI value mutation parsing/formatting, and
+  `Persistence` permission classification.
 
 Left to do:
 
@@ -360,6 +363,11 @@ Done:
   `DoDeleteRegistryKey`, and `DoRenameRegistryKey`: the client host wires registry mutation
   handlers, CLI exposes `registry-create-key`, `registry-delete-key`, and `registry-rename-key`,
   and create preserves the legacy `New Key #n` naming behavior.
+- Added registry value create/delete/rename/change parity through `DoCreateRegistryValue`,
+  `DoDeleteRegistryValue`, `DoRenameRegistryValue`, and `DoChangeRegistryValue`: the client host
+  wires registry value mutation handlers, CLI exposes `registry-create-value`,
+  `registry-delete-value`, `registry-rename-value`, and `registry-change-value`, and create
+  preserves the legacy `New Value #n` naming behavior.
 
 Left to do:
 
@@ -519,7 +527,7 @@ Status: Planned as part of modern runtime parity
 Areas still deferred from the legacy app:
 
 - Remote desktop image compression and streaming.
-- Registry operations.
+- Registry mutation manual verification.
 - Process and shell execution behavior.
 - File-system access behavior beyond DTO contracts.
 - Client command handlers.
@@ -670,6 +678,23 @@ dispatch first registry-delete-key --path HKCU\Software --name MasterSplinterTes
 
 Use only a harmless test key under `HKCU\Software` and remove it afterward. Machine-wide hives may
 require an elevated client process.
+
+Current manual registry value mutation check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47860 --grant-permission
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47860 --handle-commands
+dispatch first registry-create-key --path HKCU\Software
+dispatch first registry-rename-key --path HKCU\Software --name "New Key #1" --new-name MasterSplinterTestKey
+dispatch first registry-create-value --path HKCU\Software\MasterSplinterTestKey --kind string
+dispatch first registry-rename-value --path HKCU\Software\MasterSplinterTestKey --name "New Value #1" --new-name TestValue
+dispatch first registry-change-value --path HKCU\Software\MasterSplinterTestKey --name TestValue --kind string --data Hello
+dispatch first registry-delete-value --path HKCU\Software\MasterSplinterTestKey --name TestValue
+dispatch first registry-delete-key --path HKCU\Software --name MasterSplinterTestKey
+```
+
+Use only a harmless test key/value under `HKCU\Software` and remove both afterward. For binary
+value data, pass hex such as `01-02-ff`; for multi-string data, separate entries with `|`.
 
 Current manual file-download check:
 

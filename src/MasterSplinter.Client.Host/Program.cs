@@ -54,6 +54,10 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.list");
                 identityOptions.Capabilities.SupportedFeatures.Add("processes.start");
                 identityOptions.Capabilities.SupportedFeatures.Add("registry.read");
+                identityOptions.Capabilities.SupportedFeatures.Add("registry.value.change");
+                identityOptions.Capabilities.SupportedFeatures.Add("registry.value.create");
+                identityOptions.Capabilities.SupportedFeatures.Add("registry.value.delete");
+                identityOptions.Capabilities.SupportedFeatures.Add("registry.value.rename");
                 identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
                 identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
@@ -116,6 +120,14 @@ namespace MasterSplinter.Client.Host
                             new DoDeleteRegistryKeyHandler(new RegistryKeyProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoRenameRegistryKey>(
                             new DoRenameRegistryKeyHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoCreateRegistryValue>(
+                            new DoCreateRegistryValueHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoDeleteRegistryValue>(
+                            new DoDeleteRegistryValueHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoRenameRegistryValue>(
+                            new DoRenameRegistryValueHandler(new RegistryKeyProvider())))
+                        .AddHandler(new ResponseMessageHandlerAdapter<DoChangeRegistryValue>(
+                            new DoChangeRegistryValueHandler(new RegistryKeyProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetStartupItems>(
                             new GetStartupItemsHandler(new StartupItemProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<DoStartupItemAdd>(

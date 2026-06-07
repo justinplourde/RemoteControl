@@ -2,10 +2,12 @@ using MasterSplinter.Server.Core.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MasterSplinter.Common.Enums;
 using MasterSplinter.Common.Messages;
+using Microsoft.Win32;
 using System.Collections.Generic;
 
 namespace MasterSplinter.Server.Core.Tests.Commands
 {
+#pragma warning disable CA1416
     [TestClass]
     public class DefaultCommandSafetyClassifierTests
     {
@@ -56,6 +58,10 @@ namespace MasterSplinter.Server.Core.Tests.Commands
                 [new DoCreateRegistryKey { ParentPath = "HKCU\\Software" }] = CommandSafetyClass.Persistence,
                 [new DoDeleteRegistryKey { ParentPath = "HKCU\\Software", KeyName = "Old" }] = CommandSafetyClass.Persistence,
                 [new DoRenameRegistryKey { ParentPath = "HKCU\\Software", OldKeyName = "Old", NewKeyName = "New" }] = CommandSafetyClass.Persistence,
+                [new DoCreateRegistryValue { KeyPath = "HKCU\\Software", Kind = RegistryValueKind.String }] = CommandSafetyClass.Persistence,
+                [new DoDeleteRegistryValue { KeyPath = "HKCU\\Software", ValueName = "Old" }] = CommandSafetyClass.Persistence,
+                [new DoRenameRegistryValue { KeyPath = "HKCU\\Software", OldValueName = "Old", NewValueName = "New" }] = CommandSafetyClass.Persistence,
+                [new DoChangeRegistryValue { KeyPath = "HKCU\\Software", Value = new MasterSplinter.Common.Models.RegValueData { Name = "Answer", Kind = RegistryValueKind.DWord, Data = new byte[] { 42, 0, 0, 0 } } }] = CommandSafetyClass.Persistence,
                 [new GetPasswords()] = CommandSafetyClass.CredentialAccess,
                 [new GetKeyloggerLogsDirectory()] = CommandSafetyClass.KeystrokeAccess
             };
@@ -168,4 +174,5 @@ namespace MasterSplinter.Server.Core.Tests.Commands
         {
         }
     }
+#pragma warning restore CA1416
 }

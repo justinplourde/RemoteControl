@@ -7,15 +7,20 @@ using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using MasterSplinter.Common.Enums;
 using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Models;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MasterSplinter.Cli
 {
+#pragma warning disable CA1416
     public static class Program
     {
         private const int FileTransferId = 1;
@@ -202,6 +207,8 @@ namespace MasterSplinter.Cli
                 options.PathType,
                 options.Name,
                 options.NewName,
+                options.Kind,
+                options.Data,
                 options.StartupType,
                 options.Pid,
                 options.Action,
@@ -219,7 +226,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null, null, null, false, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -229,6 +236,8 @@ namespace MasterSplinter.Cli
             string pathType,
             string name,
             string newName,
+            string kind,
+            string data,
             string startupType,
             int? pid,
             string action,
@@ -259,6 +268,26 @@ namespace MasterSplinter.Cli
                 return new DoDeleteRegistryKey { ParentPath = path, KeyName = name };
             if (string.Equals(dispatchCommand, "registry-rename-key", StringComparison.OrdinalIgnoreCase))
                 return new DoRenameRegistryKey { ParentPath = path, OldKeyName = name, NewKeyName = newName };
+            if (string.Equals(dispatchCommand, "registry-create-value", StringComparison.OrdinalIgnoreCase))
+                return new DoCreateRegistryValue { KeyPath = path, Kind = ParseRegistryValueKind(kind) };
+            if (string.Equals(dispatchCommand, "registry-delete-value", StringComparison.OrdinalIgnoreCase))
+                return new DoDeleteRegistryValue { KeyPath = path, ValueName = name };
+            if (string.Equals(dispatchCommand, "registry-rename-value", StringComparison.OrdinalIgnoreCase))
+                return new DoRenameRegistryValue { KeyPath = path, OldValueName = name, NewValueName = newName };
+            if (string.Equals(dispatchCommand, "registry-change-value", StringComparison.OrdinalIgnoreCase))
+            {
+                RegistryValueKind valueKind = ParseRegistryValueKind(kind);
+                return new DoChangeRegistryValue
+                {
+                    KeyPath = path,
+                    Value = new RegValueData
+                    {
+                        Name = name,
+                        Kind = valueKind,
+                        Data = ParseRegistryValueData(valueKind, data)
+                    }
+                };
+            }
             if (string.Equals(dispatchCommand, "download-file", StringComparison.OrdinalIgnoreCase))
                 return new FileTransferRequest { Id = 1, RemotePath = path };
             if (string.Equals(dispatchCommand, "rename-path", StringComparison.OrdinalIgnoreCase))
@@ -366,6 +395,8 @@ namespace MasterSplinter.Cli
                 listenCommand.PathType,
                 listenCommand.Name,
                 listenCommand.NewName,
+                listenCommand.Kind,
+                listenCommand.Data,
                 listenCommand.StartupType,
                 listenCommand.Pid,
                 listenCommand.Action,
@@ -593,6 +624,81 @@ namespace MasterSplinter.Cli
             throw new ArgumentException("--startup-type must be local-machine-run, local-machine-run-once, current-user-run, current-user-run-once, start-menu, local-machine-run-x86, or local-machine-run-once-x86.");
         }
 
+        private static RegistryValueKind ParseRegistryValueKind(string kind)
+        {
+            if (string.Equals(kind, "string", StringComparison.OrdinalIgnoreCase))
+                return RegistryValueKind.String;
+            if (string.Equals(kind, "expand-string", StringComparison.OrdinalIgnoreCase))
+                return RegistryValueKind.ExpandString;
+            if (string.Equals(kind, "binary", StringComparison.OrdinalIgnoreCase))
+                return RegistryValueKind.Binary;
+            if (string.Equals(kind, "dword", StringComparison.OrdinalIgnoreCase))
+                return RegistryValueKind.DWord;
+            if (string.Equals(kind, "qword", StringComparison.OrdinalIgnoreCase))
+                return RegistryValueKind.QWord;
+            if (string.Equals(kind, "multi-string", StringComparison.OrdinalIgnoreCase))
+                return RegistryValueKind.MultiString;
+
+            throw new ArgumentException("--kind must be string, expand-string, binary, dword, qword, or multi-string.");
+        }
+
+        private static byte[] ParseRegistryValueData(RegistryValueKind kind, string data)
+        {
+            switch (kind)
+            {
+                case RegistryValueKind.Binary:
+                    return ParseHexBytes(data);
+                case RegistryValueKind.MultiString:
+                    return GetStringArrayBytes((data ?? string.Empty).Split(new[] { '|' }, StringSplitOptions.None));
+                case RegistryValueKind.DWord:
+                    return BitConverter.GetBytes(uint.Parse(data, CultureInfo.InvariantCulture));
+                case RegistryValueKind.QWord:
+                    return BitConverter.GetBytes(ulong.Parse(data, CultureInfo.InvariantCulture));
+                case RegistryValueKind.String:
+                case RegistryValueKind.ExpandString:
+                    return GetStringBytes(data ?? string.Empty);
+                default:
+                    return new byte[0];
+            }
+        }
+
+        private static byte[] ParseHexBytes(string data)
+        {
+            if (string.IsNullOrWhiteSpace(data))
+                return new byte[0];
+
+            string normalized = data
+                .Replace("-", string.Empty)
+                .Replace(":", string.Empty)
+                .Replace(" ", string.Empty);
+            if (normalized.Length % 2 != 0)
+                throw new ArgumentException("--data for binary values must contain an even number of hex digits.");
+
+            byte[] bytes = new byte[normalized.Length / 2];
+            for (int index = 0; index < bytes.Length; index++)
+                bytes[index] = byte.Parse(normalized.Substring(index * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+
+            return bytes;
+        }
+
+        private static byte[] GetStringBytes(string value)
+        {
+            return Encoding.Unicode.GetBytes(value ?? string.Empty);
+        }
+
+        private static byte[] GetStringArrayBytes(string[] values)
+        {
+            var bytes = new List<byte>();
+            foreach (string value in values ?? Array.Empty<string>())
+            {
+                bytes.AddRange(GetStringBytes(value));
+                bytes.Add(0);
+                bytes.Add(0);
+            }
+
+            return bytes.ToArray();
+        }
+
         private static ShutdownAction ParseShutdownAction(string action)
         {
             if (string.Equals(action, "shutdown", StringComparison.OrdinalIgnoreCase))
@@ -704,7 +810,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--name <name>] [--new-name <name>] [--kind <registry-kind>] [--data <value>] [--startup-type <type>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--url <http-url>] [--hidden] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(
@@ -955,6 +1061,18 @@ namespace MasterSplinter.Cli
                 case GetRenameRegistryKeyResponse response:
                     lines.Add($"Registry rename key: Parent={ValueOrDash(response.ParentPath)}; OldKey={ValueOrDash(response.OldKeyName)}; NewKey={ValueOrDash(response.NewKeyName)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
                     break;
+                case GetCreateRegistryValueResponse response:
+                    lines.Add($"Registry create value: Key={ValueOrDash(response.KeyPath)}; Value={ValueOrDash(response.Value == null ? null : response.Value.Name)}; Kind={(response.Value == null ? RegistryValueKind.Unknown : response.Value.Kind)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
+                case GetDeleteRegistryValueResponse response:
+                    lines.Add($"Registry delete value: Key={ValueOrDash(response.KeyPath)}; Value={ValueOrDash(response.ValueName)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
+                case GetRenameRegistryValueResponse response:
+                    lines.Add($"Registry rename value: Key={ValueOrDash(response.KeyPath)}; OldValue={ValueOrDash(response.OldValueName)}; NewValue={ValueOrDash(response.NewValueName)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
+                case GetChangeRegistryValueResponse response:
+                    lines.Add($"Registry change value: Key={ValueOrDash(response.KeyPath)}; Value={ValueOrDash(response.Value == null ? null : response.Value.Name)}; Kind={(response.Value == null ? RegistryValueKind.Unknown : response.Value.Kind)}; IsError={response.IsError}; Error={ValueOrDash(response.ErrorMsg)}.");
+                    break;
                 case SetStatusFileManager response:
                     lines.Add($"File manager status: {ValueOrDash(response.Message)}; SetLastDirectorySeen={response.SetLastDirectorySeen}.");
                     break;
@@ -1163,4 +1281,5 @@ namespace MasterSplinter.Cli
             }
         }
     }
+#pragma warning restore CA1416
 }

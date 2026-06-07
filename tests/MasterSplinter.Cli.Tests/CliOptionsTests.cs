@@ -8,6 +8,7 @@ using MasterSplinter.Common.Models;
 
 namespace MasterSplinter.Cli.Tests
 {
+#pragma warning disable CA1416
     [TestClass]
     public class CliOptionsTests
     {
@@ -326,6 +327,52 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("Old", registryRenameKey.OldKeyName);
             Assert.AreEqual("New", registryRenameKey.NewKeyName);
 
+            var registryCreateValue = (DoCreateRegistryValue)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "registry-create-value",
+                "--path", "HKCU\\Software",
+                "--kind", "string"
+            }));
+            Assert.AreEqual("HKCU\\Software", registryCreateValue.KeyPath);
+            Assert.AreEqual(RegistryValueKind.String, registryCreateValue.Kind);
+
+            var registryDeleteValue = (DoDeleteRegistryValue)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "registry-delete-value",
+                "--path", "HKCU\\Software",
+                "--name", "Old"
+            }));
+            Assert.AreEqual("HKCU\\Software", registryDeleteValue.KeyPath);
+            Assert.AreEqual("Old", registryDeleteValue.ValueName);
+
+            var registryRenameValue = (DoRenameRegistryValue)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "registry-rename-value",
+                "--path", "HKCU\\Software",
+                "--name", "Old",
+                "--new-name", "New"
+            }));
+            Assert.AreEqual("HKCU\\Software", registryRenameValue.KeyPath);
+            Assert.AreEqual("Old", registryRenameValue.OldValueName);
+            Assert.AreEqual("New", registryRenameValue.NewValueName);
+
+            var registryChangeValue = (DoChangeRegistryValue)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "registry-change-value",
+                "--path", "HKCU\\Software",
+                "--name", "Answer",
+                "--kind", "dword",
+                "--data", "42"
+            }));
+            Assert.AreEqual("HKCU\\Software", registryChangeValue.KeyPath);
+            Assert.AreEqual("Answer", registryChangeValue.Value.Name);
+            Assert.AreEqual(RegistryValueKind.DWord, registryChangeValue.Value.Kind);
+            CollectionAssert.AreEqual(BitConverter.GetBytes((uint)42), registryChangeValue.Value.Data);
+
             var closeConnection = (DoCloseConnection)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -481,6 +528,16 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "registry-rename-key", "--path", "HKCU\\Software", "--name", "Old" }));
             Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "registry-create-value", "--path", "HKCU\\Software" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "registry-delete-value", "--path", "HKCU\\Software" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "registry-rename-value", "--path", "HKCU\\Software", "--name", "Old" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "registry-change-value", "--path", "HKCU\\Software", "--name", "Answer", "--kind", "dword" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "registry-change-value", "--path", "HKCU\\Software", "--name", "Answer", "--kind", "bogus", "--data", "42" })));
+            Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "startup-add", "--name", "Agent", "--startup-type", "current-user-run" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 CliOptions.Parse(new[] { "dispatch", "--command", "startup-remove", "--startup-type", "current-user-run" }));
@@ -587,6 +644,17 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("Old", registryRenameKey.Name);
             Assert.AreEqual("New", registryRenameKey.NewName);
 
+            ListenCommand registryCreateValue = ListenCommand.Parse("dispatch first registry-create-value --path HKCU\\Software --kind string");
+            Assert.AreEqual("registry-create-value", registryCreateValue.DispatchCommand);
+            Assert.AreEqual("HKCU\\Software", registryCreateValue.Path);
+            Assert.AreEqual("string", registryCreateValue.Kind);
+
+            ListenCommand registryChangeValue = ListenCommand.Parse("dispatch first registry-change-value --path HKCU\\Software --name Answer --kind dword --data 42");
+            Assert.AreEqual("registry-change-value", registryChangeValue.DispatchCommand);
+            Assert.AreEqual("Answer", registryChangeValue.Name);
+            Assert.AreEqual("dword", registryChangeValue.Kind);
+            Assert.AreEqual("42", registryChangeValue.Data);
+
             ListenCommand closeConnection = ListenCommand.Parse("dispatch first close-connection --local-address 127.0.0.1 --local-port 5000 --remote-address 127.0.0.1 --remote-port 5001");
             Assert.AreEqual("close-connection", closeConnection.DispatchCommand);
             Assert.AreEqual("127.0.0.1", closeConnection.LocalAddress);
@@ -610,6 +678,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-create-key"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-delete-key --path HKCU\\Software"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-rename-key --path HKCU\\Software --name Old"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-create-value --path HKCU\\Software"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-delete-value --path HKCU\\Software"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-rename-value --path HKCU\\Software --name Old"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first registry-change-value --path HKCU\\Software --name Answer --kind dword"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("bogus"));
         }
@@ -758,6 +830,41 @@ namespace MasterSplinter.Cli.Tests
                 }));
 
             CollectionAssert.AreEqual(
+                new[] { "Registry create value: Key=HKCU\\Software; Value=New Value #1; Kind=String; IsError=False; Error=-." },
+                Program.FormatResponse(new GetCreateRegistryValueResponse
+                {
+                    KeyPath = "HKCU\\Software",
+                    Value = new RegValueData { Name = "New Value #1", Kind = RegistryValueKind.String }
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Registry delete value: Key=HKCU\\Software; Value=Old; IsError=True; Error=Denied." },
+                Program.FormatResponse(new GetDeleteRegistryValueResponse
+                {
+                    KeyPath = "HKCU\\Software",
+                    ValueName = "Old",
+                    IsError = true,
+                    ErrorMsg = "Denied"
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Registry rename value: Key=HKCU\\Software; OldValue=Old; NewValue=New; IsError=False; Error=-." },
+                Program.FormatResponse(new GetRenameRegistryValueResponse
+                {
+                    KeyPath = "HKCU\\Software",
+                    OldValueName = "Old",
+                    NewValueName = "New"
+                }));
+
+            CollectionAssert.AreEqual(
+                new[] { "Registry change value: Key=HKCU\\Software; Value=Answer; Kind=DWord; IsError=False; Error=-." },
+                Program.FormatResponse(new GetChangeRegistryValueResponse
+                {
+                    KeyPath = "HKCU\\Software",
+                    Value = new RegValueData { Name = "Answer", Kind = RegistryValueKind.DWord }
+                }));
+
+            CollectionAssert.AreEqual(
                 new[] { "File manager status: Renamed file; SetLastDirectorySeen=False." },
                 Program.FormatResponse(new SetStatusFileManager
                 {
@@ -811,4 +918,5 @@ namespace MasterSplinter.Cli.Tests
                 Program.FormatResponse(new FileTransferCancel { Id = 7, Reason = "No permission" }));
         }
     }
+#pragma warning restore CA1416
 }

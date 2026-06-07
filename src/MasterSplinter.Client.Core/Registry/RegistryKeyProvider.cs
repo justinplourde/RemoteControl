@@ -4,16 +4,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Text;
 
 namespace MasterSplinter.Client.Core.Registry
 {
 #pragma warning disable CA1416
-    public sealed class RegistryKeyProvider : IRegistryKeyProvider, IRegistryKeyMutationProvider
+    public sealed class RegistryKeyProvider : IRegistryKeyProvider, IRegistryKeyMutationProvider, IRegistryValueMutationProvider
     {
         private const string DefaultValueName = "";
         private const string RegistryKeyCreateError = "Cannot create key: Error writing to the registry";
         private const string RegistryKeyDeleteError = "Cannot delete key: Error writing to the registry";
         private const string RegistryKeyRenameError = "Cannot rename key: Error writing to the registry";
+        private const string RegistryValueCreateError = "Cannot create value: Error writing to the registry";
+        private const string RegistryValueDeleteError = "Cannot delete value: Error writing to the registry";
+        private const string RegistryValueRenameError = "Cannot rename value: Error writing to the registry";
+        private const string RegistryValueChangeError = "Cannot change value: Error writing to the registry";
 
         public RegistryKeyLoadResult LoadKey(string rootKeyName)
         {
@@ -139,6 +144,162 @@ namespace MasterSplinter.Client.Core.Registry
             catch (Exception exception)
             {
                 return RegistryKeyMutationResult.Error(exception.Message, oldKeyName);
+            }
+        }
+
+        public RegistryValueMutationResult CreateValue(string keyPath, RegistryValueKind kind)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryValueMutationResult.Error("Registry access is only supported on Windows.");
+
+            string name = string.Empty;
+            try
+            {
+                using (RegistryKey key = OpenWritableKey(keyPath))
+                {
+                    if (key == null)
+                        return RegistryValueMutationResult.Error(GetWriteAccessError(keyPath), name);
+
+                    int index = 1;
+                    name = $"New Value #{index}";
+                    while (ContainsValue(key, name))
+                    {
+                        index++;
+                        name = $"New Value #{index}";
+                    }
+
+                    object defaultValue = GetDefaultValue(kind);
+                    try
+                    {
+                        key.SetValue(name, defaultValue, kind);
+                    }
+                    catch
+                    {
+                        return RegistryValueMutationResult.Error(RegistryValueCreateError, name);
+                    }
+
+                    return RegistryValueMutationResult.Success(name, CreateValueData(name, kind, defaultValue));
+                }
+            }
+            catch (Exception exception)
+            {
+                return RegistryValueMutationResult.Error(exception.Message, name);
+            }
+        }
+
+        public RegistryValueMutationResult DeleteValue(string keyPath, string valueName)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryValueMutationResult.Error("Registry access is only supported on Windows.", valueName);
+
+            try
+            {
+                ValidateValueName(valueName);
+                using (RegistryKey key = OpenWritableKey(keyPath))
+                {
+                    if (key == null)
+                        return RegistryValueMutationResult.Error(GetWriteAccessError(keyPath), valueName);
+
+                    if (!ContainsValue(key, valueName))
+                        return RegistryValueMutationResult.Success(valueName, null);
+
+                    try
+                    {
+                        key.DeleteValue(valueName);
+                    }
+                    catch
+                    {
+                        return RegistryValueMutationResult.Error(RegistryValueDeleteError, valueName);
+                    }
+                }
+
+                return RegistryValueMutationResult.Success(valueName, null);
+            }
+            catch (Exception exception)
+            {
+                return RegistryValueMutationResult.Error(exception.Message, valueName);
+            }
+        }
+
+        public RegistryValueMutationResult RenameValue(string keyPath, string oldValueName, string newValueName)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryValueMutationResult.Error("Registry access is only supported on Windows.", oldValueName);
+
+            try
+            {
+                ValidateValueName(oldValueName);
+                ValidateValueName(newValueName);
+                using (RegistryKey key = OpenWritableKey(keyPath))
+                {
+                    if (key == null)
+                        return RegistryValueMutationResult.Error(GetWriteAccessError(keyPath), oldValueName);
+                    if (!ContainsValue(key, oldValueName))
+                        return RegistryValueMutationResult.Error($"The value: {oldValueName} does not exist in: {keyPath}", oldValueName);
+                    if (ContainsValue(key, newValueName))
+                        return RegistryValueMutationResult.Error(RegistryValueRenameError, oldValueName);
+
+                    try
+                    {
+                        object value = key.GetValue(oldValueName);
+                        RegistryValueKind kind = key.GetValueKind(oldValueName);
+                        key.SetValue(newValueName, value, kind);
+                        key.DeleteValue(oldValueName);
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            key.DeleteValue(newValueName, false);
+                        }
+                        catch
+                        {
+                        }
+
+                        return RegistryValueMutationResult.Error(RegistryValueRenameError, oldValueName);
+                    }
+                }
+
+                return RegistryValueMutationResult.Success(newValueName, null);
+            }
+            catch (Exception exception)
+            {
+                return RegistryValueMutationResult.Error(exception.Message, oldValueName);
+            }
+        }
+
+        public RegistryValueMutationResult ChangeValue(string keyPath, RegValueData value)
+        {
+            if (!OperatingSystem.IsWindows())
+                return RegistryValueMutationResult.Error("Registry access is only supported on Windows.", value == null ? null : value.Name, value);
+            if (value == null)
+                return RegistryValueMutationResult.Error("Registry value is required.");
+
+            try
+            {
+                ValidateValueName(value.Name);
+                using (RegistryKey key = OpenWritableKey(keyPath))
+                {
+                    if (key == null)
+                        return RegistryValueMutationResult.Error(GetWriteAccessError(keyPath), value.Name, value);
+                    if (!IsDefaultValue(value.Name) && !ContainsValue(key, value.Name))
+                        return RegistryValueMutationResult.Error($"The value: {value.Name} does not exist in: {keyPath}", value.Name, value);
+
+                    try
+                    {
+                        key.SetValue(value.Name, ConvertBytesToValue(value.Kind, value.Data), value.Kind);
+                    }
+                    catch
+                    {
+                        return RegistryValueMutationResult.Error(RegistryValueChangeError, value.Name, value);
+                    }
+                }
+
+                return RegistryValueMutationResult.Success(value.Name, value);
+            }
+            catch (Exception exception)
+            {
+                return RegistryValueMutationResult.Error(exception.Message, value.Name, value);
             }
         }
 
@@ -286,6 +447,57 @@ namespace MasterSplinter.Client.Core.Registry
             }
         }
 
+        private static object ConvertBytesToValue(RegistryValueKind kind, byte[] data)
+        {
+            byte[] bytes = data ?? new byte[0];
+            switch (kind)
+            {
+                case RegistryValueKind.Binary:
+                    return bytes;
+                case RegistryValueKind.MultiString:
+                    return GetStringArray(bytes);
+                case RegistryValueKind.DWord:
+                    return bytes.Length < sizeof(uint) ? 0 : unchecked((int)BitConverter.ToUInt32(bytes, 0));
+                case RegistryValueKind.QWord:
+                    return bytes.Length < sizeof(ulong) ? 0L : unchecked((long)BitConverter.ToUInt64(bytes, 0));
+                case RegistryValueKind.String:
+                case RegistryValueKind.ExpandString:
+                    return Encoding.Unicode.GetString(bytes).TrimEnd('\0');
+                default:
+                    return new byte[0];
+            }
+        }
+
+        private static string[] GetStringArray(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+                return new string[0];
+
+            return Encoding.Unicode
+                .GetString(bytes)
+                .Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private static object GetDefaultValue(RegistryValueKind kind)
+        {
+            switch (kind)
+            {
+                case RegistryValueKind.Binary:
+                    return new byte[0];
+                case RegistryValueKind.MultiString:
+                    return new string[0];
+                case RegistryValueKind.DWord:
+                    return 0;
+                case RegistryValueKind.QWord:
+                    return 0L;
+                case RegistryValueKind.String:
+                case RegistryValueKind.ExpandString:
+                    return string.Empty;
+                default:
+                    return null;
+            }
+        }
+
         private static byte[] GetStringBytes(string value)
         {
             if (value == null)
@@ -357,6 +569,12 @@ namespace MasterSplinter.Client.Core.Registry
         }
 
         [SupportedOSPlatform("windows")]
+        private static bool ContainsValue(RegistryKey key, string valueName)
+        {
+            return Array.IndexOf(key.GetValueNames(), valueName ?? string.Empty) >= 0;
+        }
+
+        [SupportedOSPlatform("windows")]
         private static void CopySubKey(RegistryKey parentKey, string oldName, string newName)
         {
             using (RegistryKey sourceKey = parentKey.OpenSubKey(oldName, false))
@@ -394,6 +612,19 @@ namespace MasterSplinter.Client.Core.Registry
                 throw new ArgumentException("Registry key name is required.", nameof(keyName));
             if (keyName.IndexOf('\\') >= 0)
                 throw new ArgumentException("Registry key name must be a child name, not a path.", nameof(keyName));
+        }
+
+        private static void ValidateValueName(string valueName)
+        {
+            if (valueName == null)
+                throw new ArgumentException("Registry value name is required.", nameof(valueName));
+            if (valueName.IndexOf('\\') >= 0)
+                throw new ArgumentException("Registry value name must be a value name, not a path.", nameof(valueName));
+        }
+
+        private static bool IsDefaultValue(string valueName)
+        {
+            return string.IsNullOrEmpty(valueName);
         }
 
         private static string GetWriteAccessError(string parentPath)
