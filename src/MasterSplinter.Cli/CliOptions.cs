@@ -6,7 +6,7 @@ namespace MasterSplinter.Cli
     public sealed class CliOptions
     {
         public const string Usage =
-            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
+            "Usage: MasterSplinter.Cli <dispatch|listen> [--command <get-system-info|get-drives|get-directory|get-registry-key|download-file|upload-file|rename-path|delete-path|start-process|end-process|ask-elevate|shutdown-action|disconnect-client|reconnect-client|show-message|close-connection|get-processes|get-startup-items|get-connections>] [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] [--host 127.0.0.1] [--port 4782] [--timeout-seconds 60] [--operator-id cli-operator] [--grant-permission] [--grant-consent]";
 
         private CliOptions(
             string command,
@@ -16,6 +16,10 @@ namespace MasterSplinter.Cli
             string pathType,
             int? pid,
             string action,
+            string caption,
+            string text,
+            string button,
+            string icon,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -37,6 +41,10 @@ namespace MasterSplinter.Cli
             PathType = pathType;
             Pid = pid;
             Action = action;
+            Caption = caption;
+            Text = text;
+            Button = button;
+            Icon = icon;
             LocalAddress = localAddress;
             LocalPort = localPort;
             RemoteAddress = remoteAddress;
@@ -59,6 +67,10 @@ namespace MasterSplinter.Cli
         public string PathType { get; }
         public int? Pid { get; }
         public string Action { get; }
+        public string Caption { get; }
+        public string Text { get; }
+        public string Button { get; }
+        public string Icon { get; }
         public string LocalAddress { get; }
         public ushort? LocalPort { get; }
         public string RemoteAddress { get; }
@@ -79,7 +91,7 @@ namespace MasterSplinter.Cli
                 string.Equals(args[0], "--help", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(args[0], "-h", StringComparison.OrdinalIgnoreCase))
             {
-                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
+                return new CliOptions(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "127.0.0.1", 4782, 60, "cli-operator", false, false, true);
             }
 
             string command = args[0];
@@ -89,6 +101,10 @@ namespace MasterSplinter.Cli
             string pathType = null;
             int? pid = null;
             string action = null;
+            string caption = null;
+            string text = null;
+            string button = null;
+            string icon = null;
             string localAddress = null;
             ushort? localPort = null;
             string remoteAddress = null;
@@ -117,6 +133,14 @@ namespace MasterSplinter.Cli
                     pid = int.Parse(ReadValue(args, ref index, "--pid"), CultureInfo.InvariantCulture);
                 else if (string.Equals(arg, "--action", StringComparison.OrdinalIgnoreCase))
                     action = ReadValue(args, ref index, "--action");
+                else if (string.Equals(arg, "--caption", StringComparison.OrdinalIgnoreCase))
+                    caption = ReadValue(args, ref index, "--caption");
+                else if (string.Equals(arg, "--text", StringComparison.OrdinalIgnoreCase))
+                    text = ReadValue(args, ref index, "--text");
+                else if (string.Equals(arg, "--button", StringComparison.OrdinalIgnoreCase))
+                    button = ReadValue(args, ref index, "--button");
+                else if (string.Equals(arg, "--icon", StringComparison.OrdinalIgnoreCase))
+                    icon = ReadValue(args, ref index, "--icon");
                 else if (string.Equals(arg, "--local-address", StringComparison.OrdinalIgnoreCase))
                     localAddress = ReadValue(args, ref index, "--local-address");
                 else if (string.Equals(arg, "--local-port", StringComparison.OrdinalIgnoreCase))
@@ -194,6 +218,12 @@ namespace MasterSplinter.Cli
                 string.IsNullOrWhiteSpace(action))
                 throw new ArgumentException("--action is required for shutdown-action.");
 
+            if (string.Equals(dispatchCommand, "show-message", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                    throw new ArgumentException("--text is required for show-message.");
+            }
+
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(localAddress))
@@ -214,6 +244,10 @@ namespace MasterSplinter.Cli
                 pathType,
                 pid,
                 action,
+                caption,
+                text,
+                button,
+                icon,
                 localAddress,
                 localPort,
                 remoteAddress,

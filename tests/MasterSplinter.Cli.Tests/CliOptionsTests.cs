@@ -23,6 +23,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.IsNull(options.PathType);
             Assert.IsFalse(options.Pid.HasValue);
             Assert.IsNull(options.Action);
+            Assert.IsNull(options.Caption);
+            Assert.IsNull(options.Text);
+            Assert.IsNull(options.Button);
+            Assert.IsNull(options.Icon);
             Assert.IsNull(options.LocalAddress);
             Assert.IsFalse(options.LocalPort.HasValue);
             Assert.IsNull(options.RemoteAddress);
@@ -65,6 +69,10 @@ namespace MasterSplinter.Cli.Tests
                 "--type", "file",
                 "--pid", "1234",
                 "--action", "restart",
+                "--caption", "Notice",
+                "--text", "Hello",
+                "--button", "OKCancel",
+                "--icon", "Information",
                 "--local-address", "127.0.0.1",
                 "--local-port", "5000",
                 "--remote-address", "127.0.0.1",
@@ -83,6 +91,10 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("file", options.PathType);
             Assert.AreEqual(1234, options.Pid);
             Assert.AreEqual("restart", options.Action);
+            Assert.AreEqual("Notice", options.Caption);
+            Assert.AreEqual("Hello", options.Text);
+            Assert.AreEqual("OKCancel", options.Button);
+            Assert.AreEqual("Information", options.Icon);
             Assert.AreEqual("127.0.0.1", options.LocalAddress);
             Assert.AreEqual((ushort)5000, options.LocalPort);
             Assert.AreEqual("127.0.0.1", options.RemoteAddress);
@@ -331,6 +343,20 @@ namespace MasterSplinter.Cli.Tests
             }));
             Assert.AreEqual(ShutdownAction.Restart, shutdownAction.Action);
 
+            var messageBox = (DoShowMessageBox)Program.CreateMessage(CliOptions.Parse(new[]
+            {
+                "dispatch",
+                "--command", "show-message",
+                "--caption", "Notice",
+                "--text", "Hello",
+                "--button", "OKCancel",
+                "--icon", "Information"
+            }));
+            Assert.AreEqual("Notice", messageBox.Caption);
+            Assert.AreEqual("Hello", messageBox.Text);
+            Assert.AreEqual("OKCancel", messageBox.Button);
+            Assert.AreEqual("Information", messageBox.Icon);
+
             var startProcess = (DoProcessStart)Program.CreateMessage(CliOptions.Parse(new[]
             {
                 "dispatch",
@@ -361,6 +387,12 @@ namespace MasterSplinter.Cli.Tests
                 CliOptions.Parse(new[] { "dispatch", "--command", "shutdown-action" }));
             Assert.ThrowsException<ArgumentException>(() =>
                 Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "shutdown-action", "--action", "bogus" })));
+            Assert.ThrowsException<ArgumentException>(() =>
+                CliOptions.Parse(new[] { "dispatch", "--command", "show-message" }));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "show-message", "--text", "Hello", "--button", "Bogus" })));
+            Assert.ThrowsException<ArgumentException>(() =>
+                Program.CreateMessage(CliOptions.Parse(new[] { "dispatch", "--command", "show-message", "--text", "Hello", "--icon", "Bogus" })));
         }
 
         [TestMethod, TestCategory("Cli")]
@@ -416,6 +448,13 @@ namespace MasterSplinter.Cli.Tests
             Assert.AreEqual("shutdown-action", shutdownAction.DispatchCommand);
             Assert.AreEqual("standby", shutdownAction.Action);
 
+            ListenCommand messageBox = ListenCommand.Parse("dispatch first show-message --caption Notice --text Hello --button OK --icon Information");
+            Assert.AreEqual("show-message", messageBox.DispatchCommand);
+            Assert.AreEqual("Notice", messageBox.Caption);
+            Assert.AreEqual("Hello", messageBox.Text);
+            Assert.AreEqual("OK", messageBox.Button);
+            Assert.AreEqual("Information", messageBox.Icon);
+
             ListenCommand startProcess = ListenCommand.Parse("dispatch first start-process --path C:\\Temp\\run.cmd");
             Assert.AreEqual("start-process", startProcess.DispatchCommand);
             Assert.AreEqual("C:\\Temp\\run.cmd", startProcess.Path);
@@ -438,6 +477,7 @@ namespace MasterSplinter.Cli.Tests
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first delete-path --path C:\\Temp\\old.txt"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first end-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first shutdown-action"));
+            Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first show-message"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first start-process"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first get-registry-key"));
             Assert.ThrowsException<ArgumentException>(() => ListenCommand.Parse("dispatch first close-connection"));

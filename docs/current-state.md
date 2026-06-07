@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`, and
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add client lifecycle CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add message box CLI parity`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -35,14 +35,14 @@ Primary acceptance check:
 dotnet test .\MasterSplinter.sln
 ```
 
-Latest result from June 6, 2026:
+Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 58 passed
+- `MasterSplinter.Client.Core.Tests`: 60 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 51 passed
 - `MasterSplinter.Host.Tests`: 15 passed
-- Total: 166 passed, 1 skipped, 0 failed
+- Total: 168 passed, 1 skipped, 0 failed
 
 Current smoke checks:
 
@@ -99,6 +99,7 @@ Current CLI dispatch command names:
 - `shutdown-action --action <shutdown|restart|standby>` (requires `--grant-permission --grant-consent`; real action affects the client machine)
 - `disconnect-client` (requires `--grant-permission`; closes the client session)
 - `reconnect-client` (requires `--grant-permission`; closes the current client session so reconnect policy can re-establish it)
+- `show-message --text <message> [--caption <title>] [--button <AbortRetryIgnore|OK|OKCancel|RetryCancel|YesNo|YesNoCancel>] [--icon <None|Error|Hand|Question|Exclamation|Warning|Information|Asterisk>]` (requires `--grant-permission --grant-consent`; displays a visible client desktop message box)
 - `get-processes`
 - `get-startup-items`
 - `get-connections`
@@ -115,7 +116,7 @@ Current CLI listen commands:
 ## Modern Projects
 
 - `src/MasterSplinter.Common`: protocol DTOs, shared models, crypto helpers, payload reader/writer.
-- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, and client disconnect/reconnect request handling.
+- `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing, TCP-connection listing/close, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect request handling, and message-box handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
@@ -224,6 +225,11 @@ All modern projects target `net10.0`.
   `reconnect-client`, and `ConnectionLifecycle` permission enforcement. The current loopback
   host closes the active command session for both actions; a future long-running reconnect
   scheduler should reuse the same lifecycle abstraction.
+- Message box parity is now wired through `DoShowMessageBox`, a Windows `user32!MessageBoxW`
+  provider matching the legacy caption/text/button/icon fields, CLI `show-message`, and
+  `UserInteraction` permission plus consent enforcement. Automated tests cover handler mapping,
+  provider failure status, CLI parsing, and safety metadata; manual verification should be run
+  from a visible Windows desktop session.
 
 ## Current Limitations
 
@@ -239,7 +245,8 @@ All modern projects target `net10.0`.
   dispatch is implemented, but manual verification should only be run on a disposable or prepared
   Windows client because it will change the client machine power state. Reconnect currently
   disconnects the active loopback command session; automatic retry/reconnect scheduling is still
-  future host behavior.
+  future host behavior. Message box dispatch is implemented, but visible desktop display still
+  needs manual verification.
 
 ## Recommended Next Tasks
 

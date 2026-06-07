@@ -202,6 +202,10 @@ namespace MasterSplinter.Cli
                 options.PathType,
                 options.Pid,
                 options.Action,
+                options.Caption,
+                options.Text,
+                options.Button,
+                options.Icon,
                 options.LocalAddress,
                 options.LocalPort,
                 options.RemoteAddress,
@@ -210,7 +214,7 @@ namespace MasterSplinter.Cli
 
         public static IMessage CreateMessage(string dispatchCommand, string path)
         {
-            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null);
+            return CreateMessage(dispatchCommand, path, null, null, null, null, null, null, null, null, null, null, null, null);
         }
 
         public static IMessage CreateMessage(
@@ -220,6 +224,10 @@ namespace MasterSplinter.Cli
             string pathType,
             int? pid,
             string action,
+            string caption,
+            string text,
+            string button,
+            string icon,
             string localAddress,
             ushort? localPort,
             string remoteAddress,
@@ -262,6 +270,14 @@ namespace MasterSplinter.Cli
                 return new DoClientDisconnect();
             if (string.Equals(dispatchCommand, "reconnect-client", StringComparison.OrdinalIgnoreCase))
                 return new DoClientReconnect();
+            if (string.Equals(dispatchCommand, "show-message", StringComparison.OrdinalIgnoreCase))
+                return new DoShowMessageBox
+                {
+                    Caption = caption ?? string.Empty,
+                    Text = text,
+                    Button = ParseMessageBoxButton(button),
+                    Icon = ParseMessageBoxIcon(icon)
+                };
             if (string.Equals(dispatchCommand, "close-connection", StringComparison.OrdinalIgnoreCase))
                 return new DoCloseConnection
                 {
@@ -309,6 +325,10 @@ namespace MasterSplinter.Cli
                 listenCommand.PathType,
                 listenCommand.Pid,
                 listenCommand.Action,
+                listenCommand.Caption,
+                listenCommand.Text,
+                listenCommand.Button,
+                listenCommand.Icon,
                 listenCommand.LocalAddress,
                 listenCommand.LocalPort,
                 listenCommand.RemoteAddress,
@@ -519,6 +539,50 @@ namespace MasterSplinter.Cli
             throw new ArgumentException("--action must be shutdown, restart, or standby.");
         }
 
+        private static string ParseMessageBoxButton(string button)
+        {
+            if (string.IsNullOrWhiteSpace(button))
+                return "OK";
+            if (string.Equals(button, "AbortRetryIgnore", StringComparison.OrdinalIgnoreCase))
+                return "AbortRetryIgnore";
+            if (string.Equals(button, "OK", StringComparison.OrdinalIgnoreCase))
+                return "OK";
+            if (string.Equals(button, "OKCancel", StringComparison.OrdinalIgnoreCase))
+                return "OKCancel";
+            if (string.Equals(button, "RetryCancel", StringComparison.OrdinalIgnoreCase))
+                return "RetryCancel";
+            if (string.Equals(button, "YesNo", StringComparison.OrdinalIgnoreCase))
+                return "YesNo";
+            if (string.Equals(button, "YesNoCancel", StringComparison.OrdinalIgnoreCase))
+                return "YesNoCancel";
+
+            throw new ArgumentException("--button must be AbortRetryIgnore, OK, OKCancel, RetryCancel, YesNo, or YesNoCancel.");
+        }
+
+        private static string ParseMessageBoxIcon(string icon)
+        {
+            if (string.IsNullOrWhiteSpace(icon))
+                return "None";
+            if (string.Equals(icon, "None", StringComparison.OrdinalIgnoreCase))
+                return "None";
+            if (string.Equals(icon, "Error", StringComparison.OrdinalIgnoreCase))
+                return "Error";
+            if (string.Equals(icon, "Hand", StringComparison.OrdinalIgnoreCase))
+                return "Hand";
+            if (string.Equals(icon, "Question", StringComparison.OrdinalIgnoreCase))
+                return "Question";
+            if (string.Equals(icon, "Exclamation", StringComparison.OrdinalIgnoreCase))
+                return "Exclamation";
+            if (string.Equals(icon, "Warning", StringComparison.OrdinalIgnoreCase))
+                return "Warning";
+            if (string.Equals(icon, "Information", StringComparison.OrdinalIgnoreCase))
+                return "Information";
+            if (string.Equals(icon, "Asterisk", StringComparison.OrdinalIgnoreCase))
+                return "Asterisk";
+
+            throw new ArgumentException("--icon must be None, Error, Hand, Question, Exclamation, Warning, Information, or Asterisk.");
+        }
+
         private static string ResolveClientId(ClientSessionRegistry registry, string clientId)
         {
             IReadOnlyList<ClientSessionSnapshot> snapshots = registry.GetSnapshots();
@@ -549,7 +613,7 @@ namespace MasterSplinter.Cli
 
         private static void PrintListenHelp()
         {
-            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
+            Console.WriteLine("Commands: clients | dispatch <client-id|first> <command> [--path <path>] [--new-path <path>] [--type <file|directory>] [--pid <pid>] [--action <shutdown|restart|standby>] [--caption <title>] [--text <message>] [--button <button>] [--icon <icon>] [--local-address <ip>] [--local-port <port>] [--remote-address <ip>] [--remote-port <port>] [--remote-path <client-path>] [--output <local-path>] | help | exit");
         }
 
         private static async Task ReceiveAndPrintResponseAsync(

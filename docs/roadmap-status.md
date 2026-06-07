@@ -67,7 +67,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 58 passed.
+- `MasterSplinter.Client.Core.Tests`: 60 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 51 passed.
@@ -149,6 +149,8 @@ Done:
   power-state changes behind `IShutdownActionProvider`.
 - Added lifecycle-capable client contexts plus tests for `DoClientDisconnect` and
   `DoClientReconnect` status-and-lifecycle request behavior.
+- Added tests for `DoShowMessageBox` provider mapping/failure status, CLI caption/text/button/icon
+  parsing, and `UserInteraction` permission plus consent classification.
 
 Left to do:
 
@@ -335,6 +337,10 @@ Done:
   `DoClientReconnect`: the client host wires lifecycle-capable command contexts, CLI exposes
   `disconnect-client` and `reconnect-client`, and the loopback host closes the active command
   session after sending a `SetStatus` acknowledgement.
+- Added consent-gated message box parity through `DoShowMessageBox`: the client host wires a
+  Windows `user32!MessageBoxW` provider, CLI exposes `show-message --text <message>
+  [--caption <title>] [--button <button>] [--icon <icon>]`, and response formatting prints the
+  legacy-style `SetStatus` acknowledgement.
 
 Left to do:
 
@@ -597,6 +603,17 @@ dispatch first reconnect-client
 
 `disconnect-client` and `reconnect-client` both close the current loopback client session after
 sending a status response. Automatic reconnect scheduling is not implemented yet.
+
+Current manual message-box check:
+
+```powershell
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Cli\MasterSplinter.Cli.csproj -- listen --port 47856 --grant-permission --grant-consent
+dotnet run --no-launch-profile --project .\src\MasterSplinter.Client.Host\MasterSplinter.Client.Host.csproj -- --port 47856 --handle-commands
+dispatch first show-message --caption Notice --text Hello --button OK --icon Information
+```
+
+Run from a visible Windows desktop session. The client should return `Successfully displayed
+MessageBox` and show the dialog on the client desktop.
 
 Current manual file-download check:
 
