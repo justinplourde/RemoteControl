@@ -1,4 +1,6 @@
+using MasterSplinter.Common.Enums;
 using MasterSplinter.Common.Messages;
+using MasterSplinter.Common.Video;
 using MasterSplinter.Server.Core.Authorization;
 using MasterSplinter.Server.Core.Commands;
 using MasterSplinter.Server.Core.Handshake;
@@ -49,6 +51,7 @@ namespace MasterSplinter.Operator.WinForms
         private CancellationTokenSource _streamCancellation;
         private int _frameCount;
         private Stopwatch _fpsStopwatch;
+        private Resolution _lastRemoteResolution;
 
         public RemoteDesktopForm()
         {
@@ -56,6 +59,7 @@ namespace MasterSplinter.Operator.WinForms
             Width = 1180;
             Height = 780;
             MinimumSize = new Size(900, 600);
+            KeyPreview = true;
 
             BuildLayout();
             WireEvents();
@@ -142,6 +146,7 @@ namespace MasterSplinter.Operator.WinForms
             _desktopPictureBox.BackColor = Color.Black;
             _desktopPictureBox.Dock = DockStyle.Fill;
             _desktopPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            _desktopPictureBox.TabStop = true;
 
             _statusLabel.Dock = DockStyle.Bottom;
             _statusLabel.Height = 24;
@@ -160,6 +165,13 @@ namespace MasterSplinter.Operator.WinForms
             _startStreamButton.Click += async (sender, args) => await StartStreamAsync().ConfigureAwait(false);
             _stopStreamButton.Click += (sender, args) => StopStream();
             _qualityTrackBar.Scroll += (sender, args) => _qualityLabel.Text = $"Quality {_qualityTrackBar.Value}";
+            _desktopPictureBox.MouseDown += async (sender, args) => await SendMouseEventAsync(ToMouseDownAction(args.Button), true, args).ConfigureAwait(false);
+            _desktopPictureBox.MouseUp += async (sender, args) => await SendMouseEventAsync(ToMouseUpAction(args.Button), false, args).ConfigureAwait(false);
+            _desktopPictureBox.MouseMove += async (sender, args) => await SendMouseEventAsync(MouseAction.MoveCursor, false, args).ConfigureAwait(false);
+            _desktopPictureBox.MouseWheel += async (sender, args) => await SendMouseEventAsync(args.Delta < 0 ? MouseAction.ScrollDown : MouseAction.ScrollUp, false, args).ConfigureAwait(false);
+            _desktopPictureBox.MouseEnter += (sender, args) => _desktopPictureBox.Focus();
+            KeyDown += async (sender, args) => await SendKeyboardEventAsync(args, true).ConfigureAwait(false);
+            KeyUp += async (sender, args) => await SendKeyboardEventAsync(args, false).ConfigureAwait(false);
             _clientsTimer.Interval = 1000;
             _clientsTimer.Tick += (sender, args) => RefreshClients();
         }
@@ -242,6 +254,7 @@ namespace MasterSplinter.Operator.WinForms
             _streamCancellation = new CancellationTokenSource();
             _fpsStopwatch = Stopwatch.StartNew();
             _frameCount = 0;
+            _lastRemoteResolution = null;
             SetStreamingState(true);
             SetStatus("Remote desktop stream starting.");
 
@@ -306,6 +319,7 @@ namespace MasterSplinter.Operator.WinForms
                     previous?.Dispose();
                 }
 
+                _lastRemoteResolution = frame.Response.Resolution;
                 _frameCount++;
                 double fps = _frameCount / Math.Max(0.001, _fpsStopwatch.Elapsed.TotalSeconds);
                 _fpsLabel.Text = $"FPS {fps:0.00}";
@@ -337,6 +351,100 @@ namespace MasterSplinter.Operator.WinForms
                 cancellationToken).ConfigureAwait(false);
 
             return request.WithAuthorization(authorization);
+        }
+
+        private async Task SendMouseEventAsync(MouseAction action, bool isMouseDown, MouseEventArgs args)
+        {
+            if (action == MouseAction.None || _dispatcher == null || _streamCancellation == null)
+                return;
+
+            _desktopPictureBox.Focus();
+            if (!TryMapMousePoint(args.X, args.Y, out RemoteDesktopPoint point))
+                return;
+
+            var message = new DoMouseEvent
+            {
+                Action = action,
+                IsMouseDown = isMouseDown,
+                X = point.X,
+                Y = point.Y,
+                MonitorIndex = (int)_displayIndexInput.Value
+            };
+
+            await DispatchInputAsync(message).ConfigureAwait(false);
+        }
+
+        private async Task SendKeyboardEventAsync(KeyEventArgs args, bool keyDown)
+        {
+            if (_dispatcher == null || _streamCancellation == null)
+                return;
+            if (args.KeyValue < 0 || args.KeyValue > byte.MaxValue)
+                return;
+
+            var message = new DoKeyboardEvent
+            {
+                Key = (byte)args.KeyValue,
+                KeyDown = keyDown
+            };
+
+            args.Handled = true;
+            await DispatchInputAsync(message).ConfigureAwait(false);
+        }
+
+        private async Task DispatchInputAsync(IMessage message)
+        {
+            string clientId = GetSelectedClientId();
+            if (string.IsNullOrWhiteSpace(clientId))
+                return;
+
+            CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
+                clientId,
+                message,
+                CancellationToken.None).ConfigureAwait(false);
+            CommandDispatchResult result = await _dispatcher.DispatchAsync(request, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            if (result.Status != CommandDispatchStatus.Sent)
+                SetStatus($"Input dispatch stopped: {result.Status}.");
+        }
+
+        private bool TryMapMousePoint(int x, int y, out RemoteDesktopPoint point)
+        {
+            point = default;
+            Image image = _desktopPictureBox.Image;
+            if (image == null || _lastRemoteResolution == null)
+                return false;
+
+            return RemoteDesktopCoordinateMapper.TryMapZoomedPoint(
+                _desktopPictureBox.ClientSize.Width,
+                _desktopPictureBox.ClientSize.Height,
+                image.Width,
+                image.Height,
+                _lastRemoteResolution.Width,
+                _lastRemoteResolution.Height,
+                x,
+                y,
+                out point);
+        }
+
+        private static MouseAction ToMouseDownAction(MouseButtons button)
+        {
+            if (button == MouseButtons.Left)
+                return MouseAction.LeftDown;
+            if (button == MouseButtons.Right)
+                return MouseAction.RightDown;
+
+            return MouseAction.None;
+        }
+
+        private static MouseAction ToMouseUpAction(MouseButtons button)
+        {
+            if (button == MouseButtons.Left)
+                return MouseAction.LeftUp;
+            if (button == MouseButtons.Right)
+                return MouseAction.RightUp;
+
+            return MouseAction.None;
         }
 
         private void RefreshClients()

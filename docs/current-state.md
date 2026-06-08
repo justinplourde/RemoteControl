@@ -327,8 +327,10 @@ All modern projects target `net10.0`.
 - The first operator remote desktop viewer surface now exists in
   `MasterSplinter.Operator.WinForms`. It can start/stop the loopback listener, select clients,
   choose quality/display, start/stop a live stream, render frames into a zoomed picture box, and
-  show FPS/status. Legacy parity still needs input coordinate scaling from the rendered frame,
-  monitor refresh UX, and broader session/audit controls.
+  show FPS/status. Viewer input dispatch now maps mouse coordinates from the zoomed image back to
+  the remote desktop resolution, sends mouse movement/click/wheel events, and sends keyboard
+  down/up events while streaming. Legacy parity still needs monitor refresh UX, manual
+  viewer-input verification, visible active state, and broader session/audit controls.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
@@ -359,8 +361,9 @@ All modern projects target `net10.0`.
   Remote input dispatch has a gentle local manual verification, but broader manual verification
   should still use harmless pointer/key actions on a prepared visible Windows desktop session.
   Single-frame desktop capture has a gentle local manual verification; `get-desktop-stream` now
-  covers the request-response frame loop, and the first WinForms live viewer surface builds.
-  Viewer manual verification against a connected client is still pending.
+  covers the request-response frame loop, and the first WinForms live viewer surface builds with
+  mouse/keyboard dispatch. Viewer input manual verification against a connected client is still
+  pending.
 
 ## Recommended Next Tasks
 

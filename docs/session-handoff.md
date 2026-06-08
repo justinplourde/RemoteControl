@@ -19,7 +19,7 @@ Current checkpoint:
 - Legacy reference: `legacy/Quasar`
 - Latest committed work before this handoff: first WinForms remote desktop operator viewer
   surface
-- Latest known full test result: 197 passed, 1 skipped, 0 failed
+- Latest known full test result: 202 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -88,7 +88,10 @@ The first operator remote desktop viewer surface now exists at
 `src\MasterSplinter.Operator.WinForms`. It is a Windows-only WinForms app that can start/stop the
 loopback listener, select connected clients, choose quality/display, start/stop live streaming,
 render frames in a zoomed image area, and show FPS/status. It builds in the root solution; manual
-viewer verification against a connected client is still pending.
+viewer verification against a connected client is still pending. Viewer input dispatch is now
+wired: mouse coordinates are scaled from the zoomed image to the remote desktop resolution,
+mouse move/click/wheel events dispatch `DoMouseEvent`, and key down/up dispatches
+`DoKeyboardEvent` while streaming.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard

@@ -75,8 +75,15 @@ namespace MasterSplinter.Server.Core.RemoteDesktop
                     throw;
                 }
 
-                if (!(response is GetDesktopResponse desktopResponse))
-                    throw new InvalidOperationException($"Expected GetDesktopResponse but received {response.GetType().Name}.");
+                while (!(response is GetDesktopResponse))
+                {
+                    response = await _responses.WaitForNextAsync(
+                        options.ClientId,
+                        options.ResponseTimeout,
+                        cancellationToken).ConfigureAwait(false);
+                }
+
+                var desktopResponse = (GetDesktopResponse)response;
 
                 receivedFrames++;
                 await frameHandler(

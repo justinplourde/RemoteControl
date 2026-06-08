@@ -380,6 +380,10 @@ Done:
   `MasterSplinter.Operator.WinForms`: the GUI can start/stop the loopback listener, select a
   connected client, choose quality/display, start/stop streaming, render live frames, and show
   FPS/status. Input coordinate scaling and richer legacy session controls remain pending.
+- Added zoom-aware remote desktop viewer input dispatch: server core now has
+  `RemoteDesktopCoordinateMapper` tests for picture-box style scaling/letterboxing, the stream
+  session ignores unrelated status messages while waiting for frames, and the WinForms viewer
+  dispatches mouse move/click/wheel plus keyboard down/up events while streaming.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -578,7 +582,8 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Remote desktop input coordinate scaling and richer operator viewer controls.
+- Remote desktop monitor refresh UX, visible active state, richer operator viewer controls, and
+  manual viewer-input verification.
 - Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
 - Process and shell execution broader behavior checks.

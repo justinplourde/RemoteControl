@@ -101,17 +101,26 @@ namespace MasterSplinter.Server.Core.Tests.RemoteDesktop
         }
 
         [TestMethod, TestCategory("ServerCore")]
-        public async Task RunAsyncRejectsUnexpectedResponseType()
+        public async Task RunAsyncIgnoresUnrelatedResponsesWhileWaitingForFrame()
         {
             var dispatcher = new RecordingDispatcher();
-            var responses = new QueueResponseSource(new SetStatus { Message = "Not a frame" });
+            var responses = new QueueResponseSource(
+                new SetStatus { Message = "Mouse event sent." },
+                CreateFrameResponse(1));
             var session = CreateSession(dispatcher, responses, new List<GetDesktop>());
+            var frames = new List<RemoteDesktopStreamFrame>();
 
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>
-                session.RunAsync(
-                    CreateOptions(frameCount: 1),
-                    (frame, token) => Task.CompletedTask,
-                    CancellationToken.None));
+            RemoteDesktopStreamResult result = await session.RunAsync(
+                CreateOptions(frameCount: 1),
+                (frame, token) =>
+                {
+                    frames.Add(frame);
+                    return Task.CompletedTask;
+                },
+                CancellationToken.None);
+
+            Assert.AreEqual(1, result.ReceivedFrames);
+            Assert.AreEqual(1, frames.Count);
         }
 
         [TestMethod, TestCategory("ServerCore")]
