@@ -40,7 +40,7 @@ This file is the parity ledger. Nothing should silently fall out of scope.
 | Registry editor | Registry load/create/delete/rename/change DTOs, `FrmRegistryEditor`, value edit forms | partial | Runtime paths done; harmless mutation manual pass and GUI/value-editor parity pending. |
 | Startup manager | `GetStartupItems`, `DoStartupItemAdd`, `DoStartupItemRemove`, `FrmStartupManager`, `FrmStartupAdd` | partial | Runtime paths done; harmless add/remove manual pass and GUI parity pending. |
 | Remote shell | `DoShellExecute`, `DoShellExecuteResponse`, `FrmRemoteShell` | partial | Persistent shell dispatch done; shell transcript/UI behavior and broader harmless manual verification pending. |
-| Remote desktop monitor/capture/input | `GetMonitors`, `GetDesktop`, `GetDesktopResponse`, `DoMouseEvent`, `DoKeyboardEvent`, `FrmRemoteDesktop` | partial | Monitor count, single-frame capture, reusable request-response frame streaming, first WinForms live viewer, and viewer mouse/keyboard dispatch with zoom-aware coordinate scaling done; monitor refresh UX, visible active state, richer session controls, and manual viewer-input verification pending. |
+| Remote desktop monitor/capture/input | `GetMonitors`, `GetDesktop`, `GetDesktopResponse`, `DoMouseEvent`, `DoKeyboardEvent`, `FrmRemoteDesktop` | partial | Monitor count, single-frame capture, reusable request-response frame streaming, first WinForms live viewer, monitor refresh/display selection, and viewer mouse/keyboard dispatch with zoom-aware coordinate scaling done; visible active state, richer session controls, and manual viewer-input verification pending. |
 | Message box | `DoShowMessageBox`, `FrmShowMessagebox` | partial | Dispatch done; visible desktop manual verification and GUI parity pending. |
 | Website visitor | `DoVisitWebsite`, `FrmVisitWebsite` | partial | Dispatch done; browser/hidden GET manual verification and GUI parity pending. |
 | Shutdown/restart/standby | `DoShutdownAction` | partial | Dispatch done; real power-state manual verification pending on prepared client. |
@@ -63,7 +63,7 @@ behavior that are not represented as simple command DTOs.
 
 ## Highest-Value Remaining 1:1 Gaps
 
-1. Remote desktop monitor refresh UX, visible active state, and richer operator session controls.
+1. Remote desktop visible active state, richer operator session controls, and manual viewer-input verification.
 2. Reverse proxy with explicit allowlist/session/audit boundaries.
 3. Builder/install/update/service parity as a transparent administrative installer flow.
 4. Manual verification matrix for all implemented sensitive commands.

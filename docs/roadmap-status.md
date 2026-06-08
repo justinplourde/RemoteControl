@@ -384,6 +384,9 @@ Done:
   `RemoteDesktopCoordinateMapper` tests for picture-box style scaling/letterboxing, the stream
   session ignores unrelated status messages while waiting for frames, and the WinForms viewer
   dispatches mouse move/click/wheel plus keyboard down/up events while streaming.
+- Added remote desktop monitor refresh UX to the WinForms viewer: operators can refresh remote
+  displays through `GetMonitors`, select a display from the returned count, and stream start is
+  disabled until a remote display is selected.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -582,8 +585,8 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Remote desktop monitor refresh UX, visible active state, richer operator viewer controls, and
-  manual viewer-input verification.
+- Remote desktop visible active state, richer operator viewer controls, and manual viewer-input
+  verification.
 - Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
 - Process and shell execution broader behavior checks.

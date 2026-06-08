@@ -326,10 +326,10 @@ All modern projects target `net10.0`.
   2026 loopback smoke test saved two `1280x720` JPEG frames at quality 45, each 36,110 bytes.
 - The first operator remote desktop viewer surface now exists in
   `MasterSplinter.Operator.WinForms`. It can start/stop the loopback listener, select clients,
-  choose quality/display, start/stop a live stream, render frames into a zoomed picture box, and
-  show FPS/status. Viewer input dispatch now maps mouse coordinates from the zoomed image back to
-  the remote desktop resolution, sends mouse movement/click/wheel events, and sends keyboard
-  down/up events while streaming. Legacy parity still needs monitor refresh UX, manual
+  refresh remote displays, choose quality/display, start/stop a live stream, render frames into a
+  zoomed picture box, and show FPS/status. Viewer input dispatch now maps mouse coordinates from
+  the zoomed image back to the remote desktop resolution, sends mouse movement/click/wheel events,
+  and sends keyboard down/up events while streaming. Legacy parity still needs manual
   viewer-input verification, visible active state, and broader session/audit controls.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and

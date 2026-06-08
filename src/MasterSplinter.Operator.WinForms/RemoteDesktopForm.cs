@@ -26,6 +26,7 @@ namespace MasterSplinter.Operator.WinForms
         private const string OperatorId = "winforms-operator";
 
         private readonly Button _refreshClientsButton = new Button();
+        private readonly Button _refreshMonitorsButton = new Button();
         private readonly Button _startListenerButton = new Button();
         private readonly Button _startStreamButton = new Button();
         private readonly Button _stopListenerButton = new Button();
@@ -33,10 +34,10 @@ namespace MasterSplinter.Operator.WinForms
         private readonly CheckBox _grantConsentCheckBox = new CheckBox();
         private readonly CheckBox _grantPermissionCheckBox = new CheckBox();
         private readonly ComboBox _clientsComboBox = new ComboBox();
+        private readonly ComboBox _monitorsComboBox = new ComboBox();
         private readonly Label _fpsLabel = new Label();
         private readonly Label _qualityLabel = new Label();
         private readonly Label _statusLabel = new Label();
-        private readonly NumericUpDown _displayIndexInput = new NumericUpDown();
         private readonly NumericUpDown _portInput = new NumericUpDown();
         private readonly PictureBox _desktopPictureBox = new PictureBox();
         private readonly System.Windows.Forms.Timer _clientsTimer = new System.Windows.Forms.Timer();
@@ -52,6 +53,7 @@ namespace MasterSplinter.Operator.WinForms
         private int _frameCount;
         private Stopwatch _fpsStopwatch;
         private Resolution _lastRemoteResolution;
+        private bool _refreshingClients;
 
         public RemoteDesktopForm()
         {
@@ -106,6 +108,11 @@ namespace MasterSplinter.Operator.WinForms
             _clientsComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             _clientsComboBox.Width = 330;
 
+            _monitorsComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            _monitorsComboBox.Width = 96;
+            _refreshMonitorsButton.Text = "Refresh Monitors";
+            _refreshMonitorsButton.AutoSize = true;
+
             _qualityTrackBar.Minimum = 1;
             _qualityTrackBar.Maximum = 100;
             _qualityTrackBar.Value = 75;
@@ -113,10 +120,6 @@ namespace MasterSplinter.Operator.WinForms
             _qualityTrackBar.Width = 120;
             _qualityLabel.AutoSize = true;
             _qualityLabel.Text = "Quality 75";
-
-            _displayIndexInput.Minimum = 0;
-            _displayIndexInput.Maximum = 16;
-            _displayIndexInput.Width = 48;
 
             _startStreamButton.Text = "Start Stream";
             _startStreamButton.AutoSize = true;
@@ -138,7 +141,8 @@ namespace MasterSplinter.Operator.WinForms
             topPanel.Controls.Add(_qualityLabel);
             topPanel.Controls.Add(_qualityTrackBar);
             topPanel.Controls.Add(new Label { Text = "Display", AutoSize = true, Padding = new Padding(8, 6, 0, 0) });
-            topPanel.Controls.Add(_displayIndexInput);
+            topPanel.Controls.Add(_monitorsComboBox);
+            topPanel.Controls.Add(_refreshMonitorsButton);
             topPanel.Controls.Add(_startStreamButton);
             topPanel.Controls.Add(_stopStreamButton);
             topPanel.Controls.Add(_fpsLabel);
@@ -162,6 +166,12 @@ namespace MasterSplinter.Operator.WinForms
             _startListenerButton.Click += async (sender, args) => await StartListenerAsync().ConfigureAwait(false);
             _stopListenerButton.Click += async (sender, args) => await StopListenerAsync().ConfigureAwait(false);
             _refreshClientsButton.Click += (sender, args) => RefreshClients();
+            _refreshMonitorsButton.Click += async (sender, args) => await RefreshMonitorsAsync().ConfigureAwait(false);
+            _clientsComboBox.SelectedIndexChanged += (sender, args) =>
+            {
+                if (!_refreshingClients)
+                    ClearMonitors();
+            };
             _startStreamButton.Click += async (sender, args) => await StartStreamAsync().ConfigureAwait(false);
             _stopStreamButton.Click += (sender, args) => StopStream();
             _qualityTrackBar.Scroll += (sender, args) => _qualityLabel.Text = $"Quality {_qualityTrackBar.Value}";
@@ -251,6 +261,13 @@ namespace MasterSplinter.Operator.WinForms
                 return;
             }
 
+            int displayIndex = GetSelectedMonitorIndex();
+            if (displayIndex < 0)
+            {
+                SetStatus("Refresh and select a remote display.");
+                return;
+            }
+
             _streamCancellation = new CancellationTokenSource();
             _fpsStopwatch = Stopwatch.StartNew();
             _frameCount = 0;
@@ -263,7 +280,7 @@ namespace MasterSplinter.Operator.WinForms
                 var options = new RemoteDesktopStreamOptions(
                     clientId,
                     _qualityTrackBar.Value,
-                    (int)_displayIndexInput.Value,
+                    displayIndex,
                     int.MaxValue,
                     0,
                     TimeSpan.FromSeconds(10));
@@ -368,7 +385,7 @@ namespace MasterSplinter.Operator.WinForms
                 IsMouseDown = isMouseDown,
                 X = point.X,
                 Y = point.Y,
-                MonitorIndex = (int)_displayIndexInput.Value
+                MonitorIndex = GetSelectedMonitorIndex()
             };
 
             await DispatchInputAsync(message).ConfigureAwait(false);
@@ -406,6 +423,95 @@ namespace MasterSplinter.Operator.WinForms
 
             if (result.Status != CommandDispatchStatus.Sent)
                 SetStatus($"Input dispatch stopped: {result.Status}.");
+        }
+
+        private async Task RefreshMonitorsAsync()
+        {
+            if (_dispatcher == null || _responseSink == null)
+            {
+                SetStatus("Start the listener first.");
+                return;
+            }
+
+            string clientId = GetSelectedClientId();
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                SetStatus("Select a connected client.");
+                return;
+            }
+
+            try
+            {
+                CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
+                    clientId,
+                    new GetMonitors(),
+                    CancellationToken.None).ConfigureAwait(false);
+                CommandDispatchResult result = await _dispatcher.DispatchAsync(request, CancellationToken.None)
+                    .ConfigureAwait(false);
+                if (result.Status != CommandDispatchStatus.Sent)
+                {
+                    SetStatus($"Monitor refresh stopped: {result.Status}.");
+                    return;
+                }
+
+                IMessage response = await WaitForResponseAsync<GetMonitorsResponse>(
+                    clientId,
+                    TimeSpan.FromSeconds(10),
+                    CancellationToken.None).ConfigureAwait(false);
+                var monitors = (GetMonitorsResponse)response;
+                BeginInvoke((Action)(() => PopulateMonitors(monitors.Number)));
+            }
+            catch (Exception exception)
+            {
+                SetStatus($"Monitor refresh failed: {exception.Message}");
+            }
+        }
+
+        private async Task<IMessage> WaitForResponseAsync<TResponse>(
+            string clientId,
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+            where TResponse : IMessage
+        {
+            while (true)
+            {
+                IMessage response = await _responseSink.WaitForNextAsync(clientId, timeout, cancellationToken)
+                    .ConfigureAwait(false);
+                if (response is TResponse)
+                    return response;
+            }
+        }
+
+        private void PopulateMonitors(int monitorCount)
+        {
+            _monitorsComboBox.BeginUpdate();
+            try
+            {
+                _monitorsComboBox.Items.Clear();
+                for (int index = 0; index < monitorCount; index++)
+                    _monitorsComboBox.Items.Add(new MonitorListItem(index));
+
+                if (_monitorsComboBox.Items.Count > 0)
+                    _monitorsComboBox.SelectedIndex = 0;
+            }
+            finally
+            {
+                _monitorsComboBox.EndUpdate();
+            }
+
+            SetStreamingState(_streamCancellation != null);
+            SetStatus(monitorCount == 0
+                ? "No remote displays detected."
+                : $"Remote displays: {monitorCount}.");
+        }
+
+        private void ClearMonitors()
+        {
+            if (_streamCancellation != null)
+                return;
+
+            _monitorsComboBox.Items.Clear();
+            SetStreamingState(false);
         }
 
         private bool TryMapMousePoint(int x, int y, out RemoteDesktopPoint point)
@@ -453,6 +559,7 @@ namespace MasterSplinter.Operator.WinForms
                 return;
 
             string selectedClientId = GetSelectedClientId();
+            _refreshingClients = true;
             _clientsComboBox.BeginUpdate();
             try
             {
@@ -481,12 +588,18 @@ namespace MasterSplinter.Operator.WinForms
             finally
             {
                 _clientsComboBox.EndUpdate();
+                _refreshingClients = false;
             }
         }
 
         private string GetSelectedClientId()
         {
             return _clientsComboBox.SelectedItem is ClientListItem item ? item.ClientId : null;
+        }
+
+        private int GetSelectedMonitorIndex()
+        {
+            return _monitorsComboBox.SelectedItem is MonitorListItem item ? item.DisplayIndex : -1;
         }
 
         private void SetListeningState(bool listening)
@@ -496,14 +609,16 @@ namespace MasterSplinter.Operator.WinForms
             _refreshClientsButton.Enabled = listening;
             _portInput.Enabled = !listening;
             _startStreamButton.Enabled = listening;
+            _refreshMonitorsButton.Enabled = listening;
         }
 
         private void SetStreamingState(bool streaming)
         {
-            _startStreamButton.Enabled = !streaming && _orchestrator != null;
+            _startStreamButton.Enabled = !streaming && _orchestrator != null && GetSelectedMonitorIndex() >= 0;
             _stopStreamButton.Enabled = streaming;
             _qualityTrackBar.Enabled = !streaming;
-            _displayIndexInput.Enabled = !streaming;
+            _monitorsComboBox.Enabled = !streaming;
+            _refreshMonitorsButton.Enabled = !streaming && _orchestrator != null;
             _clientsComboBox.Enabled = !streaming;
         }
 
@@ -552,6 +667,21 @@ namespace MasterSplinter.Operator.WinForms
             public override string ToString()
             {
                 return Text;
+            }
+        }
+
+        private sealed class MonitorListItem
+        {
+            public MonitorListItem(int displayIndex)
+            {
+                DisplayIndex = displayIndex;
+            }
+
+            public int DisplayIndex { get; }
+
+            public override string ToString()
+            {
+                return $"Display {DisplayIndex + 1}";
             }
         }
 
