@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasterSplinter.Cli", "src\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasterSplinter.Cli.Tests", "tests\MasterSplinter.Cli.Tests\MasterSplinter.Cli.Tests.csproj", "{DBF4D741-1A85-4DF6-9323-DC7BF7F4C6EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasterSplinter.Operator.WinForms", "src\MasterSplinter.Operator.WinForms\MasterSplinter.Operator.WinForms.csproj", "{ABD1395F-60A4-49EE-9926-69F27B59774D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -171,6 +173,18 @@ Global
 		{DBF4D741-1A85-4DF6-9323-DC7BF7F4C6EE}.Release|x64.Build.0 = Release|Any CPU
 		{DBF4D741-1A85-4DF6-9323-DC7BF7F4C6EE}.Release|x86.ActiveCfg = Release|Any CPU
 		{DBF4D741-1A85-4DF6-9323-DC7BF7F4C6EE}.Release|x86.Build.0 = Release|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Debug|x64.Build.0 = Debug|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Debug|x86.Build.0 = Debug|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Release|x64.ActiveCfg = Release|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Release|x64.Build.0 = Release|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Release|x86.ActiveCfg = Release|Any CPU
+		{ABD1395F-60A4-49EE-9926-69F27B59774D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,5 +201,6 @@ Global
 		{8F727271-724D-4190-B29D-11D7A64EF4C2} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{47C83270-6FDC-4D07-A72D-FAF5EE59AD91} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{DBF4D741-1A85-4DF6-9323-DC7BF7F4C6EE} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{ABD1395F-60A4-49EE-9926-69F27B59774D} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

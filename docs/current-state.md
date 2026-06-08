@@ -164,6 +164,7 @@ Current CLI listen commands:
 - `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting/desktop capture/input, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
+- `src/MasterSplinter.Operator.WinForms`: Windows-only operator GUI surface; currently focused on remote desktop listener/client selection and live stream rendering.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
 - `tests/*`: MSTest coverage for the modern projects.
@@ -323,7 +324,11 @@ All modern projects target `net10.0`.
   inspection. The loop sequencing now lives in reusable server core through
   `RemoteDesktopStreamSession`, so a future GUI/Web API can consume the same behavior. A June 7,
   2026 loopback smoke test saved two `1280x720` JPEG frames at quality 45, each 36,110 bytes.
-  GUI/live viewer rendering and richer session controls remain pending.
+- The first operator remote desktop viewer surface now exists in
+  `MasterSplinter.Operator.WinForms`. It can start/stop the loopback listener, select clients,
+  choose quality/display, start/stop a live stream, render frames into a zoomed picture box, and
+  show FPS/status. Legacy parity still needs input coordinate scaling from the rendered frame,
+  monitor refresh UX, and broader session/audit controls.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
@@ -354,7 +359,8 @@ All modern projects target `net10.0`.
   Remote input dispatch has a gentle local manual verification, but broader manual verification
   should still use harmless pointer/key actions on a prepared visible Windows desktop session.
   Single-frame desktop capture has a gentle local manual verification; `get-desktop-stream` now
-  covers the request-response frame loop, while GUI/live-viewer verification remains pending.
+  covers the request-response frame loop, and the first WinForms live viewer surface builds.
+  Viewer manual verification against a connected client is still pending.
 
 ## Recommended Next Tasks
 

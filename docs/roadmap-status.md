@@ -58,6 +58,7 @@ Current root projects:
 - `src/MasterSplinter.Client.Core`
 - `src/MasterSplinter.Client.Host`
 - `src/MasterSplinter.Cli`
+- `src/MasterSplinter.Operator.WinForms`
 - `src/MasterSplinter.Server.Core`
 - `src/MasterSplinter.Server.Host`
 - `tests/MasterSplinter.Common.Tests`
@@ -373,8 +374,12 @@ Done:
   first frame sends legacy `GetDesktop.CreateNew=true`, later frames continue the session with
   `CreateNew=false`, and the CLI saves numbered JPEG frames to an output directory.
   `RemoteDesktopStreamSession` now owns that sequencing in server core for future GUI/Web API
-  reuse. GUI/live viewer rendering remains pending. A June 7, 2026 loopback smoke test saved two
-  `1280x720` JPEG frames at quality 45, each 36,110 bytes.
+  reuse. A June 7, 2026 loopback smoke test saved two `1280x720` JPEG frames at quality 45, each
+  36,110 bytes.
+- Added the first WinForms operator remote desktop viewer surface in
+  `MasterSplinter.Operator.WinForms`: the GUI can start/stop the loopback listener, select a
+  connected client, choose quality/display, start/stop streaming, render live frames, and show
+  FPS/status. Input coordinate scaling and richer legacy session controls remain pending.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -555,7 +560,8 @@ Status: Long-term, after modern runtime parity and API/core boundaries
 - Consider WPF or a web-based interface.
 - Drive GUI behavior through Web API or shared server core instead of directly coupling to
   legacy WinForms handlers.
-- Improve remote desktop rendering only after streaming contracts and consent behavior are defined.
+- Continue improving remote desktop rendering now that streaming contracts and consent behavior
+  are defined.
 
 ## Priority 13: Transparent Protocol Documentation
 
@@ -572,7 +578,7 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Continuous remote desktop image compression and streaming beyond single-frame capture.
+- Remote desktop input coordinate scaling and richer operator viewer controls.
 - Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
 - Process and shell execution broader behavior checks.

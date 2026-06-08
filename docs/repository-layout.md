@@ -1,6 +1,6 @@
 # Repository Layout
 
-Last updated: June 1, 2026
+Last updated: June 7, 2026
 
 ## Direction
 
@@ -33,6 +33,7 @@ Modern product code belongs under `src`:
 - `src/MasterSplinter.Client.Core`
 - `src/MasterSplinter.Client.Host`
 - `src/MasterSplinter.Cli`
+- `src/MasterSplinter.Operator.WinForms`
 - `src/MasterSplinter.Server.Core`
 - `src/MasterSplinter.Server.Host`
 
@@ -41,7 +42,7 @@ Future product surfaces should also be added under `src`, for example:
 - `src/MasterSplinter.WebApi`
 - `src/MasterSplinter.Cli`
 - `src/MasterSplinter.Service`
-- `src/MasterSplinter.Desktop` or `src/MasterSplinter.Gui`
+- additional desktop/web surfaces as parity work requires
 
 Tests should stay under `tests` with matching names.
 

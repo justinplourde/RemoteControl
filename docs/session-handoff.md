@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: continuous remote desktop request-loop streaming
-  through `get-desktop-stream`
+- Latest committed work before this handoff: first WinForms remote desktop operator viewer
+  surface
 - Latest known full test result: 197 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -82,8 +82,13 @@ Continuous remote desktop request-loop parity is wired through `get-desktop-stre
 `GetDesktop.CreateNew=true` for the first frame and `CreateNew=false` for subsequent frames, and
 saves numbered JPEG frames to the output directory. `RemoteDesktopStreamSession` owns the stream
 sequencing in server core for future GUI/Web API reuse. A June 7, 2026 loopback smoke test saved
-two `1280x720` JPEG frames at quality 45, each 36,110 bytes. GUI/live viewer rendering remains
-pending.
+two `1280x720` JPEG frames at quality 45, each 36,110 bytes.
+
+The first operator remote desktop viewer surface now exists at
+`src\MasterSplinter.Operator.WinForms`. It is a Windows-only WinForms app that can start/stop the
+loopback listener, select connected clients, choose quality/display, start/stop live streaming,
+render frames in a zoomed image area, and show FPS/status. It builds in the root solution; manual
+viewer verification against a connected client is still pending.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard
