@@ -36,7 +36,13 @@ namespace MasterSplinter.Operator.WinForms
         private readonly ComboBox _clientsComboBox = new ComboBox();
         private readonly ComboBox _monitorsComboBox = new ComboBox();
         private readonly Label _fpsLabel = new Label();
+        private readonly Label _clientValueLabel = new Label();
+        private readonly Label _clientStatusValueLabel = new Label();
+        private readonly Label _lastFrameValueLabel = new Label();
+        private readonly Label _permissionValueLabel = new Label();
         private readonly Label _qualityLabel = new Label();
+        private readonly Label _sessionValueLabel = new Label();
+        private readonly Label _stateValueLabel = new Label();
         private readonly Label _statusLabel = new Label();
         private readonly NumericUpDown _portInput = new NumericUpDown();
         private readonly PictureBox _desktopPictureBox = new PictureBox();
@@ -52,8 +58,11 @@ namespace MasterSplinter.Operator.WinForms
         private CancellationTokenSource _streamCancellation;
         private int _frameCount;
         private Stopwatch _fpsStopwatch;
+        private double _lastFps;
+        private DateTimeOffset? _lastFrameAtUtc;
         private Resolution _lastRemoteResolution;
         private bool _refreshingClients;
+        private string _viewerState = "Idle";
 
         public RemoteDesktopForm()
         {
@@ -67,6 +76,7 @@ namespace MasterSplinter.Operator.WinForms
             WireEvents();
             SetStreamingState(false);
             SetListeningState(false);
+            UpdateSessionSummary();
         }
 
         protected override async void OnFormClosing(FormClosingEventArgs e)
@@ -156,9 +166,62 @@ namespace MasterSplinter.Operator.WinForms
             _statusLabel.Height = 24;
             _statusLabel.TextAlign = ContentAlignment.MiddleLeft;
 
+            var summaryPanel = BuildSummaryPanel();
+
             Controls.Add(_desktopPictureBox);
+            Controls.Add(summaryPanel);
             Controls.Add(_statusLabel);
             Controls.Add(topPanel);
+        }
+
+        private Control BuildSummaryPanel()
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Right,
+                Width = 280,
+                Padding = new Padding(8),
+                BackColor = SystemColors.ControlLightLight
+            };
+
+            var table = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                ColumnCount = 2,
+                RowCount = 6
+            };
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 78));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+            AddSummaryRow(table, 0, "State", _stateValueLabel);
+            AddSummaryRow(table, 1, "Client", _clientValueLabel);
+            AddSummaryRow(table, 2, "Status", _clientStatusValueLabel);
+            AddSummaryRow(table, 3, "Access", _permissionValueLabel);
+            AddSummaryRow(table, 4, "Session", _sessionValueLabel);
+            AddSummaryRow(table, 5, "Last frame", _lastFrameValueLabel);
+
+            panel.Controls.Add(table);
+            return panel;
+        }
+
+        private static void AddSummaryRow(TableLayoutPanel table, int rowIndex, string name, Label valueLabel)
+        {
+            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            table.Controls.Add(new Label
+            {
+                AutoSize = true,
+                Text = name,
+                Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
+                Margin = new Padding(0, 3, 8, 6)
+            }, 0, rowIndex);
+
+            valueLabel.AutoSize = false;
+            valueLabel.Dock = DockStyle.Fill;
+            valueLabel.MaximumSize = new Size(180, 0);
+            valueLabel.AutoEllipsis = true;
+            valueLabel.Margin = new Padding(0, 3, 0, 6);
+            table.Controls.Add(valueLabel, 1, rowIndex);
         }
 
         private void WireEvents()
@@ -170,11 +233,21 @@ namespace MasterSplinter.Operator.WinForms
             _clientsComboBox.SelectedIndexChanged += (sender, args) =>
             {
                 if (!_refreshingClients)
+                {
                     ClearMonitors();
+                    UpdateViewerStateFromSelection();
+                    UpdateSessionSummary();
+                }
             };
             _startStreamButton.Click += async (sender, args) => await StartStreamAsync().ConfigureAwait(false);
             _stopStreamButton.Click += (sender, args) => StopStream();
-            _qualityTrackBar.Scroll += (sender, args) => _qualityLabel.Text = $"Quality {_qualityTrackBar.Value}";
+            _qualityTrackBar.Scroll += (sender, args) =>
+            {
+                _qualityLabel.Text = $"Quality {_qualityTrackBar.Value}";
+                UpdateSessionSummary();
+            };
+            _grantPermissionCheckBox.CheckedChanged += (sender, args) => UpdateSessionSummary();
+            _grantConsentCheckBox.CheckedChanged += (sender, args) => UpdateSessionSummary();
             _desktopPictureBox.MouseDown += async (sender, args) => await SendMouseEventAsync(ToMouseDownAction(args.Button), true, args).ConfigureAwait(false);
             _desktopPictureBox.MouseUp += async (sender, args) => await SendMouseEventAsync(ToMouseUpAction(args.Button), false, args).ConfigureAwait(false);
             _desktopPictureBox.MouseMove += async (sender, args) => await SendMouseEventAsync(MouseAction.MoveCursor, false, args).ConfigureAwait(false);
@@ -211,6 +284,7 @@ namespace MasterSplinter.Operator.WinForms
             BeginInvoke((Action)(() =>
             {
                 SetListeningState(true);
+                SetViewerState("Listening");
                 SetStatus($"Listening on 127.0.0.1:{_portInput.Value}.");
                 _clientsTimer.Start();
             }));
@@ -238,7 +312,9 @@ namespace MasterSplinter.Operator.WinForms
                 BeginInvoke((Action)(() =>
                 {
                     _clientsComboBox.Items.Clear();
+                    _monitorsComboBox.Items.Clear();
                     SetListeningState(false);
+                    SetViewerState("Idle");
                     SetStatus("Listener stopped.");
                 }));
             }
@@ -272,6 +348,9 @@ namespace MasterSplinter.Operator.WinForms
             _fpsStopwatch = Stopwatch.StartNew();
             _frameCount = 0;
             _lastRemoteResolution = null;
+            _lastFrameAtUtc = null;
+            _lastFps = 0;
+            SetViewerState("Streaming");
             SetStreamingState(true);
             SetStatus("Remote desktop stream starting.");
 
@@ -304,6 +383,7 @@ namespace MasterSplinter.Operator.WinForms
             }
             catch (Exception exception)
             {
+                SetViewerState("Failed");
                 SetStatus($"Remote desktop stream failed: {exception.Message}");
             }
             finally
@@ -311,7 +391,13 @@ namespace MasterSplinter.Operator.WinForms
                 _streamCancellation?.Dispose();
                 _streamCancellation = null;
                 if (!IsDisposed)
-                    BeginInvoke((Action)(() => SetStreamingState(false)));
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        SetStreamingState(false);
+                        UpdateViewerStateFromSelection();
+                    }));
+                }
             }
         }
 
@@ -338,9 +424,11 @@ namespace MasterSplinter.Operator.WinForms
 
                 _lastRemoteResolution = frame.Response.Resolution;
                 _frameCount++;
-                double fps = _frameCount / Math.Max(0.001, _fpsStopwatch.Elapsed.TotalSeconds);
-                _fpsLabel.Text = $"FPS {fps:0.00}";
+                _lastFrameAtUtc = DateTimeOffset.UtcNow;
+                _lastFps = _frameCount / Math.Max(0.001, _fpsStopwatch.Elapsed.TotalSeconds);
+                _fpsLabel.Text = $"FPS {_lastFps:0.00}";
                 SetStatus($"Frame {frame.FrameNumber}: {frame.Response.Resolution}; quality {frame.Response.Quality}; monitor {frame.Response.Monitor}.");
+                UpdateSessionSummary();
             }));
 
             return Task.CompletedTask;
@@ -500,6 +588,7 @@ namespace MasterSplinter.Operator.WinForms
             }
 
             SetStreamingState(_streamCancellation != null);
+            UpdateViewerStateFromSelection();
             SetStatus(monitorCount == 0
                 ? "No remote displays detected."
                 : $"Remote displays: {monitorCount}.");
@@ -512,6 +601,7 @@ namespace MasterSplinter.Operator.WinForms
 
             _monitorsComboBox.Items.Clear();
             SetStreamingState(false);
+            UpdateViewerStateFromSelection();
         }
 
         private bool TryMapMousePoint(int x, int y, out RemoteDesktopPoint point)
@@ -584,12 +674,22 @@ namespace MasterSplinter.Operator.WinForms
 
                     _clientsComboBox.SelectedIndex = selectedIndex;
                 }
+
+                if (_clientsComboBox.Items.Count == 0)
+                {
+                    _clientsComboBox.SelectedIndex = -1;
+                    _monitorsComboBox.Items.Clear();
+                }
             }
             finally
             {
                 _clientsComboBox.EndUpdate();
                 _refreshingClients = false;
             }
+
+            SetStreamingState(_streamCancellation != null);
+            UpdateViewerStateFromSelection();
+            UpdateSessionSummary();
         }
 
         private string GetSelectedClientId()
@@ -604,22 +704,159 @@ namespace MasterSplinter.Operator.WinForms
 
         private void SetListeningState(bool listening)
         {
-            _startListenerButton.Enabled = !listening;
+            bool streaming = _streamCancellation != null;
+            _startListenerButton.Enabled = !listening && !streaming;
             _stopListenerButton.Enabled = listening;
-            _refreshClientsButton.Enabled = listening;
-            _portInput.Enabled = !listening;
-            _startStreamButton.Enabled = listening;
-            _refreshMonitorsButton.Enabled = listening;
+            _refreshClientsButton.Enabled = listening && !streaming;
+            _portInput.Enabled = !listening && !streaming;
+            SetStreamingState(streaming);
         }
 
         private void SetStreamingState(bool streaming)
         {
-            _startStreamButton.Enabled = !streaming && _orchestrator != null && GetSelectedMonitorIndex() >= 0;
+            bool hasClient = !string.IsNullOrWhiteSpace(GetSelectedClientId());
+            bool hasMonitor = GetSelectedMonitorIndex() >= 0;
+            _startStreamButton.Enabled = !streaming && _orchestrator != null && hasClient && hasMonitor;
             _stopStreamButton.Enabled = streaming;
             _qualityTrackBar.Enabled = !streaming;
             _monitorsComboBox.Enabled = !streaming;
-            _refreshMonitorsButton.Enabled = !streaming && _orchestrator != null;
+            _refreshMonitorsButton.Enabled = !streaming && _orchestrator != null && hasClient;
             _clientsComboBox.Enabled = !streaming;
+            _refreshClientsButton.Enabled = !streaming && _orchestrator != null;
+            UpdateSessionSummary();
+        }
+
+        private void SetViewerState(string state)
+        {
+            if (IsDisposed)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke((Action)(() => SetViewerState(state)));
+                return;
+            }
+
+            _viewerState = string.IsNullOrWhiteSpace(state) ? "Idle" : state;
+            Text = $"MasterSplinter Remote Desktop - {_viewerState}";
+            UpdateSessionSummary();
+        }
+
+        private void UpdateViewerStateFromSelection()
+        {
+            if (_streamCancellation != null)
+            {
+                SetViewerState("Streaming");
+                return;
+            }
+
+            if (_orchestrator == null)
+            {
+                SetViewerState("Idle");
+                return;
+            }
+
+            if (GetSelectedMonitorIndex() >= 0)
+            {
+                SetViewerState("Displays Loaded");
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(GetSelectedClientId()))
+            {
+                SetViewerState("Client Selected");
+                return;
+            }
+
+            SetViewerState("Listening");
+        }
+
+        private void UpdateSessionSummary()
+        {
+            if (IsDisposed)
+                return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke((Action)UpdateSessionSummary);
+                return;
+            }
+
+            string clientId = GetSelectedClientId();
+            ClientSessionSnapshot session = null;
+            if (!string.IsNullOrWhiteSpace(clientId) && _registry != null)
+            {
+                session = _registry.GetSnapshots()
+                    .FirstOrDefault(snapshot => string.Equals(snapshot.ClientId, clientId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            _stateValueLabel.Text = _viewerState;
+            _clientValueLabel.Text = FormatClientSummary(session, clientId);
+            _clientStatusValueLabel.Text = FormatClientStatus(clientId);
+            _permissionValueLabel.Text = $"Permission {FormatGrant(_grantPermissionCheckBox.Checked)}; consent {FormatGrant(_grantConsentCheckBox.Checked)}";
+            _sessionValueLabel.Text = FormatSessionSummary();
+            _lastFrameValueLabel.Text = FormatLastFrameSummary();
+        }
+
+        private string FormatClientStatus(string clientId)
+        {
+            if (string.IsNullOrWhiteSpace(clientId) || _statusRegistry == null)
+                return "-";
+
+            if (!_statusRegistry.TryGet(clientId, out ClientStatusSnapshot snapshot))
+                return "-";
+
+            string status = string.IsNullOrWhiteSpace(snapshot.StatusMessage) ? "-" : snapshot.StatusMessage;
+            string userStatus = snapshot.UserStatus.HasValue ? snapshot.UserStatus.Value.ToString() : "-";
+            return $"{status}; user {userStatus}";
+        }
+
+        private static string FormatClientSummary(ClientSessionSnapshot session, string fallbackClientId)
+        {
+            if (session == null)
+                return string.IsNullOrWhiteSpace(fallbackClientId) ? "-" : ShortClientId(fallbackClientId);
+
+            if (session.Identification == null)
+                return $"{ShortClientId(session.ClientId)}; connected {FormatBoolean(session.IsConnected)}";
+
+            string user = string.IsNullOrWhiteSpace(session.Identification.Username) ? "-" : session.Identification.Username;
+            string machine = string.IsNullOrWhiteSpace(session.Identification.PcName) ? "-" : session.Identification.PcName;
+            string accountType = string.IsNullOrWhiteSpace(session.Identification.AccountType) ? "-" : session.Identification.AccountType;
+            return $"{ShortClientId(session.ClientId)}; {user}@{machine}; {accountType}; connected {FormatBoolean(session.IsConnected)}";
+        }
+
+        private static string FormatGrant(bool granted)
+        {
+            return granted ? "granted" : "required";
+        }
+
+        private static string FormatBoolean(bool value)
+        {
+            return value ? "yes" : "no";
+        }
+
+        private string FormatSessionSummary()
+        {
+            string monitor = _monitorsComboBox.SelectedItem is MonitorListItem item ? item.ToString() : "-";
+            string resolution = _lastRemoteResolution == null ? "-" : _lastRemoteResolution.ToString();
+            return $"{monitor}; q{_qualityTrackBar.Value}; frames {_frameCount}; fps {_lastFps:0.00}; {resolution}";
+        }
+
+        private string FormatLastFrameSummary()
+        {
+            if (!_lastFrameAtUtc.HasValue)
+                return "-";
+
+            TimeSpan age = DateTimeOffset.UtcNow - _lastFrameAtUtc.Value;
+            return $"{_lastFrameAtUtc.Value.LocalDateTime:T}; {Math.Max(0, age.TotalSeconds):0}s ago";
+        }
+
+        private static string ShortClientId(string clientId)
+        {
+            if (string.IsNullOrWhiteSpace(clientId))
+                return "-";
+
+            return clientId.Length <= 12 ? clientId : clientId.Substring(0, 12) + "...";
         }
 
         private void SetStatus(string message)

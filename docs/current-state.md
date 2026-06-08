@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`,
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add single-frame desktop capture CLI parity`
+- Latest committed roadmap checkpoint before this handoff: `Add remote desktop viewer session status`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -40,7 +40,7 @@ Latest result from June 7, 2026:
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
 - `MasterSplinter.Client.Core.Tests`: 80 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
-- `MasterSplinter.Server.Core.Tests`: 51 passed
+- `MasterSplinter.Server.Core.Tests`: 67 passed
 - `MasterSplinter.Host.Tests`: 15 passed
 - Total: 186 passed, 1 skipped, 0 failed
 
@@ -164,7 +164,7 @@ Current CLI listen commands:
 - `src/MasterSplinter.Client.Core`: client dispatch contracts, response-handler adapters, lifecycle-capable command contexts, client identification factory, system-info handling, drive-list handling, directory-list handling, process-list handling, startup-item listing/add/remove, registry key read/create/delete/rename, registry value create/delete/rename/change, TCP-connection listing/close, remote monitor counting/desktop capture/input, shell command execution, elevation request handling, shutdown/restart/standby request handling, client disconnect/reconnect/uninstall request handling, message-box handling, and website-visit handling.
 - `src/MasterSplinter.Client.Host`: minimal runnable client host with smoke mode, loopback handshake, and one-command handling mode.
 - `src/MasterSplinter.Cli`: minimal operator CLI for manual loopback command-dispatch testing across current read-only handlers.
-- `src/MasterSplinter.Operator.WinForms`: Windows-only operator GUI surface; currently focused on remote desktop listener/client selection and live stream rendering.
+- `src/MasterSplinter.Operator.WinForms`: Windows-only operator GUI surface; currently focused on remote desktop listener/client selection, live stream rendering, viewer input, and session state visibility.
 - `src/MasterSplinter.Server.Core`: session registry, handshake coordination, lifecycle contracts, listener orchestration, audit and command dispatch contracts.
 - `src/MasterSplinter.Server.Host`: minimal runnable loopback-only server host.
 - `tests/*`: MSTest coverage for the modern projects.
@@ -329,8 +329,10 @@ All modern projects target `net10.0`.
   refresh remote displays, choose quality/display, start/stop a live stream, render frames into a
   zoomed picture box, and show FPS/status. Viewer input dispatch now maps mouse coordinates from
   the zoomed image back to the remote desktop resolution, sends mouse movement/click/wheel events,
-  and sends keyboard down/up events while streaming. Legacy parity still needs manual
-  viewer-input verification, visible active state, and broader session/audit controls.
+  and sends keyboard down/up events while streaming. The viewer also exposes active state,
+  selected-client identity/status, permission/consent state, selected display, quality, frame
+  count, FPS, resolution, and last-frame timing. Legacy parity still needs manual viewer-input
+  verification and broader audit persistence.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
@@ -362,8 +364,8 @@ All modern projects target `net10.0`.
   should still use harmless pointer/key actions on a prepared visible Windows desktop session.
   Single-frame desktop capture has a gentle local manual verification; `get-desktop-stream` now
   covers the request-response frame loop, and the first WinForms live viewer surface builds with
-  mouse/keyboard dispatch. Viewer input manual verification against a connected client is still
-  pending.
+  mouse/keyboard dispatch plus visible session state. Viewer input manual verification against a
+  connected client is still pending.
 
 ## Recommended Next Tasks
 

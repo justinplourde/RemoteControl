@@ -17,7 +17,7 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: WinForms remote desktop monitor refresh UX
+- Latest committed work before this handoff: WinForms remote desktop viewer session status
 - Latest known full test result: 202 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -86,7 +86,9 @@ two `1280x720` JPEG frames at quality 45, each 36,110 bytes.
 The first operator remote desktop viewer surface now exists at
 `src\MasterSplinter.Operator.WinForms`. It is a Windows-only WinForms app that can start/stop the
 loopback listener, select connected clients, refresh remote displays, choose quality/display,
-start/stop live streaming, render frames in a zoomed image area, and show FPS/status. It builds in
+start/stop live streaming, render frames in a zoomed image area, and show FPS/status. It also has a
+session summary panel for active state, selected-client identity/status, permission/consent state,
+selected display, quality, frame count, FPS, remote resolution, and last-frame timing. It builds in
 the root solution; manual viewer verification against a connected client is still pending. Viewer
 input dispatch is now wired: mouse coordinates are scaled from the zoomed image to the remote
 desktop resolution, mouse move/click/wheel events dispatch `DoMouseEvent`, and key down/up

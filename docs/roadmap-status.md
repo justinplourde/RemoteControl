@@ -73,7 +73,7 @@ Current verification:
 - `MasterSplinter.Client.Core.Tests`: 80 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
-- `MasterSplinter.Server.Core.Tests`: 51 passed.
+- `MasterSplinter.Server.Core.Tests`: 67 passed.
 
 Known legacy limitation:
 
@@ -379,7 +379,8 @@ Done:
 - Added the first WinForms operator remote desktop viewer surface in
   `MasterSplinter.Operator.WinForms`: the GUI can start/stop the loopback listener, select a
   connected client, choose quality/display, start/stop streaming, render live frames, and show
-  FPS/status. Input coordinate scaling and richer legacy session controls remain pending.
+  FPS/status. Input coordinate scaling and richer legacy session controls were added in later
+  viewer parity slices.
 - Added zoom-aware remote desktop viewer input dispatch: server core now has
   `RemoteDesktopCoordinateMapper` tests for picture-box style scaling/letterboxing, the stream
   session ignores unrelated status messages while waiting for frames, and the WinForms viewer
@@ -387,6 +388,10 @@ Done:
 - Added remote desktop monitor refresh UX to the WinForms viewer: operators can refresh remote
   displays through `GetMonitors`, select a display from the returned count, and stream start is
   disabled until a remote display is selected.
+- Added remote desktop viewer active/session state: the WinForms viewer now shows idle/listening/
+  client-selected/displays-loaded/streaming/failed state, selected-client identity and status,
+  permission/consent state, selected display, quality, frame count, FPS, remote resolution, and
+  last-frame timing while tightening start/stop/refresh control enablement.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -585,8 +590,7 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Remote desktop visible active state, richer operator viewer controls, and manual viewer-input
-  verification.
+- Remote desktop manual viewer-input verification against a connected visible Windows client.
 - Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
 - Process and shell execution broader behavior checks.
