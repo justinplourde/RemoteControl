@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`,
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Release viewer modifiers on stream stop`
+- Latest committed roadmap checkpoint before this handoff: `Fix remote desktop viewer layout`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -336,6 +336,8 @@ All modern projects target `net10.0`.
   Shift/Ctrl/Alt/Win state after keyboard input checks. A June 7, 2026 local GUI verification
   connected the WinForms operator to a local client host, loaded displays, streamed `1280x720`,
   sent a plain `a` key while streaming, stopped cleanly, and returned to `Displays Loaded`.
+  The command area was then rebuilt from a fixed-height wrapping strip into stable command and
+  content grids so controls no longer overlap at launch or under DPI scaling.
   Legacy parity still needs broader audit persistence.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and

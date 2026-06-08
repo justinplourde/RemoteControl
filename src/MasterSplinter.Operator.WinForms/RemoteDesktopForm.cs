@@ -82,9 +82,9 @@ namespace MasterSplinter.Operator.WinForms
         public RemoteDesktopForm()
         {
             Text = "MasterSplinter Remote Desktop";
-            Width = 1180;
-            Height = 780;
-            MinimumSize = new Size(900, 600);
+            Width = 1280;
+            Height = 820;
+            MinimumSize = new Size(1024, 680);
             KeyPreview = true;
 
             BuildLayout();
@@ -104,18 +104,22 @@ namespace MasterSplinter.Operator.WinForms
 
         private void BuildLayout()
         {
-            var topPanel = new FlowLayoutPanel
+            var rootPanel = new TableLayoutPanel
             {
-                Dock = DockStyle.Top,
-                Height = 86,
-                Padding = new Padding(8),
-                WrapContents = true
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 3
             };
+            rootPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            rootPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            rootPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+
+            var topPanel = BuildCommandPanel();
 
             _portInput.Minimum = 1;
             _portInput.Maximum = 65535;
             _portInput.Value = 4782;
-            _portInput.Width = 72;
+            _portInput.Width = 82;
 
             _startListenerButton.Text = "Start Listener";
             _startListenerButton.AutoSize = true;
@@ -132,10 +136,10 @@ namespace MasterSplinter.Operator.WinForms
             _grantConsentCheckBox.AutoSize = true;
 
             _clientsComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            _clientsComboBox.Width = 330;
+            _clientsComboBox.Width = 360;
 
             _monitorsComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            _monitorsComboBox.Width = 96;
+            _monitorsComboBox.Width = 118;
             _refreshMonitorsButton.Text = "Refresh Monitors";
             _refreshMonitorsButton.AutoSize = true;
 
@@ -155,47 +159,101 @@ namespace MasterSplinter.Operator.WinForms
             _fpsLabel.AutoSize = true;
             _fpsLabel.Text = "FPS 0.00";
 
-            topPanel.Controls.Add(new Label { Text = "Port", AutoSize = true, Padding = new Padding(0, 6, 0, 0) });
-            topPanel.Controls.Add(_portInput);
-            topPanel.Controls.Add(_startListenerButton);
-            topPanel.Controls.Add(_stopListenerButton);
-            topPanel.Controls.Add(_refreshClientsButton);
-            topPanel.Controls.Add(_grantPermissionCheckBox);
-            topPanel.Controls.Add(_grantConsentCheckBox);
-            topPanel.Controls.Add(new Label { Text = "Client", AutoSize = true, Padding = new Padding(12, 6, 0, 0) });
-            topPanel.Controls.Add(_clientsComboBox);
-            topPanel.Controls.Add(_qualityLabel);
-            topPanel.Controls.Add(_qualityTrackBar);
-            topPanel.Controls.Add(new Label { Text = "Display", AutoSize = true, Padding = new Padding(8, 6, 0, 0) });
-            topPanel.Controls.Add(_monitorsComboBox);
-            topPanel.Controls.Add(_refreshMonitorsButton);
-            topPanel.Controls.Add(_startStreamButton);
-            topPanel.Controls.Add(_stopStreamButton);
-            topPanel.Controls.Add(_fpsLabel);
+            AddCommandRow(topPanel);
 
             _desktopPictureBox.BackColor = Color.Black;
             _desktopPictureBox.Dock = DockStyle.Fill;
             _desktopPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
             _desktopPictureBox.TabStop = true;
 
-            _statusLabel.Dock = DockStyle.Bottom;
-            _statusLabel.Height = 24;
+            _statusLabel.Dock = DockStyle.Fill;
             _statusLabel.TextAlign = ContentAlignment.MiddleLeft;
+            _statusLabel.Padding = new Padding(8, 0, 8, 0);
+
+            var contentPanel = new TableLayoutPanel
+            {
+                ColumnCount = 2,
+                Dock = DockStyle.Fill,
+                Padding = new Padding(8, 0, 8, 0),
+                RowCount = 1
+            };
+            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 340));
+            contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             var summaryPanel = BuildSummaryPanel();
 
-            Controls.Add(_desktopPictureBox);
-            Controls.Add(summaryPanel);
-            Controls.Add(_statusLabel);
-            Controls.Add(topPanel);
+            contentPanel.Controls.Add(_desktopPictureBox, 0, 0);
+            contentPanel.Controls.Add(summaryPanel, 1, 0);
+            rootPanel.Controls.Add(topPanel, 0, 0);
+            rootPanel.Controls.Add(contentPanel, 0, 1);
+            rootPanel.Controls.Add(_statusLabel, 0, 2);
+            Controls.Add(rootPanel);
+        }
+
+        private static TableLayoutPanel BuildCommandPanel()
+        {
+            var panel = new TableLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                ColumnCount = 8,
+                Dock = DockStyle.Top,
+                Padding = new Padding(8),
+                RowCount = 3
+            };
+
+            for (int index = 0; index < panel.ColumnCount; index++)
+                panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            return panel;
+        }
+
+        private void AddCommandRow(TableLayoutPanel panel)
+        {
+            panel.Controls.Add(CreateCommandLabel("Port"), 0, 0);
+            panel.Controls.Add(_portInput, 1, 0);
+            panel.Controls.Add(_startListenerButton, 2, 0);
+            panel.Controls.Add(_stopListenerButton, 3, 0);
+            panel.Controls.Add(_refreshClientsButton, 4, 0);
+            panel.Controls.Add(_grantPermissionCheckBox, 5, 0);
+            panel.Controls.Add(_grantConsentCheckBox, 6, 0);
+
+            panel.Controls.Add(CreateCommandLabel("Client"), 0, 1);
+            panel.Controls.Add(_clientsComboBox, 1, 1);
+            panel.SetColumnSpan(_clientsComboBox, 3);
+            panel.Controls.Add(_refreshMonitorsButton, 4, 1);
+            panel.Controls.Add(CreateCommandLabel("Display"), 5, 1);
+            panel.Controls.Add(_monitorsComboBox, 6, 1);
+
+            panel.Controls.Add(_startStreamButton, 0, 2);
+            panel.Controls.Add(_stopStreamButton, 1, 2);
+            panel.Controls.Add(_qualityLabel, 2, 2);
+            panel.Controls.Add(_qualityTrackBar, 3, 2);
+            panel.SetColumnSpan(_qualityTrackBar, 2);
+            panel.Controls.Add(_fpsLabel, 5, 2);
+        }
+
+        private static Label CreateCommandLabel(string text)
+        {
+            return new Label
+            {
+                AutoSize = true,
+                Margin = new Padding(8, 6, 4, 4),
+                Text = text,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
         }
 
         private Control BuildSummaryPanel()
         {
             var panel = new Panel
             {
-                Dock = DockStyle.Right,
-                Width = 280,
+                Dock = DockStyle.Fill,
+                Width = 340,
                 Padding = new Padding(8),
                 BackColor = SystemColors.ControlLightLight
             };
@@ -203,11 +261,11 @@ namespace MasterSplinter.Operator.WinForms
             var table = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
-                AutoSize = true,
+                Height = 330,
                 ColumnCount = 2,
                 RowCount = 6
             };
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 78));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 88));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
             AddSummaryRow(table, 0, "State", _stateValueLabel);
@@ -223,20 +281,19 @@ namespace MasterSplinter.Operator.WinForms
 
         private static void AddSummaryRow(TableLayoutPanel table, int rowIndex, string name, Label valueLabel)
         {
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            table.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
             table.Controls.Add(new Label
             {
                 AutoSize = true,
                 Text = name,
                 Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
-                Margin = new Padding(0, 3, 8, 6)
+                Margin = new Padding(0, 6, 8, 4)
             }, 0, rowIndex);
 
             valueLabel.AutoSize = false;
             valueLabel.Dock = DockStyle.Fill;
-            valueLabel.MaximumSize = new Size(180, 0);
             valueLabel.AutoEllipsis = true;
-            valueLabel.Margin = new Padding(0, 3, 0, 6);
+            valueLabel.Margin = new Padding(0, 6, 0, 4);
             table.Controls.Add(valueLabel, 1, rowIndex);
         }
 

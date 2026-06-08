@@ -401,6 +401,9 @@ Done:
   stream stops or the form closes. A follow-up GUI verification used a plain `a` key while
   streaming, reached `1280x720` at 801 frames / 21.60 FPS, stopped cleanly, and returned to
   `Displays Loaded`.
+- Fixed the WinForms remote desktop viewer layout after manual inspection showed overlapping
+  controls: the fixed-height wrapping command strip was replaced with stable command rows, and
+  the desktop canvas plus session summary now live in a deterministic two-column content grid.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle

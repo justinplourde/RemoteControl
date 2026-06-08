@@ -17,7 +17,7 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: WinForms remote desktop keyboard cleanup
+- Latest committed work before this handoff: WinForms remote desktop layout fix
 - Latest known full test result: 202 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -100,6 +100,11 @@ local `MasterSplinter.Client.Host`, refreshed displays, started streaming, reach
 the stream, and returned to `Displays Loaded`. The viewer now releases tracked remote key-down
 events and local Shift/Ctrl/Alt/Win modifiers when a stream stops or the form closes, so future
 keyboard checks should avoid Shift unless specifically testing modifier behavior.
+
+After manual inspection showed overlapping controls, the viewer layout was rebuilt from a
+fixed-height wrapping command strip into stable command rows, with the desktop canvas and session
+summary in a two-column content grid. Build, full tests, UI Automation bounds inspection, and GUI
+launch smoke passed after the layout fix.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard
