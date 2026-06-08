@@ -50,16 +50,11 @@ namespace MasterSplinter.Operator.WinForms
         private readonly ComboBox _clientsComboBox = new ComboBox();
         private readonly ComboBox _monitorsComboBox = new ComboBox();
         private readonly Label _fpsLabel = new Label();
-        private readonly Label _clientValueLabel = new Label();
-        private readonly Label _clientStatusValueLabel = new Label();
-        private readonly Label _lastFrameValueLabel = new Label();
-        private readonly Label _permissionValueLabel = new Label();
         private readonly Label _qualityLabel = new Label();
-        private readonly Label _sessionValueLabel = new Label();
-        private readonly Label _stateValueLabel = new Label();
         private readonly Label _statusLabel = new Label();
         private readonly NumericUpDown _portInput = new NumericUpDown();
         private readonly PictureBox _desktopPictureBox = new PictureBox();
+        private readonly TextBox _sessionSummaryTextBox = new TextBox();
         private readonly System.Windows.Forms.Timer _clientsTimer = new System.Windows.Forms.Timer();
         private readonly TrackBar _qualityTrackBar = new TrackBar();
 
@@ -86,6 +81,7 @@ namespace MasterSplinter.Operator.WinForms
             Height = 820;
             MinimumSize = new Size(1024, 680);
             KeyPreview = true;
+            StartPosition = FormStartPosition.CenterScreen;
 
             BuildLayout();
             WireEvents();
@@ -119,7 +115,7 @@ namespace MasterSplinter.Operator.WinForms
             _portInput.Minimum = 1;
             _portInput.Maximum = 65535;
             _portInput.Value = 4782;
-            _portInput.Width = 82;
+            _portInput.Width = 128;
 
             _startListenerButton.Text = "Start Listener";
             _startListenerButton.AutoSize = true;
@@ -178,7 +174,7 @@ namespace MasterSplinter.Operator.WinForms
                 RowCount = 1
             };
             contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 340));
+            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 520));
             contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             var summaryPanel = BuildSummaryPanel();
@@ -250,51 +246,39 @@ namespace MasterSplinter.Operator.WinForms
 
         private Control BuildSummaryPanel()
         {
-            var panel = new Panel
+            var panel = new TableLayoutPanel
             {
+                ColumnCount = 1,
                 Dock = DockStyle.Fill,
-                Width = 340,
                 Padding = new Padding(8),
+                RowCount = 2,
                 BackColor = SystemColors.ControlLightLight
             };
+            panel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            panel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            var table = new TableLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                Height = 330,
-                ColumnCount = 2,
-                RowCount = 6
-            };
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 88));
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-            AddSummaryRow(table, 0, "State", _stateValueLabel);
-            AddSummaryRow(table, 1, "Client", _clientValueLabel);
-            AddSummaryRow(table, 2, "Status", _clientStatusValueLabel);
-            AddSummaryRow(table, 3, "Access", _permissionValueLabel);
-            AddSummaryRow(table, 4, "Session", _sessionValueLabel);
-            AddSummaryRow(table, 5, "Last frame", _lastFrameValueLabel);
-
-            panel.Controls.Add(table);
-            return panel;
-        }
-
-        private static void AddSummaryRow(TableLayoutPanel table, int rowIndex, string name, Label valueLabel)
-        {
-            table.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
-            table.Controls.Add(new Label
+            var titleLabel = new Label
             {
                 AutoSize = true,
-                Text = name,
+                Dock = DockStyle.Fill,
                 Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Bold),
-                Margin = new Padding(0, 6, 8, 4)
-            }, 0, rowIndex);
+                Margin = new Padding(0, 0, 0, 8),
+                Text = "Session",
+                TextAlign = ContentAlignment.MiddleLeft
+            };
 
-            valueLabel.AutoSize = false;
-            valueLabel.Dock = DockStyle.Fill;
-            valueLabel.AutoEllipsis = true;
-            valueLabel.Margin = new Padding(0, 6, 0, 4);
-            table.Controls.Add(valueLabel, 1, rowIndex);
+            _sessionSummaryTextBox.BackColor = SystemColors.ControlLightLight;
+            _sessionSummaryTextBox.BorderStyle = BorderStyle.None;
+            _sessionSummaryTextBox.Dock = DockStyle.Fill;
+            _sessionSummaryTextBox.Multiline = true;
+            _sessionSummaryTextBox.ReadOnly = true;
+            _sessionSummaryTextBox.ScrollBars = ScrollBars.Vertical;
+            _sessionSummaryTextBox.TabStop = false;
+            _sessionSummaryTextBox.WordWrap = true;
+
+            panel.Controls.Add(titleLabel, 0, 0);
+            panel.Controls.Add(_sessionSummaryTextBox, 0, 1);
+            return panel;
         }
 
         private void WireEvents()
@@ -927,12 +911,13 @@ namespace MasterSplinter.Operator.WinForms
                     .FirstOrDefault(snapshot => string.Equals(snapshot.ClientId, clientId, StringComparison.OrdinalIgnoreCase));
             }
 
-            _stateValueLabel.Text = _viewerState;
-            _clientValueLabel.Text = FormatClientSummary(session, clientId);
-            _clientStatusValueLabel.Text = FormatClientStatus(clientId);
-            _permissionValueLabel.Text = $"Permission {FormatGrant(_grantPermissionCheckBox.Checked)}; consent {FormatGrant(_grantConsentCheckBox.Checked)}";
-            _sessionValueLabel.Text = FormatSessionSummary();
-            _lastFrameValueLabel.Text = FormatLastFrameSummary();
+            _sessionSummaryTextBox.Text =
+                $"State: {_viewerState}{Environment.NewLine}{Environment.NewLine}" +
+                $"Client: {FormatClientSummary(session, clientId)}{Environment.NewLine}{Environment.NewLine}" +
+                $"Status: {FormatClientStatus(clientId)}{Environment.NewLine}{Environment.NewLine}" +
+                $"Access: Perm {FormatGrant(_grantPermissionCheckBox.Checked)}; consent {FormatGrant(_grantConsentCheckBox.Checked)}{Environment.NewLine}{Environment.NewLine}" +
+                $"Stream: {FormatSessionSummary()}{Environment.NewLine}{Environment.NewLine}" +
+                $"Last frame: {FormatLastFrameSummary()}";
         }
 
         private string FormatClientStatus(string clientId)
@@ -976,7 +961,7 @@ namespace MasterSplinter.Operator.WinForms
         {
             string monitor = _monitorsComboBox.SelectedItem is MonitorListItem item ? item.ToString() : "-";
             string resolution = _lastRemoteResolution == null ? "-" : _lastRemoteResolution.ToString();
-            return $"{monitor}; q{_qualityTrackBar.Value}; frames {_frameCount}; fps {_lastFps:0.00}; {resolution}";
+            return $"{monitor} | Q{_qualityTrackBar.Value} | frames {_frameCount} | FPS {_lastFps:0.00} | {resolution}";
         }
 
         private string FormatLastFrameSummary()

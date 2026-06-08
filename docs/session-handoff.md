@@ -103,8 +103,9 @@ keyboard checks should avoid Shift unless specifically testing modifier behavior
 
 After manual inspection showed overlapping controls, the viewer layout was rebuilt from a
 fixed-height wrapping command strip into stable command rows, with the desktop canvas and session
-summary in a two-column content grid. Build, full tests, UI Automation bounds inspection, and GUI
-launch smoke passed after the layout fix.
+summary in a two-column content grid. The right-side summary table still clipped vertically at the
+user's DPI, so it was replaced with one multiline read-only summary surface; the user confirmed
+the final visible layout looked good. Build and full tests passed after the final layout fix.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard

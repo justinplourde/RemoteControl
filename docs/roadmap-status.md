@@ -404,6 +404,8 @@ Done:
 - Fixed the WinForms remote desktop viewer layout after manual inspection showed overlapping
   controls: the fixed-height wrapping command strip was replaced with stable command rows, and
   the desktop canvas plus session summary now live in a deterministic two-column content grid.
+  Follow-up manual inspection found the right-side summary rows still clipped vertically at the
+  user's DPI, so the summary table was replaced with one multiline read-only summary surface.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle

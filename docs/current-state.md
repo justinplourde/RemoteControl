@@ -337,7 +337,8 @@ All modern projects target `net10.0`.
   connected the WinForms operator to a local client host, loaded displays, streamed `1280x720`,
   sent a plain `a` key while streaming, stopped cleanly, and returned to `Displays Loaded`.
   The command area was then rebuilt from a fixed-height wrapping strip into stable command and
-  content grids so controls no longer overlap at launch or under DPI scaling.
+  content grids, and the right-side session table was replaced with a multiline summary surface
+  after manual inspection confirmed the final layout no longer overlaps.
   Legacy parity still needs broader audit persistence.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
