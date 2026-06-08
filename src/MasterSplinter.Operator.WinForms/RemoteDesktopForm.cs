@@ -10,10 +10,12 @@ using MasterSplinter.Server.Core.RemoteDesktop;
 using MasterSplinter.Server.Core.Sessions;
 using MasterSplinter.Server.Host;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -24,6 +26,18 @@ namespace MasterSplinter.Operator.WinForms
     public sealed class RemoteDesktopForm : Form
     {
         private const string OperatorId = "winforms-operator";
+        private const uint KeyEventFKeyUp = 0x0002;
+        private const byte VirtualKeyShift = 0x10;
+        private const byte VirtualKeyControl = 0x11;
+        private const byte VirtualKeyAlt = 0x12;
+        private const byte VirtualKeyLeftWin = 0x5B;
+        private const byte VirtualKeyRightWin = 0x5C;
+        private const byte VirtualKeyLeftShift = 0xA0;
+        private const byte VirtualKeyRightShift = 0xA1;
+        private const byte VirtualKeyLeftControl = 0xA2;
+        private const byte VirtualKeyRightControl = 0xA3;
+        private const byte VirtualKeyLeftAlt = 0xA4;
+        private const byte VirtualKeyRightAlt = 0xA5;
 
         private readonly Button _refreshClientsButton = new Button();
         private readonly Button _refreshMonitorsButton = new Button();
@@ -54,6 +68,7 @@ namespace MasterSplinter.Operator.WinForms
         private ClientStatusRegistry _statusRegistry;
         private RemoteClientListenerOrchestrator _orchestrator;
         private ServerCommandDispatcher _dispatcher;
+        private readonly HashSet<byte> _pressedRemoteKeys = new HashSet<byte>();
         private CancellationTokenSource _listenerCancellation;
         private CancellationTokenSource _streamCancellation;
         private int _frameCount;
@@ -82,6 +97,7 @@ namespace MasterSplinter.Operator.WinForms
         protected override async void OnFormClosing(FormClosingEventArgs e)
         {
             _streamCancellation?.Cancel();
+            ReleaseLocalModifierKeys();
             await StopListenerAsync();
             base.OnFormClosing(e);
         }
@@ -388,6 +404,8 @@ namespace MasterSplinter.Operator.WinForms
             }
             finally
             {
+                await ReleasePressedRemoteKeysAsync(clientId).ConfigureAwait(false);
+                ReleaseLocalModifierKeys();
                 _streamCancellation?.Dispose();
                 _streamCancellation = null;
                 if (!IsDisposed)
@@ -403,6 +421,7 @@ namespace MasterSplinter.Operator.WinForms
 
         private void StopStream()
         {
+            ReleaseLocalModifierKeys();
             _streamCancellation?.Cancel();
         }
 
@@ -494,6 +513,7 @@ namespace MasterSplinter.Operator.WinForms
 
             args.Handled = true;
             await DispatchInputAsync(message).ConfigureAwait(false);
+            TrackRemoteKeyState(message.Key, keyDown);
         }
 
         private async Task DispatchInputAsync(IMessage message)
@@ -511,6 +531,66 @@ namespace MasterSplinter.Operator.WinForms
 
             if (result.Status != CommandDispatchStatus.Sent)
                 SetStatus($"Input dispatch stopped: {result.Status}.");
+        }
+
+        private async Task ReleasePressedRemoteKeysAsync(string clientId)
+        {
+            byte[] keys;
+            lock (_pressedRemoteKeys)
+            {
+                keys = _pressedRemoteKeys.ToArray();
+                _pressedRemoteKeys.Clear();
+            }
+
+            if (keys.Length == 0 || string.IsNullOrWhiteSpace(clientId) || _dispatcher == null)
+                return;
+
+            foreach (byte key in keys)
+            {
+                var message = new DoKeyboardEvent
+                {
+                    Key = key,
+                    KeyDown = false
+                };
+
+                CommandDispatchRequest request = await CreateAuthorizedRequestAsync(
+                    clientId,
+                    message,
+                    CancellationToken.None).ConfigureAwait(false);
+                await _dispatcher.DispatchAsync(request, CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        private void TrackRemoteKeyState(byte key, bool keyDown)
+        {
+            lock (_pressedRemoteKeys)
+            {
+                if (keyDown)
+                    _pressedRemoteKeys.Add(key);
+                else
+                    _pressedRemoteKeys.Remove(key);
+            }
+        }
+
+        private static void ReleaseLocalModifierKeys()
+        {
+            byte[] keys =
+            {
+                VirtualKeyShift,
+                VirtualKeyLeftShift,
+                VirtualKeyRightShift,
+                VirtualKeyControl,
+                VirtualKeyLeftControl,
+                VirtualKeyRightControl,
+                VirtualKeyAlt,
+                VirtualKeyLeftAlt,
+                VirtualKeyRightAlt,
+                VirtualKeyLeftWin,
+                VirtualKeyRightWin
+            };
+
+            foreach (byte key in keys)
+                keybd_event(key, 0, KeyEventFKeyUp, UIntPtr.Zero);
         }
 
         private async Task RefreshMonitorsAsync()
@@ -886,6 +966,9 @@ namespace MasterSplinter.Operator.WinForms
             Buffer.BlockCopy(image, 4, jpeg, 0, length);
             return jpeg;
         }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern void keybd_event(byte virtualKey, byte scanCode, uint flags, UIntPtr extraInfo);
 
         private sealed class ClientListItem
         {

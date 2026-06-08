@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`,
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Add remote desktop viewer session status`
+- Latest committed roadmap checkpoint before this handoff: `Release viewer modifiers on stream stop`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -331,9 +331,11 @@ All modern projects target `net10.0`.
   the zoomed image back to the remote desktop resolution, sends mouse movement/click/wheel events,
   and sends keyboard down/up events while streaming. The viewer also exposes active state,
   selected-client identity/status, permission/consent state, selected display, quality, frame
-  count, FPS, resolution, and last-frame timing. A June 7, 2026 local GUI verification connected
-  the WinForms operator to a local client host, loaded displays, streamed `1280x720` at 71 frames /
-  21.96 FPS, and observed input acknowledgement after a harmless Shift key while streaming.
+  count, FPS, resolution, and last-frame timing. The viewer now releases tracked remote key-down
+  events and local operator modifier keys when a stream stops or the form closes, preventing stuck
+  Shift/Ctrl/Alt/Win state after keyboard input checks. A June 7, 2026 local GUI verification
+  connected the WinForms operator to a local client host, loaded displays, streamed `1280x720`,
+  sent a plain `a` key while streaming, stopped cleanly, and returned to `Displays Loaded`.
   Legacy parity still needs broader audit persistence.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and

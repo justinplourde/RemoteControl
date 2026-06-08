@@ -17,7 +17,7 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: WinForms remote desktop viewer session status
+- Latest committed work before this handoff: WinForms remote desktop keyboard cleanup
 - Latest known full test result: 202 passed, 1 skipped, 0 failed
 
 Primary verification command:
@@ -96,9 +96,10 @@ dispatches `DoKeyboardEvent` while streaming.
 
 The latest local GUI verification on June 7, 2026 started the WinForms listener, connected a
 local `MasterSplinter.Client.Host`, refreshed displays, started streaming, reached
-`Display 1; q75; frames 71; fps 21.96; 1280x720`, sent harmless pointer movement plus Shift input
-while streaming, observed `Keyboard event sent.`, stopped the stream, and returned to
-`Displays Loaded`.
+`Display 1; q75; frames 801; fps 21.60; 1280x720`, sent a plain `a` key while streaming, stopped
+the stream, and returned to `Displays Loaded`. The viewer now releases tracked remote key-down
+events and local Shift/Ctrl/Alt/Win modifiers when a stream stops or the form closes, so future
+keyboard checks should avoid Shift unless specifically testing modifier behavior.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard

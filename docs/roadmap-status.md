@@ -396,6 +396,11 @@ Done:
   listener, a local client host connected, displays loaded, streaming reached `1280x720` at
   71 frames / 21.96 FPS, and a harmless Shift key input acknowledgement was observed while
   streaming.
+- Added remote desktop keyboard cleanup in the WinForms viewer: tracked remote key-down events
+  are released on stream teardown, and local Shift/Ctrl/Alt/Win modifiers are released when the
+  stream stops or the form closes. A follow-up GUI verification used a plain `a` key while
+  streaming, reached `1280x720` at 801 frames / 21.60 FPS, stopped cleanly, and returned to
+  `Displays Loaded`.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
