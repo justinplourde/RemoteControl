@@ -331,8 +331,10 @@ All modern projects target `net10.0`.
   the zoomed image back to the remote desktop resolution, sends mouse movement/click/wheel events,
   and sends keyboard down/up events while streaming. The viewer also exposes active state,
   selected-client identity/status, permission/consent state, selected display, quality, frame
-  count, FPS, resolution, and last-frame timing. Legacy parity still needs manual viewer-input
-  verification and broader audit persistence.
+  count, FPS, resolution, and last-frame timing. A June 7, 2026 local GUI verification connected
+  the WinForms operator to a local client host, loaded displays, streamed `1280x720` at 71 frames /
+  21.96 FPS, and observed input acknowledgement after a harmless Shift key while streaming.
+  Legacy parity still needs broader audit persistence.
 - Remote input parity is now wired through `DoMouseEvent` and `DoKeyboardEvent`, a Windows
   `SendInput`/`SetCursorPos` provider, CLI `mouse-event` and `keyboard-event`, and
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
@@ -363,9 +365,8 @@ All modern projects target `net10.0`.
   Remote input dispatch has a gentle local manual verification, but broader manual verification
   should still use harmless pointer/key actions on a prepared visible Windows desktop session.
   Single-frame desktop capture has a gentle local manual verification; `get-desktop-stream` now
-  covers the request-response frame loop, and the first WinForms live viewer surface builds with
-  mouse/keyboard dispatch plus visible session state. Viewer input manual verification against a
-  connected client is still pending.
+  covers the request-response frame loop, and the first WinForms live viewer surface builds and
+  has been locally verified with mouse/keyboard dispatch plus visible session state.
 
 ## Recommended Next Tasks
 

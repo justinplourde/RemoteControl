@@ -89,10 +89,16 @@ loopback listener, select connected clients, refresh remote displays, choose qua
 start/stop live streaming, render frames in a zoomed image area, and show FPS/status. It also has a
 session summary panel for active state, selected-client identity/status, permission/consent state,
 selected display, quality, frame count, FPS, remote resolution, and last-frame timing. It builds in
-the root solution; manual viewer verification against a connected client is still pending. Viewer
+the root solution, and local viewer verification against a connected client has passed. Viewer
 input dispatch is now wired: mouse coordinates are scaled from the zoomed image to the remote
 desktop resolution, mouse move/click/wheel events dispatch `DoMouseEvent`, and key down/up
 dispatches `DoKeyboardEvent` while streaming.
+
+The latest local GUI verification on June 7, 2026 started the WinForms listener, connected a
+local `MasterSplinter.Client.Host`, refreshed displays, started streaming, reached
+`Display 1; q75; frames 71; fps 21.96; 1280x720`, sent harmless pointer movement plus Shift input
+while streaming, observed `Keyboard event sent.`, stopped the stream, and returned to
+`Displays Loaded`.
 
 Remote input parity is wired through `mouse-event` and `keyboard-event`. These require
 `--grant-permission --grant-consent`, map to `RemoteInput`, and send legacy-style mouse/keyboard

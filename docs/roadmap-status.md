@@ -392,6 +392,10 @@ Done:
   client-selected/displays-loaded/streaming/failed state, selected-client identity and status,
   permission/consent state, selected display, quality, frame count, FPS, remote resolution, and
   last-frame timing while tightening start/stop/refresh control enablement.
+- Verified the WinForms remote desktop viewer locally on June 7, 2026: the GUI started its
+  listener, a local client host connected, displays loaded, streaming reached `1280x720` at
+  71 frames / 21.96 FPS, and a harmless Shift key input acknowledgement was observed while
+  streaming.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -590,7 +594,6 @@ Status: Planned as part of modern runtime parity
 
 Areas still deferred from the legacy app:
 
-- Remote desktop manual viewer-input verification against a connected visible Windows client.
 - Manual verification for remote input and other sensitive desktop-visible commands.
 - Registry mutation manual verification.
 - Process and shell execution broader behavior checks.
