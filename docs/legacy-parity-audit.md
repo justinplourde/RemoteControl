@@ -47,7 +47,7 @@ This file is the parity ledger. Nothing should silently fall out of scope.
 | Client lifecycle | `DoClientDisconnect`, `DoClientReconnect` | partial | Dispatch closes current session; legacy reconnect scheduling/backoff behavior still needs host parity. |
 | Elevation request | `DoAskElevate` | partial | UAC dispatch done; interactive accept/cancel manual verification pending. |
 | Client uninstall | `DoClientUninstall` | partial | Provider/CLI done; published executable manual self-delete verification pending. |
-| Reverse proxy | `ReverseProxyConnect`, `ReverseProxyData`, `ReverseProxyDisconnect`, `ReverseProxyConnectResponse`, `FrmReverseProxy` | not-started | Needs explicit modern network-control design, operator permission, audit, allowlist/session controls, and tests. |
+| Reverse proxy | `ReverseProxyConnect`, `ReverseProxyData`, `ReverseProxyDisconnect`, `ReverseProxyConnectResponse`, `FrmReverseProxy` | partial | Protocol DTOs and first client-side runtime handlers are done behind `NetworkControl` permission and a loopback-only target policy; tests cover handler delegation, allowlist behavior, and loopback data relay. Operator SOCKS5/HTTPS listener, load balancing, broader allowlist/session controls, audit persistence, CLI/manual verification, and GUI parity remain. |
 | Builder/client packaging | `FrmBuilder`, `FrmCertificate`, `ClientBuilder`, `Renamer`, client setup/update classes | not-started | Need modern transparent installer/package builder plan, signing/certificate handling, config injection, service/install/startup/update behavior. |
 | Settings/about/operator shell | `FrmSettings`, `FrmAbout`, main server listener settings | not-started | Operator GUI/settings parity pending after Web API/core boundaries. |
 | Webcam stop / capture-era control | `DoWebcamStop` | not-started | Only protocol-compatible today; no modern webcam capture feature exists. Needs consentful capture/session design before any runtime path. |
@@ -58,12 +58,13 @@ This file is the parity ledger. Nothing should silently fall out of scope.
 
 Modern `MasterSplinter.Common` mirrors the legacy protocol DTO surface and has reflection plus
 wire-compatibility coverage. Remaining protocol DTOs without modern runtime enablement are tracked
-above: reverse proxy, webcam stop, password recovery, keylogger logs, and parts of build/install
-behavior that are not represented as simple command DTOs.
+above: webcam stop, password recovery, keylogger logs, and parts of build/install behavior that
+are not represented as simple command DTOs. Reverse proxy now has a first loopback-only client
+runtime path but is not yet full operator SOCKS/GUI parity.
 
 ## Highest-Value Remaining 1:1 Gaps
 
-1. Reverse proxy with explicit allowlist/session/audit boundaries.
+1. Reverse proxy operator SOCKS5/HTTPS listener with explicit allowlist/session/audit boundaries.
 2. Builder/install/update/service parity as a transparent administrative installer flow.
 3. Manual verification matrix for all implemented sensitive commands.
 4. GUI/operator workflow parity, likely after Web API/shared server core surfaces are ready.

@@ -21,7 +21,7 @@ Then ask the new chat to read this file, `docs/roadmap-status.md`,
 - Current solution: `MasterSplinter.sln`
 - Legacy imported source: `legacy/Quasar`
 - Legacy solution: `legacy/Quasar/Quasar.sln`
-- Latest committed roadmap checkpoint before this handoff: `Fix remote desktop viewer layout`
+- Latest committed roadmap checkpoint before this handoff: `Add loopback reverse proxy client path`
 
 The modern work is intentionally in root-level `src` and `tests` folders. The legacy
 Quasar code is preserved separately as reference material and parity source, and should
@@ -38,7 +38,7 @@ dotnet test .\MasterSplinter.sln
 Latest result from June 7, 2026:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped
-- `MasterSplinter.Client.Core.Tests`: 80 passed
+- `MasterSplinter.Client.Core.Tests`: 85 passed
 - `MasterSplinter.Cli.Tests`: 8 passed
 - `MasterSplinter.Server.Core.Tests`: 67 passed
 - `MasterSplinter.Host.Tests`: 15 passed
@@ -345,6 +345,11 @@ All modern projects target `net10.0`.
   `RemoteInput` permission plus consent enforcement. Automated tests cover CLI parsing/message
   creation, handler status mapping, and safety metadata; a gentle local manual check moved the
   pointer to `10,10` and sent Shift down/up successfully.
+- Reverse proxy parity has a first modern client-side runtime path: `ReverseProxyConnect`,
+  `ReverseProxyData`, and `ReverseProxyDisconnect` handlers delegate to a socket provider that
+  returns legacy `ReverseProxyConnectResponse`, relays data, and emits disconnect messages. The
+  host advertises `reverse-proxy.loopback` and uses a loopback-only target policy for this first
+  slice. Tests cover handler delegation, target policy decisions, and loopback echo relay.
 
 ## Current Limitations
 
@@ -375,7 +380,8 @@ All modern projects target `net10.0`.
 
 ## Recommended Next Tasks
 
-1. Work directly from `docs/legacy-parity-audit.md` and close each 1:1 parity row deliberately.
-2. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
-3. Add parity tests against legacy behavior before moving each behavior slice.
-4. Once runtime parity/accounting is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.
+1. Continue reverse proxy parity with the operator SOCKS5/HTTPS listener, target allowlist/session controls, audit persistence, CLI/manual verification, and GUI accounting.
+2. Work directly from `docs/legacy-parity-audit.md` and close each 1:1 parity row deliberately.
+3. Extract remaining read-only or permission-scoped client handlers behind explicit interfaces.
+4. Add parity tests against legacy behavior before moving each behavior slice.
+5. Once runtime parity/accounting is proven, resume roadmap features: permissioned operators, audit persistence, Web API, consentful client UI, service mode, cross-platform expansion, and GUI overhaul.

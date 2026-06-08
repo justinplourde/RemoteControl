@@ -70,7 +70,7 @@ Current root projects:
 Current verification:
 
 - `MasterSplinter.Common.Tests`: 32 passed, 1 skipped.
-- `MasterSplinter.Client.Core.Tests`: 80 passed.
+- `MasterSplinter.Client.Core.Tests`: 85 passed.
 - `MasterSplinter.Cli.Tests`: 8 passed.
 - `MasterSplinter.Host.Tests`: 15 passed.
 - `MasterSplinter.Server.Core.Tests`: 67 passed.
@@ -406,6 +406,13 @@ Done:
   the desktop canvas plus session summary now live in a deterministic two-column content grid.
   Follow-up manual inspection found the right-side summary rows still clipped vertically at the
   user's DPI, so the summary table was replaced with one multiline read-only summary surface.
+- Added the first modern reverse proxy client runtime path: client-core now has handlers for
+  `ReverseProxyConnect`, `ReverseProxyData`, and `ReverseProxyDisconnect`, backed by a socket
+  provider that returns legacy `ReverseProxyConnectResponse`, relays bytes, and emits disconnects.
+  The client host advertises `reverse-proxy.loopback` and wires the provider through a
+  loopback-only target policy; tests cover handler delegation, allowlist decisions, and loopback
+  echo relay. Operator SOCKS5/HTTPS listener, load balancing, broader allowlists, audit
+  persistence, CLI/manual verification, and GUI parity remain.
 - Added consent-gated remote input parity through `DoMouseEvent` and `DoKeyboardEvent`: the
   client host wires a Windows `SendInput`/`SetCursorPos` provider, CLI exposes `mouse-event` and
   `keyboard-event`, and `RemoteInput` permission plus consent enforcement is covered. A gentle
@@ -609,7 +616,8 @@ Areas still deferred from the legacy app:
 - Process and shell execution broader behavior checks.
 - File-system broader behavior checks.
 - Client installation, startup, updater, and uninstaller behavior.
-- Reverse proxy behavior.
+- Reverse proxy operator SOCKS5/HTTPS listener, load balancing, broader allowlists, audit
+  persistence, CLI/manual verification, and GUI parity.
 - Password recovery and keylogging-era legacy features need explicit product/security decisions
   before any modernization work continues on them.
 - Windows-specific platform helpers and native methods.

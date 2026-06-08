@@ -5,6 +5,7 @@ using MasterSplinter.Client.Core.Identity;
 using MasterSplinter.Client.Core.Processes;
 using MasterSplinter.Client.Core.Registry;
 using MasterSplinter.Client.Core.RemoteDesktop;
+using MasterSplinter.Client.Core.ReverseProxy;
 using MasterSplinter.Client.Core.Services;
 using MasterSplinter.Client.Core.Shell;
 using MasterSplinter.Client.Core.Startup;
@@ -65,6 +66,7 @@ namespace MasterSplinter.Client.Host
                 identityOptions.Capabilities.SupportedFeatures.Add("remote-desktop.monitors");
                 identityOptions.Capabilities.SupportedFeatures.Add("remote-input.keyboard");
                 identityOptions.Capabilities.SupportedFeatures.Add("remote-input.mouse");
+                identityOptions.Capabilities.SupportedFeatures.Add("reverse-proxy.loopback");
                 identityOptions.Capabilities.SupportedFeatures.Add("startup.items");
                 identityOptions.Capabilities.SupportedFeatures.Add("system.info");
                 identityOptions.Capabilities.SupportedFeatures.Add("tcp.connections");
@@ -88,6 +90,7 @@ namespace MasterSplinter.Client.Host
                 if (options.HandleOneCommand || options.HandleCommands)
                 {
                     var fileUploadHandler = new FileTransferUploadHandler(new FileUploadProvider());
+                    var reverseProxyProvider = new ReverseProxyProvider(ReverseProxyTargetPolicy.LoopbackOnly());
                     MessageDispatcher dispatcher = new MessageDispatcher.Builder()
                         .AddHandler(new ResponseMessageHandlerAdapter<GetConnections>(
                             new GetConnectionsHandler(new TcpConnectionProvider())))
@@ -155,6 +158,9 @@ namespace MasterSplinter.Client.Host
                             new DoStartupItemRemoveHandler(new StartupItemProvider())))
                         .AddHandler(new ResponseMessageHandlerAdapter<GetSystemInfo>(
                             new GetSystemInfoHandler(new SystemInfoProvider())))
+                        .AddHandler(new ReverseProxyConnectHandler(reverseProxyProvider))
+                        .AddHandler(new ReverseProxyDataHandler(reverseProxyProvider))
+                        .AddHandler(new ReverseProxyDisconnectHandler(reverseProxyProvider))
                         .Build();
 
                     var commandClient = new LoopbackTcpCommandClient();

@@ -17,8 +17,8 @@ Current checkpoint:
 - Repo path: `C:\Users\Jplou\develop\RemoteControl`
 - Main solution: `MasterSplinter.sln`
 - Legacy reference: `legacy/Quasar`
-- Latest committed work before this handoff: WinForms remote desktop layout fix
-- Latest known full test result: 202 passed, 1 skipped, 0 failed
+- Latest committed work before this handoff: loopback reverse proxy client path
+- Latest known full test result: 207 passed, 1 skipped, 0 failed
 
 Primary verification command:
 
@@ -122,6 +122,15 @@ dispatch first mouse-event --mouse-action move --x 10 --y 10 --monitor-index 0
 dispatch first keyboard-event --key 16 --key-down
 dispatch first keyboard-event --key 16 --key-up
 ```
+
+Reverse proxy parity now has a first client-side runtime path. `MasterSplinter.Client.Core`
+contains handlers for `ReverseProxyConnect`, `ReverseProxyData`, and `ReverseProxyDisconnect`,
+backed by a socket provider that returns `ReverseProxyConnectResponse`, relays bytes, and emits
+disconnects. `MasterSplinter.Client.Host` advertises `reverse-proxy.loopback` and wires this
+provider through a loopback-only target policy. Tests cover handler delegation, allowlist
+decisions, and loopback echo relay. Remaining reverse proxy parity: operator SOCKS5/HTTPS
+listener, load balancing, broader target allowlist/session controls, audit persistence,
+CLI/manual verification, and GUI accounting.
 
 In the CLI listen prompt, the latest manual pass ran `clients`, `get-system-info`, `get-drives`,
 `get-directory --path C:\`, `get-processes`, `get-startup-items`, and `get-connections` on one
